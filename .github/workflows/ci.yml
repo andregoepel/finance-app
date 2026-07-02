@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+# Actions are pinned to commit SHAs (not mutable tags) so a retagged or
+# compromised action version cannot silently enter the pipeline. The trailing
+# comment records the human-readable version each SHA corresponds to.
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      # Install the exact SDK pinned in global.json so the implicit Blazor asset
+      # package (Microsoft.AspNetCore.App.Internal.Assets) matches the lockfiles.
+      - uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        with:
+          global-json-file: global.json
+
+      # --locked-mode fails the build if the committed packages.lock.json files
+      # would change, making restores reproducible and tamper-evident. The Aspire
+      # AppHost is excluded (RID-specific packages, dev-only) and restored plainly.
+      - name: Restore (locked) — deployed app + tests
+        run: |
+          for proj in \
+            src/FinanceApp/FinanceApp.csproj \
+            src/FinanceApp.Domain/FinanceApp.Domain.csproj \
+            src/FinanceApp.Connectors/FinanceApp.Connectors.csproj \
+            src/FinanceApp.Categorization/FinanceApp.Categorization.csproj \
+            tests/FinanceApp.Tests/FinanceApp.Tests.csproj \
+            tests/FinanceApp.Domain.Tests/FinanceApp.Domain.Tests.csproj \
+            tests/FinanceApp.Connectors.Tests/FinanceApp.Connectors.Tests.csproj \
+            tests/FinanceApp.Categorization.Tests/FinanceApp.Categorization.Tests.csproj; do
+            dotnet restore "$proj" --locked-mode
+          done
+
+      - name: Restore AppHost (dev-only Aspire orchestration)
+        run: dotnet restore src/FinanceApp.AppHost/FinanceApp.AppHost.csproj
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Format check
+        run: dotnet csharpier check .
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Test
+        run: dotnet test --no-build -c Release
+
+      # Fail the build on any known-vulnerable package (direct or transitive) in
+      # the deployed app or the test surface. The Aspire AppHost is intentionally
+      # excluded: it is local-only orchestration (never shipped — the Docker image
+      # builds the FinanceApp project alone).
+      - name: Vulnerability scan
+        run: |
+          for proj in \
+            src/FinanceApp/FinanceApp.csproj \
+            src/FinanceApp.Domain/FinanceApp.Domain.csproj \
+            src/FinanceApp.Connectors/FinanceApp.Connectors.csproj \
+            src/FinanceApp.Categorization/FinanceApp.Categorization.csproj \
+            tests/FinanceApp.Tests/FinanceApp.Tests.csproj \
+            tests/FinanceApp.Domain.Tests/FinanceApp.Domain.Tests.csproj \
+            tests/FinanceApp.Connectors.Tests/FinanceApp.Connectors.Tests.csproj \
+            tests/FinanceApp.Categorization.Tests/FinanceApp.Categorization.Tests.csproj; do
+            dotnet list "$proj" package --vulnerable --include-transitive 2>&1 | tee -a vulnerable.txt
+          done
+          if grep -qiE '\b(Critical|High|Moderate|Low)\b' vulnerable.txt; then
+            echo "::error::Vulnerable NuGet packages detected (see log above)."
+            exit 1
+          fi

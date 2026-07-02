@@ -1,0 +1,39 @@
+@page "/"
+@attribute [Authorize]
+
+<PageTitle>Dashboard – Finance</PageTitle>
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem">
+
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Dashboard</RadzenText>
+
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H6">Net worth</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1">
+                    No data yet. Accounts and transactions arrive with the first import.
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H6">Spending by category</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1">
+                    No data yet. Categories are assigned once transactions are imported.
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H6">Budgets</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1">
+                    No budgets defined yet.
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+
+    </RadzenStack>
+</div>

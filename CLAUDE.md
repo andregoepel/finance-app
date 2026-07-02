@@ -1,7 +1,5 @@
 # Project Instructions — finance-app
 
-> Rename this file to `CLAUDE.md` in the repo root of `andregoepel/finance-app`.
-
 ## Project Overview
 
 Private household finance app for two users (shared household view). Aggregates
