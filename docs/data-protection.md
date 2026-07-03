@@ -1,9 +1,13 @@
 # DataProtection key ring
 
-The DataProtection key ring is persisted in Postgres as Marten documents
-(`MartenXmlRepository`), so it survives container rebuilds. Provider credentials
-(`ProviderCredential`, Phase 3) are encrypted with these keys — **a lost key ring
-makes all stored credentials unrecoverable**.
+Since `AndreGoepel.AppFoundation.Hosting` 1.1.0 the DataProtection key ring
+persistence and encryption come from the foundation
+([app-foundation#40](https://github.com/andregoepel/app-foundation/issues/40)) —
+finance-app carries no local implementation. `AddAppFoundation()` persists the
+key ring in Postgres as Marten documents (table
+`mt_doc_dataprotectionkeydocument`), so it survives container rebuilds. Provider
+credentials (`ProviderCredential`, Phase 3) are encrypted with these keys —
+**a lost key ring makes all stored credentials unrecoverable**.
 
 ## Encryption at rest
 
@@ -49,15 +53,14 @@ exactly as critical as the key ring itself:
 ## Rotation
 
 To rotate the certificate, configure the new PFX and keep the old one available
-for decrypting existing keys:
+for decrypting existing keys via the foundation's extension point in
+`Program.cs`:
 
 ```csharp
-services
-    .AddDataProtection()
-    .ProtectKeysWithCertificate(newCertificate)
-    .UnprotectKeysWithAnyCertificate(oldCertificate, newCertificate);
+builder.AddAppFoundation(options =>
+{
+    // ...
+    options.ConfigureDataProtection = dataProtection =>
+        dataProtection.UnprotectKeysWithAnyCertificate(oldCertificate, newCertificate);
+});
 ```
-
-(Wire the old-certificate list into `AddFinanceApp` when a rotation is actually
-needed — until then the single-certificate setup keeps the configuration
-surface small.)

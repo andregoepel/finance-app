@@ -14,7 +14,7 @@ builder.AddAppFoundation(options =>
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-builder.Services.AddFinanceApp(builder.Configuration);
+builder.Services.AddFinanceApp();
 
 builder.Services.Configure<AppFoundationLayoutOptions>(options =>
 {
