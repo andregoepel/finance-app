@@ -23,4 +23,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FinanceApp.Connectors\FinanceApp.Connectors.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content
+      Include="..\fixtures\**\*.csv"
+      LinkBase="fixtures"
+      CopyToOutputDirectory="PreserveNewest"
+    />
+  </ItemGroup>
 </Project>

@@ -1,0 +1,31 @@
+using Marten;
+
+namespace FinanceApp.Domain.Categories;
+
+public sealed record RenameCategoryCommand(Guid CategoryId, string Name);
+
+public static class RenameCategoryCommandHandler
+{
+    public static async Task<Result<Category>> Handle(
+        RenameCategoryCommand command,
+        IDocumentSession session,
+        CancellationToken cancellationToken
+    )
+    {
+        if (string.IsNullOrWhiteSpace(command.Name))
+        {
+            return Result.Fail<Category>("Category name is required.");
+        }
+
+        var category = await session.LoadAsync<Category>(command.CategoryId, cancellationToken);
+        if (category is null)
+        {
+            return Result.Fail<Category>("Category not found.");
+        }
+
+        category.Name = command.Name.Trim();
+        session.Store(category);
+        await session.SaveChangesAsync(cancellationToken);
+        return Result.Ok(category);
+    }
+}

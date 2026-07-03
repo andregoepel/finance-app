@@ -1,0 +1,6 @@
+"Girokonto";"DE02 1203 0000 0000 2020 51"
+""
+"Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
+"15.06.26";"15.06.26";"Gebucht";"Andre Goepel";"REWE Markt GmbH";"REWE SAGT DANKE 4711";"Lastschrift";"DE88100500000190000000";"-54,32";"DE98ZZZ09999999999";"REF-1";""
+"14.06.26";"14.06.26";"Gebucht";"ACME GmbH";"Andre Goepel";"GEHALT JUNI 2026";"Eingang";"DE44100500000123456789";"2.500,00";"";"";""
+"16.06.26";"";"Vorgemerkt";"Andre Goepel";"AMAZON EU";"AMZN-4711";"Lastschrift";"DE88100500000190000000";"-19,99";"";"";""

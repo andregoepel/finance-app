@@ -1,0 +1,310 @@
+@page "/import"
+@attribute [Authorize]
+
+@using System.Text
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject IQuerySession QuerySession
+@inject IMessageBus MessageBus
+@inject IStatementParserRegistry ParserRegistry
+@inject NotificationService NotificationService
+
+<PageTitle>Import – Finance</PageTitle>
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem">
+
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Import</RadzenText>
+
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                    <RadzenFormField Text="Account">
+                        <RadzenDropDown TValue="Guid?"
+                                        @bind-Value=@selectedAccountId
+                                        Data=@accounts
+                                        TextProperty="Name"
+                                        ValueProperty="Id"
+                                        Placeholder="Select account"
+                                        Style="min-width: 14rem;"
+                                        Change=@(_ => OnAccountChangedAsync()) />
+                    </RadzenFormField>
+                    <div>
+                        <InputFile OnChange="OnFileSelectedAsync" accept=".csv" disabled=@(selectedAccountId is null) />
+                    </div>
+                </RadzenStack>
+                @if (SelectedAccount is not null)
+                {
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                        Provider: @SelectedAccount.Provider — upload the CSV export; unknown formats are rejected, nothing is imported partially by surprise.
+                    </RadzenText>
+                }
+            </RadzenStack>
+        </RadzenCard>
+
+        @if (parseFailure is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@parseFailure</RadzenAlert>
+        }
+
+        @if (preview is not null)
+        {
+            <RadzenCard>
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H6">
+                        Preview — @fileName (@preview.ParserId)
+                    </RadzenText>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1.5rem">
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@($"{NewRowCount} new")" />
+                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"{duplicateHashes.Count(kv => kv.Value)} duplicates")" />
+                        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@($"{preview.Errors.Count} problem rows")" />
+                    </RadzenStack>
+
+                    <RadzenDataGrid TItem="NormalizedTransaction" Data=@preview.Rows AllowPaging="true" PageSize="15" Density="Density.Compact">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="SourceRow" Title="Row" Width="70px" />
+                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="BookingDate" Title="Date" Width="110px">
+                                <Template Context="row">@row.BookingDate.ToString("dd.MM.yyyy")</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Counterparty" Title="Counterparty" Width="170px" />
+                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Description" Title="Description" />
+                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Amount" Title="Amount" Width="120px" TextAlign="TextAlign.Right">
+                                <Template Context="row">@row.Amount.ToString("N2") @row.Currency</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="NormalizedTransaction" Title="Status" Width="110px">
+                                <Template Context="row">
+                                    @if (IsDuplicate(row))
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Duplicate" />
+                                    }
+                                    else
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="New" />
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+
+                    @if (preview.Errors.Count > 0)
+                    {
+                        <RadzenText TextStyle="TextStyle.H6">Problem rows (not imported)</RadzenText>
+                        <RadzenDataGrid TItem="ImportRowError" Data=@preview.Errors AllowPaging="true" PageSize="10" Density="Density.Compact">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="ImportRowError" Property="RowNumber" Title="Row" Width="70px" />
+                                <RadzenDataGridColumn TItem="ImportRowError" Property="Message" Title="Problem" Width="320px" />
+                                <RadzenDataGridColumn TItem="ImportRowError" Property="RawLine" Title="Raw line" />
+                            </Columns>
+                        </RadzenDataGrid>
+                    }
+
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                        <RadzenButton Text="@($"Import {NewRowCount} transactions")"
+                                      Icon="download_done"
+                                      ButtonStyle="ButtonStyle.Primary"
+                                      Disabled=@(isImporting || NewRowCount == 0)
+                                      IsBusy=@isImporting
+                                      BusyText="Importing..."
+                                      Click=@RunImportAsync />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        @if (history.Count > 0)
+        {
+            <RadzenCard>
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H6">Import history</RadzenText>
+                    <RadzenDataGrid TItem="ImportBatch" Data=@history Density="Density.Compact" AllowPaging="true" PageSize="10">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedAt" Title="When" Width="160px">
+                                <Template Context="batch">@batch.ImportedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="ImportBatch" Property="Source" Title="File" />
+                            <RadzenDataGridColumn TItem="ImportBatch" Property="ParserId" Title="Format" Width="140px" />
+                            <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedCount" Title="Imported" Width="90px" TextAlign="TextAlign.Right" />
+                            <RadzenDataGridColumn TItem="ImportBatch" Property="DuplicateCount" Title="Duplicates" Width="100px" TextAlign="TextAlign.Right" />
+                            <RadzenDataGridColumn TItem="ImportBatch" Title="Errors" Width="80px" TextAlign="TextAlign.Right">
+                                <Template Context="batch">@batch.ErrorCount</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedBy" Title="By" Width="140px" />
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+    </RadzenStack>
+</div>
+
+@code {
+    private const long MaxFileSize = 5 * 1024 * 1024;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private List<Account> accounts = [];
+    private Guid? selectedAccountId;
+    private string fileName = "";
+    private StatementParseResult? preview;
+    private string? parseFailure;
+    private Dictionary<int, bool> duplicateHashes = [];
+    private Dictionary<int, string> rowHashes = [];
+    private List<ImportBatch> history = [];
+    private bool isImporting;
+
+    private Account? SelectedAccount =>
+        accounts.FirstOrDefault(a => a.Id == selectedAccountId);
+
+    private int NewRowCount =>
+        preview is null ? 0 : preview.Rows.Count(row => !IsDuplicate(row));
+
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+    }
+
+    private async Task OnAccountChangedAsync()
+    {
+        preview = null;
+        parseFailure = null;
+        await LoadHistoryAsync();
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        history = selectedAccountId is Guid accountId
+            ? (await QuerySession
+                .Query<ImportBatch>()
+                .Where(b => b.AccountId == accountId)
+                .OrderByDescending(b => b.ImportedAt)
+                .Take(20)
+                .ToListAsync()).ToList()
+            : [];
+    }
+
+    private async Task OnFileSelectedAsync(InputFileChangeEventArgs args)
+    {
+        if (SelectedAccount is not Account account)
+        {
+            return;
+        }
+
+        parseFailure = null;
+        preview = null;
+        fileName = args.File.Name;
+
+        string content;
+        try
+        {
+            await using var stream = args.File.OpenReadStream(MaxFileSize);
+            using var buffer = new MemoryStream();
+            await stream.CopyToAsync(buffer);
+            content = DecodeCsv(buffer.ToArray());
+        }
+        catch (Exception ex)
+        {
+            parseFailure = $"Could not read the file: {ex.Message}";
+            return;
+        }
+
+        var parsed = ParserRegistry.Parse(account.Provider, content);
+        if (parsed.IsFailure)
+        {
+            parseFailure = parsed.Error;
+            return;
+        }
+
+        preview = parsed.Value;
+        await ComputeDuplicateStatusAsync(account);
+    }
+
+    private async Task ComputeDuplicateStatusAsync(Account account)
+    {
+        rowHashes = preview!.Rows.ToDictionary(
+            row => row.SourceRow,
+            row => DedupHash.Compute(account.Id, row.BookingDate, row.Amount, row.Description)
+        );
+        var candidates = rowHashes.Values.Distinct().ToArray();
+        var existing = (
+            await QuerySession
+                .Query<TransactionView>()
+                .Where(t => t.AccountId == account.Id && t.DedupHash.IsOneOf(candidates))
+                .Select(t => t.DedupHash)
+                .ToListAsync()
+        ).ToHashSet();
+
+        duplicateHashes = [];
+        var seen = new HashSet<string>(existing);
+        foreach (var row in preview.Rows)
+        {
+            duplicateHashes[row.SourceRow] = !seen.Add(rowHashes[row.SourceRow]);
+        }
+    }
+
+    private bool IsDuplicate(NormalizedTransaction row) =>
+        duplicateHashes.TryGetValue(row.SourceRow, out var duplicate) && duplicate;
+
+    private async Task RunImportAsync()
+    {
+        if (preview is null || SelectedAccount is not Account account)
+        {
+            return;
+        }
+
+        isImporting = true;
+        try
+        {
+            var user = AuthenticationState is null
+                ? null
+                : (await AuthenticationState).User.Identity?.Name;
+
+            var result = await MessageBus.InvokeAsync<Result<ImportBatch>>(
+                new ImportStatementCommand(
+                    account.Id,
+                    fileName,
+                    preview.ParserId,
+                    preview.Rows,
+                    preview.Errors,
+                    user
+                )
+            );
+
+            if (result.IsFailure)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Import failed", result.Error);
+                return;
+            }
+
+            NotificationService.Notify(
+                NotificationSeverity.Success,
+                "Import complete",
+                $"{result.Value!.ImportedCount} imported, {result.Value.DuplicateCount} duplicates skipped."
+            );
+            preview = null;
+            await LoadHistoryAsync();
+        }
+        finally
+        {
+            isImporting = false;
+        }
+    }
+
+    /// <summary>
+    /// Provider exports are UTF-8 except some German bank exports (Latin-1).
+    /// Try strict UTF-8 first, fall back to Latin-1 instead of importing
+    /// replacement characters.
+    /// </summary>
+    private static string DecodeCsv(byte[] bytes)
+    {
+        try
+        {
+            return new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            return Encoding.Latin1.GetString(bytes);
+        }
+    }
+}
