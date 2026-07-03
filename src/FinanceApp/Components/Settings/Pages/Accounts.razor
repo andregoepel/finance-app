@@ -1,0 +1,167 @@
+@page "/settings/accounts"
+@attribute [Authorize]
+
+@inject IQuerySession QuerySession
+@inject IMessageBus MessageBus
+@inject NotificationService NotificationService
+
+<PageTitle>Accounts – Finance</PageTitle>
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem" Style="max-width: 70rem;">
+
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Accounts</RadzenText>
+
+        <RadzenCard>
+            <RadzenDataGrid TItem="Account" Data=@accounts Density="Density.Compact">
+                <Columns>
+                    <RadzenDataGridColumn TItem="Account" Property="Name" Title="Name" />
+                    <RadzenDataGridColumn TItem="Account" Property="Provider" Title="Provider" Width="110px" />
+                    <RadzenDataGridColumn TItem="Account" Property="Type" Title="Type" Width="120px" />
+                    <RadzenDataGridColumn TItem="Account" Property="Currency" Title="Currency" Width="90px" />
+                    <RadzenDataGridColumn TItem="Account" Property="Owner" Title="Owner" Width="90px" />
+                    <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="Sync" Width="110px" />
+                    <RadzenDataGridColumn TItem="Account" Property="Iban" Title="IBAN" Width="220px" />
+                    <RadzenDataGridColumn TItem="Account" Title="" Width="70px" Sortable="false">
+                        <Template Context="account">
+                            <RadzenButton Icon="edit"
+                                          Size="ButtonSize.ExtraSmall"
+                                          ButtonStyle="ButtonStyle.Light"
+                                          Click=@(() => StartEdit(account)) />
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H6">@(editingAccountId is null ? "Add account" : "Edit account")</RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+                    <RadzenFormField Text="Name">
+                        <RadzenTextBox @bind-Value=@form.Name Style="min-width: 12rem;" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Provider">
+                        <RadzenDropDown @bind-Value=@form.Provider
+                                        Data=@ProviderChoices
+                                        Disabled=@(editingAccountId is not null)
+                                        Style="min-width: 9rem;" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Type">
+                        <RadzenDropDown @bind-Value=@form.Type Data=@TypeChoices Style="min-width: 9rem;" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Currency">
+                        <RadzenTextBox @bind-Value=@form.Currency Style="width: 5.5rem;" MaxLength="3" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Owner">
+                        <RadzenDropDown @bind-Value=@form.Owner Data=@OwnerChoices Style="min-width: 8rem;" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Sync">
+                        <RadzenDropDown @bind-Value=@form.SyncMethod Data=@SyncChoices Style="min-width: 8rem;" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="IBAN (optional)">
+                        <RadzenTextBox @bind-Value=@form.Iban Style="min-width: 14rem;" />
+                    </RadzenFormField>
+                    <RadzenButton Text="@(editingAccountId is null ? "Add" : "Save")"
+                                  Icon="save"
+                                  ButtonStyle="ButtonStyle.Primary"
+                                  Click=@SaveAsync />
+                    @if (editingAccountId is not null)
+                    {
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click=@ResetForm />
+                    }
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+
+    </RadzenStack>
+</div>
+
+@code {
+    private static readonly ProviderKind[] ProviderChoices = Enum.GetValues<ProviderKind>();
+    private static readonly AccountType[] TypeChoices = Enum.GetValues<AccountType>();
+    private static readonly AccountOwner[] OwnerChoices = Enum.GetValues<AccountOwner>();
+    private static readonly SyncMethod[] SyncChoices = Enum.GetValues<SyncMethod>();
+
+    private List<Account> accounts = [];
+    private Guid? editingAccountId;
+    private InputModel form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+    }
+
+    private void StartEdit(Account account)
+    {
+        editingAccountId = account.Id;
+        form = new InputModel
+        {
+            Name = account.Name,
+            Provider = account.Provider,
+            Type = account.Type,
+            Currency = account.Currency,
+            Owner = account.Owner,
+            SyncMethod = account.SyncMethod,
+            Iban = account.Iban ?? "",
+        };
+    }
+
+    private void ResetForm()
+    {
+        editingAccountId = null;
+        form = new InputModel();
+    }
+
+    private async Task SaveAsync()
+    {
+        var result = editingAccountId is Guid accountId
+            ? await MessageBus.InvokeAsync<Result<Account>>(
+                new UpdateAccountCommand(
+                    accountId,
+                    form.Name,
+                    form.Type,
+                    form.Currency,
+                    form.Owner,
+                    form.SyncMethod,
+                    form.Iban
+                )
+            )
+            : await MessageBus.InvokeAsync<Result<Account>>(
+                new CreateAccountCommand(
+                    form.Name,
+                    form.Provider,
+                    form.Type,
+                    form.Currency,
+                    form.Owner,
+                    form.SyncMethod,
+                    form.Iban
+                )
+            );
+
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
+            return;
+        }
+
+        ResetForm();
+        await ReloadAsync();
+    }
+
+    private sealed class InputModel
+    {
+        public string Name { get; set; } = "";
+        public ProviderKind Provider { get; set; } = ProviderKind.Dkb;
+        public AccountType Type { get; set; } = AccountType.Checking;
+        public string Currency { get; set; } = "EUR";
+        public AccountOwner Owner { get; set; } = AccountOwner.Joint;
+        public SyncMethod SyncMethod { get; set; } = SyncMethod.CsvUpload;
+        public string Iban { get; set; } = "";
+    }
+}

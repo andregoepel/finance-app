@@ -4,8 +4,8 @@
   </PropertyGroup>
 
   <ItemGroup Label="AndreGoepel">
-    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.1.0" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.1.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.1.1" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.1.1" />
     <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.1.1" />
   </ItemGroup>
 
@@ -16,6 +16,7 @@
 
   <ItemGroup Label="Libraries">
     <PackageVersion Include="Marten" Version="9.12.0" />
+    <PackageVersion Include="WolverineFx.Marten" Version="6.16.0" />
     <PackageVersion Include="Radzen.Blazor" Version="11.1.0" />
     <PackageVersion
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
