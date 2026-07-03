@@ -855,7 +855,7 @@
           "FinanceApp.Domain": "[1.0.0, )",
           "Marten": "[9.11.0, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.23.0, )",
-          "Radzen.Blazor": "[11.0.5, )"
+          "Radzen.Blazor": "[11.1.0, )"
         }
       },
       "financeapp.categorization": {
@@ -927,9 +927,9 @@
       },
       "Radzen.Blazor": {
         "type": "CentralTransitive",
-        "requested": "[11.0.5, )",
-        "resolved": "11.0.5",
-        "contentHash": "DGO3Htlmejmvmbh8oJET1ylmifaniPoXK00bzx9zCMR0vL8ccNhpIouObcwWZ0N8HsOgGF9M+YlLUo8DJR1CsQ=="
+        "requested": "[11.1.0, )",
+        "resolved": "11.1.0",
+        "contentHash": "brQCciUSVqNwzkYECVWaJZKHgXlC9CqtsmUiPVbMzRekBzswNW1teymOZm/IwnoFpIvB1xxR/HXTWFGDzHBPnw=="
       }
     }
   }

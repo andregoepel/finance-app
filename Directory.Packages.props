@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
@@ -16,7 +16,7 @@
 
   <ItemGroup Label="Libraries">
     <PackageVersion Include="Marten" Version="9.11.0" />
-    <PackageVersion Include="Radzen.Blazor" Version="11.0.5" />
+    <PackageVersion Include="Radzen.Blazor" Version="11.1.0" />
     <PackageVersion
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
       Version="10.0.9"
