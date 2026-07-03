@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FinanceApp.Domain\FinanceApp.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="FinanceApp.Connectors.Tests" />
   </ItemGroup>
 </Project>

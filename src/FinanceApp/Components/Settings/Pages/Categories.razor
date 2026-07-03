@@ -1,0 +1,156 @@
+@page "/settings/categories"
+@attribute [Authorize]
+
+@inject IQuerySession QuerySession
+@inject IMessageBus MessageBus
+@inject NotificationService NotificationService
+
+<PageTitle>Categories – Finance</PageTitle>
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem" Style="max-width: 60rem;">
+
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Categories</RadzenText>
+
+        @foreach (var group in Groups)
+        {
+            <RadzenCard>
+                <RadzenStack Gap="0.75rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        @if (editingId == group.Id)
+                        {
+                            <RadzenTextBox @bind-Value=@editingName Style="min-width: 12rem;" />
+                            <RadzenButton Icon="check" Size="ButtonSize.ExtraSmall" Click=@(() => RenameAsync(group.Id)) />
+                            <RadzenButton Icon="close" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@CancelEdit />
+                        }
+                        else
+                        {
+                            <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@group.Name</RadzenText>
+                            <RadzenButton Icon="edit" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@(() => StartEdit(group)) />
+                            <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@(() => DeleteAsync(group)) />
+                        }
+                    </RadzenStack>
+
+                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        @foreach (var child in ChildrenOf(group.Id))
+                        {
+                            @if (editingId == child.Id)
+                            {
+                                <RadzenTextBox @bind-Value=@editingName Style="width: 11rem;" />
+                                <RadzenButton Icon="check" Size="ButtonSize.ExtraSmall" Click=@(() => RenameAsync(child.Id)) />
+                                <RadzenButton Icon="close" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@CancelEdit />
+                            }
+                            else
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Style="cursor: pointer;" @onclick=@(() => StartEdit(child))>
+                                    @child.Name
+                                </RadzenBadge>
+                                <RadzenButton Icon="close"
+                                              Size="ButtonSize.ExtraSmall"
+                                              ButtonStyle="ButtonStyle.Light"
+                                              Click=@(() => DeleteAsync(child))
+                                              title="Delete" />
+                            }
+                        }
+                        <RadzenTextBox @bind-Value=@newChildNames[group.Id] Placeholder="New subcategory" Style="width: 11rem;" />
+                        <RadzenButton Icon="add" Size="ButtonSize.ExtraSmall" Click=@(() => AddAsync(newChildNames[group.Id], group.Id)) />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        <RadzenCard>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <RadzenTextBox @bind-Value=@newGroupName Placeholder="New group" Style="min-width: 12rem;" />
+                <RadzenButton Text="Add group" Icon="add" Click=@(() => AddAsync(newGroupName, null)) />
+            </RadzenStack>
+        </RadzenCard>
+
+    </RadzenStack>
+</div>
+
+@code {
+    private List<Category> categories = [];
+    private Guid? editingId;
+    private string editingName = "";
+    private string newGroupName = "";
+    private Dictionary<Guid, string> newChildNames = [];
+
+    private IEnumerable<Category> Groups =>
+        categories.Where(c => c.ParentId is null).OrderBy(c => c.SortOrder);
+
+    private IEnumerable<Category> ChildrenOf(Guid groupId) =>
+        categories.Where(c => c.ParentId == groupId).OrderBy(c => c.SortOrder);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        categories = (await QuerySession.Query<Category>().ToListAsync()).ToList();
+        foreach (var group in Groups)
+        {
+            newChildNames.TryAdd(group.Id, "");
+        }
+    }
+
+    private void StartEdit(Category category)
+    {
+        editingId = category.Id;
+        editingName = category.Name;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        editingName = "";
+    }
+
+    private async Task RenameAsync(Guid categoryId)
+    {
+        var result = await MessageBus.InvokeAsync<Result<Category>>(
+            new RenameCategoryCommand(categoryId, editingName)
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Rename failed", result.Error);
+            return;
+        }
+        CancelEdit();
+        await ReloadAsync();
+    }
+
+    private async Task AddAsync(string name, Guid? parentId)
+    {
+        var result = await MessageBus.InvokeAsync<Result<Category>>(
+            new CreateCategoryCommand(name, parentId)
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Creating failed", result.Error);
+            return;
+        }
+        if (parentId is Guid groupId)
+        {
+            newChildNames[groupId] = "";
+        }
+        else
+        {
+            newGroupName = "";
+        }
+        await ReloadAsync();
+    }
+
+    private async Task DeleteAsync(Category category)
+    {
+        var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryCommand(category.Id));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Delete refused", result.Error);
+            return;
+        }
+        await ReloadAsync();
+    }
+}

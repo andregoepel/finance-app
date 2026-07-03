@@ -1,0 +1,265 @@
+@page "/transactions"
+@attribute [Authorize]
+
+@inject IQuerySession QuerySession
+@inject IMessageBus MessageBus
+@inject NotificationService NotificationService
+
+<PageTitle>Transactions – Finance</PageTitle>
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem">
+
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Transactions</RadzenText>
+
+        <RadzenCard>
+            <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
+                <RadzenFormField Text="Account">
+                    <RadzenDropDown TValue="Guid?"
+                                    @bind-Value=@accountFilter
+                                    Data=@accounts
+                                    TextProperty="Name"
+                                    ValueProperty="Id"
+                                    AllowClear="true"
+                                    Placeholder="All"
+                                    Style="min-width: 12rem;"
+                                    Change=@(_ => ReloadAsync()) />
+                </RadzenFormField>
+                <RadzenFormField Text="Owner">
+                    <RadzenDropDown TValue="AccountOwner?"
+                                    @bind-Value=@ownerFilter
+                                    Data=@OwnerChoices
+                                    AllowClear="true"
+                                    Placeholder="All"
+                                    Style="min-width: 9rem;"
+                                    Change=@(_ => ReloadAsync()) />
+                </RadzenFormField>
+                <RadzenFormField Text="Category">
+                    <RadzenDropDown TValue="Guid?"
+                                    @bind-Value=@categoryFilter
+                                    Data=@categoryChoices
+                                    TextProperty="Label"
+                                    ValueProperty="Id"
+                                    AllowClear="true"
+                                    Placeholder="All"
+                                    Style="min-width: 13rem;"
+                                    Change=@(_ => ReloadAsync()) />
+                </RadzenFormField>
+                <RadzenFormField Text="From">
+                    <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
+                </RadzenFormField>
+                <RadzenFormField Text="To">
+                    <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
+                </RadzenFormField>
+                <RadzenFormField Text="Search">
+                    <RadzenTextBox @bind-Value=@textFilter Placeholder="Description or counterparty" Style="min-width: 14rem;" />
+                </RadzenFormField>
+                <RadzenButton Text="Apply" Icon="search" Click=@ReloadAsync ButtonStyle="ButtonStyle.Secondary" />
+                <RadzenButton Text="Link as transfer"
+                              Icon="sync_alt"
+                              ButtonStyle="ButtonStyle.Light"
+                              Disabled=@(selected.Count != 2)
+                              Click=@LinkSelectedAsTransferAsync />
+            </RadzenStack>
+        </RadzenCard>
+
+        <RadzenDataGrid TItem="TransactionView"
+                        Data=@transactions
+                        AllowPaging="true"
+                        PageSize="25"
+                        AllowSorting="true"
+                        SelectionMode="DataGridSelectionMode.Multiple"
+                        @bind-Value=@selected
+                        Density="Density.Compact">
+            <Columns>
+                <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="110px">
+                    <Template Context="transaction">@transaction.BookingDate.ToString("dd.MM.yyyy")</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="TransactionView" Title="Account" Width="140px" Sortable="false">
+                    <Template Context="transaction">@AccountName(transaction.AccountId)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="Counterparty" Width="180px" />
+                <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
+                <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="Amount" Width="130px" TextAlign="TextAlign.Right">
+                    <Template Context="transaction">
+                        <span style="color: @(transaction.Amount < 0 ? "var(--rz-danger)" : "var(--rz-success)");">
+                            @transaction.Amount.ToString("N2") @transaction.Currency
+                        </span>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="TransactionView" Title="Category" Width="220px" Sortable="false">
+                    <Template Context="transaction">
+                        <RadzenDropDown TValue="Guid?"
+                                        Value=@transaction.CategoryId
+                                        Data=@categoryChoices
+                                        TextProperty="Label"
+                                        ValueProperty="Id"
+                                        Placeholder="Uncategorized"
+                                        Style="width: 100%;"
+                                        Change=@(value => CategorizeAsync(transaction, (Guid?)value)) />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="TransactionView" Title="" Width="110px" Sortable="false">
+                    <Template Context="transaction">
+                        @if (transaction.IsTransfer)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Transfer" />
+                            <RadzenButton Icon="link_off"
+                                          Size="ButtonSize.ExtraSmall"
+                                          ButtonStyle="ButtonStyle.Light"
+                                          Click=@(() => UnlinkTransferAsync(transaction))
+                                          title="Unlink transfer" />
+                        }
+                        else if (transaction.CategorySource is not null)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@transaction.CategorySource.ToString()" />
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+
+    </RadzenStack>
+</div>
+
+@code {
+    private const int MaxRows = 1000;
+
+    private static readonly AccountOwner?[] OwnerChoices =
+        Enum.GetValues<AccountOwner>().Cast<AccountOwner?>().ToArray();
+
+    private List<Account> accounts = [];
+    private List<CategoryChoice> categoryChoices = [];
+    private List<TransactionView> transactions = [];
+    private IList<TransactionView> selected = [];
+
+    private Guid? accountFilter;
+    private AccountOwner? ownerFilter;
+    private Guid? categoryFilter;
+    private DateOnly? fromFilter;
+    private DateOnly? toFilter;
+    private string textFilter = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+        var categories = await QuerySession.Query<Category>().ToListAsync();
+        categoryChoices = CategoryChoice.Build(categories);
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        var accountIds = FilteredAccountIds();
+        var query = QuerySession.Query<TransactionView>().Where(t => t.AccountId.IsOneOf(accountIds));
+        if (categoryFilter is Guid categoryId)
+        {
+            query = query.Where(t => t.CategoryId == categoryId);
+        }
+        if (fromFilter is DateOnly from)
+        {
+            query = query.Where(t => t.BookingDate >= from);
+        }
+        if (toFilter is DateOnly to)
+        {
+            query = query.Where(t => t.BookingDate <= to);
+        }
+
+        var loaded = await query.OrderByDescending(t => t.BookingDate).Take(MaxRows).ToListAsync();
+
+        if (!string.IsNullOrWhiteSpace(textFilter))
+        {
+            var needle = textFilter.Trim();
+            loaded = loaded
+                .Where(t =>
+                    t.Description.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                    || (t.Counterparty?.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+        }
+
+        transactions = loaded.ToList();
+        selected = [];
+    }
+
+    private Guid[] FilteredAccountIds()
+    {
+        var candidates = accounts.AsEnumerable();
+        if (ownerFilter is AccountOwner owner)
+        {
+            candidates = candidates.Where(a => a.Owner == owner);
+        }
+        if (accountFilter is Guid accountId)
+        {
+            candidates = candidates.Where(a => a.Id == accountId);
+        }
+        return candidates.Select(a => a.Id).ToArray();
+    }
+
+    private string AccountName(Guid accountId) =>
+        accounts.FirstOrDefault(a => a.Id == accountId)?.Name ?? "?";
+
+    private async Task CategorizeAsync(TransactionView transaction, Guid? categoryId)
+    {
+        if (categoryId is not Guid newCategoryId || newCategoryId == transaction.CategoryId)
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result>(
+            new CategorizeTransactionCommand(transaction.Id, newCategoryId)
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Categorization failed", result.Error);
+            return;
+        }
+        await ReloadAsync();
+    }
+
+    private async Task LinkSelectedAsTransferAsync()
+    {
+        if (selected.Count != 2)
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result>(
+            new LinkTransactionsAsTransferCommand(selected[0].Id, selected[1].Id)
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Linking failed", result.Error);
+            return;
+        }
+        NotificationService.Notify(NotificationSeverity.Success, "Linked", "Transactions linked as transfer.");
+        await ReloadAsync();
+    }
+
+    private async Task UnlinkTransferAsync(TransactionView transaction)
+    {
+        var result = await MessageBus.InvokeAsync<Result>(new UnlinkTransferCommand(transaction.Id));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Unlinking failed", result.Error);
+            return;
+        }
+        await ReloadAsync();
+    }
+
+    private sealed record CategoryChoice(Guid Id, string Label)
+    {
+        public static List<CategoryChoice> Build(IReadOnlyList<Category> categories)
+        {
+            var byId = categories.ToDictionary(c => c.Id);
+            return categories
+                .OrderBy(c => byId.TryGetValue(c.ParentId ?? c.Id, out var p) ? p.SortOrder : 0)
+                .ThenBy(c => c.ParentId is null ? -1 : c.SortOrder)
+                .Select(c => new CategoryChoice(
+                    c.Id,
+                    c.ParentId is Guid parentId && byId.TryGetValue(parentId, out var parent)
+                        ? $"{parent.Name} › {c.Name}"
+                        : c.Name))
+                .ToList();
+        }
+    }
+}

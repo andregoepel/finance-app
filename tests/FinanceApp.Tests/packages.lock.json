@@ -862,10 +862,17 @@
         "type": "Project"
       },
       "financeapp.connectors": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "FinanceApp.Domain": "[1.0.0, )"
+        }
       },
       "financeapp.domain": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "Marten": "[9.12.0, )",
+          "WolverineFx.Marten": "[6.16.0, )"
+        }
       },
       "AndreGoepel.AppFoundation": {
         "type": "CentralTransitive",
@@ -931,6 +938,16 @@
         "requested": "[11.1.0, )",
         "resolved": "11.1.0",
         "contentHash": "brQCciUSVqNwzkYECVWaJZKHgXlC9CqtsmUiPVbMzRekBzswNW1teymOZm/IwnoFpIvB1xxR/HXTWFGDzHBPnw=="
+      },
+      "WolverineFx.Marten": {
+        "type": "CentralTransitive",
+        "requested": "[6.16.0, )",
+        "resolved": "6.16.0",
+        "contentHash": "d7xWZTHwOxKRkS249JCbf/ot8/Mdk8CpD3oYj+mTvrKcT7G1tRRVAfAudJCjgozWgcuHOK+uH8o0Wn9tsKgYdQ==",
+        "dependencies": {
+          "Marten": "9.11.0",
+          "WolverineFx.Postgresql": "6.16.0"
+        }
       }
     }
   }
