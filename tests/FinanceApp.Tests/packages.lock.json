@@ -23,12 +23,12 @@
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
-        "requested": "[18.5.1, )",
-        "resolved": "18.5.1",
-        "contentHash": "SfqVaLiIqAbRWuPg5BP4QFwBIirQj/YIL8Dhxl6zntBKbXp0cQykoV480SmwG+yRMiWptxEI6NbHQuGSZ8b97w==",
+        "requested": "[18.7.0, )",
+        "resolved": "18.7.0",
+        "contentHash": "49xH9j4UzCh2hMohJp53g3wUTvyycECw7CtVht4gfCz5ykudB1uBcF6D0TtgJPjCtP76UPW53bQElKdCeX+dUg==",
         "dependencies": {
-          "Microsoft.CodeCoverage": "18.5.1",
-          "Microsoft.TestPlatform.TestHost": "18.5.1"
+          "Microsoft.CodeCoverage": "18.7.0",
+          "Microsoft.TestPlatform.TestHost": "18.7.0"
         }
       },
       "NSubstitute": {
@@ -158,8 +158,8 @@
       },
       "JasperFx": {
         "type": "Transitive",
-        "resolved": "2.16.0",
-        "contentHash": "H93hRmqUVeGJSW8Ms5j9ok9I/RwzpMvxjGH6N70bW5Ne8RoYgKBj255JN6s8bjTjXMrz8L0iKCL3YtTsr1T2sg==",
+        "resolved": "2.18.1",
+        "contentHash": "i8k7awEkuDdZV4kUzIQT54h5pydEzBpH4CjD5ds7b7dHxK0KYvIyKWDWZqMHHJVbVqXEQHtQHQNTeqUi2zOLZw==",
         "dependencies": {
           "FastExpressionCompiler": "5.4.1",
           "ImTools": "4.0.0",
@@ -170,10 +170,10 @@
       },
       "JasperFx.Events": {
         "type": "Transitive",
-        "resolved": "2.16.0",
-        "contentHash": "cVwJpdj8z3k3xabZGCkowHW1rUrUPFX0ULWftR0KgqNxEXmNeU+CIRhvwwQWtMalRDrZUy4awv4+lZyUGBI15Q==",
+        "resolved": "2.18.1",
+        "contentHash": "kBK14ziH5UV7jYrsclg6KPpB8F3vmCXhkMDWw+oPnBaxYC4xeB/5STrt+gn6V4VlbR1Xn/wcd9ZVAx3teDls9w==",
         "dependencies": {
-          "JasperFx": "2.16.0"
+          "JasperFx": "2.18.1"
         }
       },
       "JasperFx.RuntimeCompiler": {
@@ -353,8 +353,8 @@
       },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
-        "resolved": "18.5.1",
-        "contentHash": "vMFDR1ZjqzzgKmM0zrPie7Gv9Y+ZppjODB5Quzu9Eq0TlIusUfUCYFPEawO91zQuqwzvdFbJSU7WHNtjStffJQ=="
+        "resolved": "18.7.0",
+        "contentHash": "+wFfx9s7D9wegM0RziXMj2kvYDT4qcqXXtyjiQwSZOGQ2wwcOAJQcD6eQXk02jt0MvRNawtp8TJxTrV+wD8X1g=="
       },
       "Microsoft.Extensions.AmbientMetadata.Application": {
         "type": "Transitive",
@@ -477,15 +477,15 @@
       },
       "Microsoft.TestPlatform.ObjectModel": {
         "type": "Transitive",
-        "resolved": "18.5.1",
-        "contentHash": "KNZd+M0S0rz5eNAln0pbZX+A/RbokYZCbGKx4fN4CkhtWhkz6nSJDO+9LGYjRE4d0WPVriJ2JnVubkjt3+PpMg=="
+        "resolved": "18.7.0",
+        "contentHash": "6rmgU4q3/WOpOPcncI0YW0Q/QpcQtwR2TTEXDR5+4TfSimPBAk6Z/BgKLeGgp1SOun0ROVUCCafXhRLwsHaPpA=="
       },
       "Microsoft.TestPlatform.TestHost": {
         "type": "Transitive",
-        "resolved": "18.5.1",
-        "contentHash": "RM+3JNHEoHOCFXzVntUcIiYxzPjzBN0N8wto6HYXi76YyBTZ/3CeRL8U+Pk5zx3AUrOmHxDvKJwGUCdElU9bJg==",
+        "resolved": "18.7.0",
+        "contentHash": "kYwfmebCs8992zaxEDkvG7S+YEouTeKfYVKUFEkwh1W2dIoOaevBt80XSKVXCUFEhusjOIm1sFfHBnoJgygrRA==",
         "dependencies": {
-          "Microsoft.TestPlatform.ObjectModel": "18.5.1",
+          "Microsoft.TestPlatform.ObjectModel": "18.7.0",
           "Newtonsoft.Json": "13.0.3"
         }
       },
@@ -853,7 +853,7 @@
           "FinanceApp.Categorization": "[1.0.0, )",
           "FinanceApp.Connectors": "[1.0.0, )",
           "FinanceApp.Domain": "[1.0.0, )",
-          "Marten": "[9.11.0, )",
+          "Marten": "[9.12.0, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.23.0, )",
           "Radzen.Blazor": "[11.1.0, )"
         }
@@ -909,12 +909,12 @@
       },
       "Marten": {
         "type": "CentralTransitive",
-        "requested": "[9.11.0, )",
-        "resolved": "9.11.0",
-        "contentHash": "EwcJgIrVyn4YK9VNJnM0oiizGMwDbw7crdURj4dDMWsUwkSJyKlK3eyEiA+1ihipde2T0w5Hjkq3OenKNCwtmA==",
+        "requested": "[9.12.0, )",
+        "resolved": "9.12.0",
+        "contentHash": "RIyPzIN6ehfDmBWPs7zyMryy13uOPZHQBA8QuBwO0PHjzpyonP/rBoJYrgiJGXcaiWFVxqHj3QfPKuLjXsA5uQ==",
         "dependencies": {
-          "JasperFx": "2.16.0",
-          "JasperFx.Events": "2.16.0",
+          "JasperFx": "2.18.1",
+          "JasperFx.Events": "2.18.1",
           "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
           "Weasel.Postgresql": "9.3.0"
         }

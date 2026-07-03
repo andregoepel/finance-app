@@ -44,12 +44,12 @@
       },
       "Marten": {
         "type": "Direct",
-        "requested": "[9.11.0, )",
-        "resolved": "9.11.0",
-        "contentHash": "EwcJgIrVyn4YK9VNJnM0oiizGMwDbw7crdURj4dDMWsUwkSJyKlK3eyEiA+1ihipde2T0w5Hjkq3OenKNCwtmA==",
+        "requested": "[9.12.0, )",
+        "resolved": "9.12.0",
+        "contentHash": "RIyPzIN6ehfDmBWPs7zyMryy13uOPZHQBA8QuBwO0PHjzpyonP/rBoJYrgiJGXcaiWFVxqHj3QfPKuLjXsA5uQ==",
         "dependencies": {
-          "JasperFx": "2.16.0",
-          "JasperFx.Events": "2.16.0",
+          "JasperFx": "2.18.1",
+          "JasperFx.Events": "2.18.1",
           "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
           "Weasel.Postgresql": "9.3.0"
         }
@@ -148,8 +148,8 @@
       },
       "JasperFx": {
         "type": "Transitive",
-        "resolved": "2.16.0",
-        "contentHash": "H93hRmqUVeGJSW8Ms5j9ok9I/RwzpMvxjGH6N70bW5Ne8RoYgKBj255JN6s8bjTjXMrz8L0iKCL3YtTsr1T2sg==",
+        "resolved": "2.18.1",
+        "contentHash": "i8k7awEkuDdZV4kUzIQT54h5pydEzBpH4CjD5ds7b7dHxK0KYvIyKWDWZqMHHJVbVqXEQHtQHQNTeqUi2zOLZw==",
         "dependencies": {
           "FastExpressionCompiler": "5.4.1",
           "ImTools": "4.0.0",
@@ -160,10 +160,10 @@
       },
       "JasperFx.Events": {
         "type": "Transitive",
-        "resolved": "2.16.0",
-        "contentHash": "cVwJpdj8z3k3xabZGCkowHW1rUrUPFX0ULWftR0KgqNxEXmNeU+CIRhvwwQWtMalRDrZUy4awv4+lZyUGBI15Q==",
+        "resolved": "2.18.1",
+        "contentHash": "kBK14ziH5UV7jYrsclg6KPpB8F3vmCXhkMDWw+oPnBaxYC4xeB/5STrt+gn6V4VlbR1Xn/wcd9ZVAx3teDls9w==",
         "dependencies": {
-          "JasperFx": "2.16.0"
+          "JasperFx": "2.18.1"
         }
       },
       "JasperFx.RuntimeCompiler": {
