@@ -4,8 +4,8 @@
   </PropertyGroup>
 
   <ItemGroup Label="AndreGoepel">
-    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.1.0" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.1.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.1.1" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.1.1" />
     <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.1.1" />
   </ItemGroup>
 
