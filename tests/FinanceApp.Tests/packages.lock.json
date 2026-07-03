@@ -81,19 +81,19 @@
       },
       "AndreGoepel.Marten.Identity": {
         "type": "Transitive",
-        "resolved": "1.1.0",
-        "contentHash": "w6kLWAeKSCTyW/qigV2I85pecyB3tKH+CuI9/sX9QNWnYuRFuwRxEFn+Vm6vi9BWn3gyIyCluFwwi1BdWyJZdQ==",
+        "resolved": "1.1.1",
+        "contentHash": "avhegku682O8/9w9o8XBNnGiMOTNUgC6yRuy3O9VvMyXeIyjQyN1OwOMNo/s8uAc58bcfvtgrTB7nLP53ViXAw==",
         "dependencies": {
-          "AndreGoepel.Marten.Identity.Abstractions": "1.1.0",
-          "Marten": "9.10.0",
-          "Marten.AspNetCore": "9.10.0",
-          "Quartz.Extensions.Hosting": "3.18.1"
+          "AndreGoepel.Marten.Identity.Abstractions": "1.1.1",
+          "Marten": "9.12.0",
+          "Marten.AspNetCore": "9.12.0",
+          "Quartz.Extensions.Hosting": "3.18.2"
         }
       },
       "AndreGoepel.Marten.Identity.Abstractions": {
         "type": "Transitive",
-        "resolved": "1.1.0",
-        "contentHash": "puDOZmPby4yrz0HPYwHoQ1z+GdaiDB9QX9AVW0K88oBAcFV11nN5E8ewmm8uICTK3wUPkCj9gUQjZjud8KzIfw=="
+        "resolved": "1.1.1",
+        "contentHash": "iXIPG9CsOMBdlxl2VYojflinQSFwKGxPEfySzFXgLVpR2QW4KW+u4AoFtNg9V1W+5nMEmHkha9CdF6caa+TsAQ=="
       },
       "AngleSharp": {
         "type": "Transitive",
@@ -202,10 +202,10 @@
       },
       "Marten.AspNetCore": {
         "type": "Transitive",
-        "resolved": "9.10.0",
-        "contentHash": "OLSEYGpoVXGosdMvW0+sbqo7okeUTK/ZplHiDX76n7sgGjRM9hRnctZ2NNdEMfZ9S+HpFIQjQio7FYtZ0ywKdg==",
+        "resolved": "9.12.0",
+        "contentHash": "g4wqBQxqZDpr4T7Ayh131xIahnipLBlkp5Ar0cNez6OhqJZDQaUvWcbqyTWYlxiIedWnILeJeMzhO5Qu02j7LA==",
         "dependencies": {
-          "Marten": "9.10.0"
+          "Marten": "9.12.0"
         }
       },
       "Microsoft.ApplicationInsights": {
@@ -625,23 +625,23 @@
       },
       "Quartz": {
         "type": "Transitive",
-        "resolved": "3.18.1",
-        "contentHash": "q/n/gKLcApDlTk90BRNvj6P8HKR+vbtZEQxo5BAbeEoN5e/8/aqRuG6yH7tVg02CeAXAD40boS74s9hVnh4XDw=="
+        "resolved": "3.18.2",
+        "contentHash": "/KaRLj7jv84RSIR/UtAWnzYRmS7o/mA6CdEuoLwxhLa9Nfl7Q1keMA7Fe/r2BzRfDf+7YpN1QNEYSSU89DA3OA=="
       },
       "Quartz.Extensions.DependencyInjection": {
         "type": "Transitive",
-        "resolved": "3.18.1",
-        "contentHash": "ct+sIqr7n961jvo695GnqHjB+dhK6b/Y9LSXxK6n9EJ6JzMXpwcusd5u2lCqVqqNHaiGBLXp37E75hpPXHQkzA==",
+        "resolved": "3.18.2",
+        "contentHash": "+P0z/WUQZF/QrY5wB1wgvl9/VkiWqGR/K5bdtjW1qiFBraEoe/dqfNTxXQPnSZHnha1qmSBRoa5oA7kwHPsTqA==",
         "dependencies": {
-          "Quartz": "3.18.1"
+          "Quartz": "3.18.2"
         }
       },
       "Quartz.Extensions.Hosting": {
         "type": "Transitive",
-        "resolved": "3.18.1",
-        "contentHash": "kZ7ufndI5vygLpI0kCeukVKlzpRFtGjfoU3BoWZ6u6QKoRF2Z3KV1dSpv+VpMqRekz3SrObfN0iLZKWldoZLZw==",
+        "resolved": "3.18.2",
+        "contentHash": "6uSMAm4FArjtVoxBjlkA+gHL1Eln2ngIOnRTrVrYxtSlM5PpLQd2aV+fc/OOwfwt+AyDm69HOAybEFqVvyyG2A==",
         "dependencies": {
-          "Quartz.Extensions.DependencyInjection": "3.18.1"
+          "Quartz.Extensions.DependencyInjection": "3.18.2"
         }
       },
       "Spectre.Console": {
@@ -849,7 +849,7 @@
         "dependencies": {
           "AndreGoepel.AppFoundation": "[1.1.0, )",
           "AndreGoepel.AppFoundation.Hosting": "[1.1.0, )",
-          "AndreGoepel.Marten.Identity.Blazor": "[1.1.0, )",
+          "AndreGoepel.Marten.Identity.Blazor": "[1.1.1, )",
           "FinanceApp.Categorization": "[1.0.0, )",
           "FinanceApp.Connectors": "[1.0.0, )",
           "FinanceApp.Domain": "[1.0.0, )",
@@ -898,13 +898,13 @@
       },
       "AndreGoepel.Marten.Identity.Blazor": {
         "type": "CentralTransitive",
-        "requested": "[1.1.0, )",
-        "resolved": "1.1.0",
-        "contentHash": "MUBxl+QirKe+H4ECDb4ERnc8LNRgGbCHDFDQn6aB1Bpwnj/dApYuXedpEmsTxXq4ppgj2R5ozysa2vkfMvprAg==",
+        "requested": "[1.1.1, )",
+        "resolved": "1.1.1",
+        "contentHash": "f9AjXVLRWmMOVLoLbK+/WZwYqNJAZSfMv3vUe4rdDgomBXBmXtMGbrOnMXE/dtBgHyxfqrNx/5qUHT0SzYXjKg==",
         "dependencies": {
-          "AndreGoepel.Marten.Identity": "1.1.0",
-          "Marten": "9.10.0",
-          "Radzen.Blazor": "11.0.4"
+          "AndreGoepel.Marten.Identity": "1.1.1",
+          "Marten": "9.12.0",
+          "Radzen.Blazor": "11.0.5"
         }
       },
       "Marten": {
