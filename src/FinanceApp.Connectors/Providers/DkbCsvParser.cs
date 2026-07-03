@@ -6,12 +6,15 @@ using FinanceApp.Domain.Providers;
 namespace FinanceApp.Connectors.Providers;
 
 /// <summary>
-/// DKB Girokonto CSV export (2023+ banking format): semicolon-separated, a
-/// preamble before the header row "Buchungsdatum";"Wertstellung";"Status";…,
-/// dates dd.MM.yy, German decimals, EUR only. Pending rows (Status
+/// DKB Girokonto CSV export: semicolon-separated, an account metadata preamble
+/// (IBAN, Zeitraum, Kontostand) before the header row
+/// "Buchungsdatum";"Wertstellung";"Status";…, dates dd.MM.yy, German decimals
+/// (integer shorthand like "20" included), EUR only. Pending rows (Status
 /// "Vorgemerkt") are surfaced as skipped — they change their booking date when
-/// they clear and would defeat deduplication. Built against the documented
-/// export format.
+/// they clear and would defeat deduplication. Counterparty follows classic DKB
+/// semantics (debit → Zahlungsempfänger, credit → Zahlungspflichtige); some
+/// incoming P2P transfers fill these columns with the account holder — refine
+/// once more real data exists. Built against a real export (2026-07).
 /// </summary>
 internal sealed class DkbCsvParser : IStatementParser
 {
@@ -21,19 +24,21 @@ internal sealed class DkbCsvParser : IStatementParser
 
     public ProviderKind Provider => ProviderKind.Dkb;
 
-    public bool CanParse(string content) =>
-        content.Contains(
-            "\"Buchungsdatum\";\"Wertstellung\";\"Status\"",
-            StringComparison.OrdinalIgnoreCase
-        );
+    public bool CanParse(StatementFile file) =>
+        !file.IsZipArchive
+        && file.DecodeText()
+            .Contains(
+                "\"Buchungsdatum\";\"Wertstellung\";\"Status\"",
+                StringComparison.OrdinalIgnoreCase
+            );
 
-    public StatementParseResult Parse(string content)
+    public StatementParseResult Parse(StatementFile file)
     {
         var rows = new List<NormalizedTransaction>();
         var errors = new List<ImportRowError>();
         var headerSeen = false;
 
-        foreach (var record in CsvReader.Read(content, ';'))
+        foreach (var record in CsvReader.Read(file.DecodeText(), ';'))
         {
             if (!headerSeen)
             {

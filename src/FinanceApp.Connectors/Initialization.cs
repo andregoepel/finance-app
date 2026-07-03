@@ -8,15 +8,15 @@ public static class Initialization
 {
     /// <summary>
     /// Registers the statement parsers (one per provider format version) and
-    /// the registry that selects them. API connectors arrive with Phase 3.
+    /// the registry that selects them. Wise and DKB export CSV; Revolut and
+    /// Easy Bank only offer XLSX. API connectors arrive with Phase 3.
     /// </summary>
     public static IServiceCollection AddConnectors(this IServiceCollection services)
     {
         services.AddSingleton<IStatementParser, WiseCsvParser>();
-        services.AddSingleton<IStatementParser, RevolutCsvParser>();
-        services.AddSingleton<IStatementParser, CryptoComCsvParser>();
+        services.AddSingleton<IStatementParser, RevolutXlsxParser>();
         services.AddSingleton<IStatementParser, DkbCsvParser>();
-        services.AddSingleton<IStatementParser, EasyBankCsvParser>();
+        services.AddSingleton<IStatementParser, EasyBankXlsxParser>();
         services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
 
         return services;

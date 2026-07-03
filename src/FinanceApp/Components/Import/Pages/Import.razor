@@ -30,7 +30,7 @@
                                         Change=@(_ => OnAccountChangedAsync()) />
                     </RadzenFormField>
                     <div>
-                        <InputFile OnChange="OnFileSelectedAsync" accept=".csv" disabled=@(selectedAccountId is null) />
+                        <InputFile OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(selectedAccountId is null) />
                     </div>
                 </RadzenStack>
                 @if (SelectedAccount is not null)
@@ -195,13 +195,13 @@
         preview = null;
         fileName = args.File.Name;
 
-        string content;
+        StatementFile statementFile;
         try
         {
             await using var stream = args.File.OpenReadStream(MaxFileSize);
             using var buffer = new MemoryStream();
             await stream.CopyToAsync(buffer);
-            content = DecodeCsv(buffer.ToArray());
+            statementFile = new StatementFile(args.File.Name, buffer.ToArray());
         }
         catch (Exception ex)
         {
@@ -209,7 +209,7 @@
             return;
         }
 
-        var parsed = ParserRegistry.Parse(account.Provider, content);
+        var parsed = ParserRegistry.Parse(account.Provider, statementFile);
         if (parsed.IsFailure)
         {
             parseFailure = parsed.Error;
@@ -288,23 +288,6 @@
         finally
         {
             isImporting = false;
-        }
-    }
-
-    /// <summary>
-    /// Provider exports are UTF-8 except some German bank exports (Latin-1).
-    /// Try strict UTF-8 first, fall back to Latin-1 instead of importing
-    /// replacement characters.
-    /// </summary>
-    private static string DecodeCsv(byte[] bytes)
-    {
-        try
-        {
-            return new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes);
-        }
-        catch (DecoderFallbackException)
-        {
-            return Encoding.Latin1.GetString(bytes);
         }
     }
 }

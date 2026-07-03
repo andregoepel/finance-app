@@ -49,6 +49,10 @@ internal static class FieldParser
     public static bool TryParseGermanDecimal(string value, out decimal amount) =>
         decimal.TryParse(NormalizeMinus(value), NumberStyles.Number, German, out amount);
 
+    /// <summary>German currency string with € suffix, e.g. <c>+1.500,00 €</c> (Easy Bank).</summary>
+    public static bool TryParseGermanEuroAmount(string value, out decimal amount) =>
+        TryParseGermanDecimal(value.Replace("€", "").Replace(' ', ' '), out amount);
+
     /// <summary>Some exports use the typographic minus (U+2212) instead of a hyphen.</summary>
     private static string NormalizeMinus(string value) => value.Trim().Replace('−', '-');
 

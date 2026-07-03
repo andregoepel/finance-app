@@ -4,7 +4,6 @@ public enum ProviderKind
 {
     Wise,
     Revolut,
-    CryptoCom,
     Dkb,
     EasyBank,
 }

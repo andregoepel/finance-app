@@ -9,13 +9,13 @@ namespace FinanceApp.Connectors.Parsing;
 /// </summary>
 public interface IStatementParserRegistry
 {
-    Result<StatementParseResult> Parse(ProviderKind provider, string content);
+    Result<StatementParseResult> Parse(ProviderKind provider, StatementFile file);
 }
 
 internal sealed class StatementParserRegistry(IEnumerable<IStatementParser> parsers)
     : IStatementParserRegistry
 {
-    public Result<StatementParseResult> Parse(ProviderKind provider, string content)
+    public Result<StatementParseResult> Parse(ProviderKind provider, StatementFile file)
     {
         var providerParsers = parsers.Where(parser => parser.Provider == provider).ToList();
         if (providerParsers.Count == 0)
@@ -25,7 +25,7 @@ internal sealed class StatementParserRegistry(IEnumerable<IStatementParser> pars
             );
         }
 
-        var parser = providerParsers.FirstOrDefault(parser => parser.CanParse(content));
+        var parser = providerParsers.FirstOrDefault(parser => parser.CanParse(file));
         if (parser is null)
         {
             var known = string.Join(", ", providerParsers.Select(p => p.ParserId));
@@ -35,6 +35,6 @@ internal sealed class StatementParserRegistry(IEnumerable<IStatementParser> pars
             );
         }
 
-        return Result.Ok(parser.Parse(content));
+        return Result.Ok(parser.Parse(file));
     }
 }

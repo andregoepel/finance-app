@@ -1,4 +1,8 @@
-TransferWise ID,Date,Amount,Currency,Description,Payment Reference,Running Balance,Exchange From,Exchange To,Exchange Rate,Payer Name,Payee Name,Payee Account Number,Merchant,Card Last Four Digits,Card Holder Full Name,Attachment,Note,Total fees
-BALANCE-100001,15-06-2026,-23.45,EUR,Card transaction of 23.45 EUR issued by REWE Berlin,,976.55,,,,,,,REWE Markt GmbH,1234,Andre Goepel,,,0.00
-BALANCE-100002,14-06-2026,1500.00,EUR,Received money from ACME GmbH,SALARY JUNE,1000.00,,,,ACME GmbH,,,,,,,,0.00
-BALANCE-100003,not-a-date,10.00,EUR,Broken row,,,,,,,,,,,,,,0.00
+"TransferWise ID",Date,"Date Time",Amount,Currency,Description,"Payment Reference","Running Balance","Exchange From","Exchange To","Exchange Rate","Payer Name","Payee Name","Payee Account Number",Merchant,"Card Last Four Digits","Card Holder Full Name",Attachment,Note,"Total fees","Exchange To Amount","Transaction Type","Transaction Details Type"
+CARD-1000000001,15-06-2026,"15-06-2026 09:12:00.000",-25.00,EUR,"Card transaction of 27.30 USD issued by Sample Store CITY",,975.00,EUR,USD,1.09200,,,,"Sample Store CITY",0000,"Max Mustermann",,,0.15,27.30,DEBIT,CARD
+TRANSFER-1000000002,14-06-2026,"14-06-2026 10:00:00.000",-500.00,EUR,"Sent money to Max Mustermann","Sample reference",1000.00,,,,,"Max Mustermann","DE00 0000 0000 0000 0000 00",,,,,,0.00,,DEBIT,TRANSFER
+TRANSFER-1000000003,12-06-2026,"12-06-2026 08:30:00.000",1400.00,EUR,"Received money from Example Corp OÜ with reference Sample salary","Sample salary",1500.00,,,,"Example Corp OÜ",,,,,,,,0.00,,CREDIT,DEPOSIT
+CARD-1000000004,10-06-2026,"10-06-2026 18:47:00.000",-9.99,EUR,"Card transaction of 9.99 EUR issued by Example Subscription",,100.00,,,,,,,"Example Subscription",0000,"Max Mustermann",,,0.00,,DEBIT,CARD
+BALANCE-1000000005,08-06-2026,"08-06-2026 10:25:00.000",-50.00,EUR,"Converted 50.00 EUR to 54.32 USD",,109.99,EUR,USD,1.08640,,,,,,,,,0.25,54.32,DEBIT,CONVERSION
+"BALANCE_CASHBACK-00000000-0000-0000-0000-000000000001",05-06-2026,"05-06-2026 14:46:00.000",1.11,EUR,Cashback,,159.99,,,,,,,,,,,,0.00,,CREDIT,UNKNOWN
+CARD-1000000006,not-a-date,"05-06-2026 10:00:00.000",10.00,EUR,"Broken row for parser tests",,,,,,,,,,,,,,0.00,,DEBIT,CARD

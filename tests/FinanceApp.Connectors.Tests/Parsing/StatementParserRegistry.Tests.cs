@@ -7,7 +7,7 @@ namespace FinanceApp.Connectors.Tests.Parsing;
 public class StatementParserRegistryTests
 {
     private static StatementParserRegistry BuildRegistry() =>
-        new([new WiseCsvParser(), new RevolutCsvParser()]);
+        new([new WiseCsvParser(), new RevolutXlsxParser()]);
 
     [Fact]
     public void Parse_MatchingFormat_UsesTheRightParser()
@@ -16,11 +16,28 @@ public class StatementParserRegistryTests
         var registry = BuildRegistry();
 
         // Act
-        var result = registry.Parse(ProviderKind.Wise, Fixtures.Read("wise", "statement-v1.csv"));
+        var result = registry.Parse(ProviderKind.Wise, Fixtures.Load("wise", "statement-v1.csv"));
 
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal("wise-csv-v1", result.Value!.ParserId);
+    }
+
+    [Fact]
+    public void Parse_XlsxFormat_UsesTheXlsxParser()
+    {
+        // Arrange
+        var registry = BuildRegistry();
+
+        // Act
+        var result = registry.Parse(
+            ProviderKind.Revolut,
+            Fixtures.Load("revolut", "statement-v1.xlsx")
+        );
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("revolut-xlsx-v1", result.Value!.ParserId);
     }
 
     [Fact]
@@ -30,7 +47,7 @@ public class StatementParserRegistryTests
         var registry = BuildRegistry();
 
         // Act
-        var result = registry.Parse(ProviderKind.Wise, "some;unknown;content");
+        var result = registry.Parse(ProviderKind.Wise, Fixtures.Text("some;unknown;content"));
 
         // Assert
         Assert.True(result.IsFailure);
@@ -45,7 +62,7 @@ public class StatementParserRegistryTests
         var registry = BuildRegistry();
 
         // Act
-        var result = registry.Parse(ProviderKind.Dkb, "anything");
+        var result = registry.Parse(ProviderKind.Dkb, Fixtures.Text("anything"));
 
         // Assert
         Assert.True(result.IsFailure);

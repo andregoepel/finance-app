@@ -17,9 +17,9 @@ public interface IStatementParser
     ProviderKind Provider { get; }
 
     /// <summary>Cheap signature check (header/shape) — used to select the format version.</summary>
-    bool CanParse(string content);
+    bool CanParse(StatementFile file);
 
-    StatementParseResult Parse(string content);
+    StatementParseResult Parse(StatementFile file);
 }
 
 public sealed record StatementParseResult(
