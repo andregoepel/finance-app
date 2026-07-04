@@ -1,6 +1,7 @@
 using FinanceApp.Domain.Accounts;
 using FinanceApp.Domain.Transactions;
 using Marten;
+using Wolverine;
 
 namespace FinanceApp.Domain.Imports;
 
@@ -24,6 +25,7 @@ public static class ImportStatementCommandHandler
     public static async Task<Result<ImportBatch>> Handle(
         ImportStatementCommand command,
         IDocumentSession session,
+        IMessageBus messageBus,
         CancellationToken cancellationToken
     )
     {
@@ -87,6 +89,14 @@ public static class ImportStatementCommandHandler
 
         session.Store(batch);
         await session.SaveChangesAsync(cancellationToken);
+
+        if (newRows.Count > 0)
+        {
+            // Async fire-and-forget: categorization failures (rules or Claude
+            // API) must never fail an import.
+            await messageBus.PublishAsync(new CategorizeImportedTransactionsCommand(batch.Id));
+        }
+
         return Result.Ok(batch);
     }
 

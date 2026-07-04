@@ -12,6 +12,20 @@
 
         <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Transactions</RadzenText>
 
+        @if (ruleOffer is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="true" Close=@(() => ruleOffer = null)>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+                    <span>
+                        Always categorize <strong>@ruleOffer.Counterparty</strong> as
+                        <strong>@ruleOffer.CategoryLabel</strong>?
+                    </span>
+                    <RadzenButton Text="Create rule" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Click=@CreateRuleFromOfferAsync />
+                    <RadzenButton Text="No" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click=@(() => ruleOffer = null) />
+                </RadzenStack>
+            </RadzenAlert>
+        }
+
         <RadzenCard>
             <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
                 <RadzenFormField Text="Account">
@@ -133,6 +147,7 @@
     private List<TransactionView> transactions = [];
     private IList<TransactionView> selected = [];
 
+    private RuleOffer? ruleOffer;
     private Guid? accountFilter;
     private AccountOwner? ownerFilter;
     private Guid? categoryFilter;
@@ -213,7 +228,48 @@
             NotificationService.Notify(NotificationSeverity.Error, "Categorization failed", result.Error);
             return;
         }
+
+        // Corrections feed rule learning: offer a counterparty rule so the next
+        // import categorizes this merchant without the AI.
+        if (!string.IsNullOrWhiteSpace(transaction.Counterparty))
+        {
+            var label = categoryChoices.FirstOrDefault(c => c.Id == newCategoryId)?.Label ?? "?";
+            ruleOffer = new RuleOffer(transaction.Counterparty, newCategoryId, label);
+        }
+
         await ReloadAsync();
+    }
+
+    private async Task CreateRuleFromOfferAsync()
+    {
+        if (ruleOffer is null)
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result<Domain.Categories.CategoryRule>>(
+            new CreateCategoryRuleCommand(
+                ruleOffer.CategoryId,
+                ruleOffer.Counterparty,
+                DescriptionContains: null,
+                MinAmount: null,
+                MaxAmount: null,
+                CategoryRuleSource.LearnedFromCorrection
+            )
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Rule creation failed", result.Error);
+        }
+        else
+        {
+            NotificationService.Notify(
+                NotificationSeverity.Success,
+                "Rule created",
+                $"'{ruleOffer.Counterparty}' → {ruleOffer.CategoryLabel}"
+            );
+        }
+        ruleOffer = null;
     }
 
     private async Task LinkSelectedAsTransferAsync()
@@ -245,6 +301,8 @@
         }
         await ReloadAsync();
     }
+
+    private sealed record RuleOffer(string Counterparty, Guid CategoryId, string CategoryLabel);
 
     private sealed record CategoryChoice(Guid Id, string Label)
     {

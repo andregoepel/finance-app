@@ -1,4 +1,5 @@
 using FinanceApp.Domain.Categories;
+using FinanceApp.Domain.Credentials;
 using FinanceApp.Domain.Transactions;
 using JasperFx.Events.Projections;
 using Marten;
@@ -28,6 +29,8 @@ public static class Initialization
         });
 
         services.InitializeMartenWith(new DefaultCategorySeed());
+
+        services.AddSingleton<ICredentialStore, MartenCredentialStore>();
 
         return services;
     }

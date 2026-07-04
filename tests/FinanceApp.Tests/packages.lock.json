@@ -850,7 +850,12 @@
         }
       },
       "financeapp.categorization": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "FinanceApp.Domain": "[1.0.0, )",
+          "Marten": "[9.12.0, )",
+          "WolverineFx.Marten": "[6.16.0, )"
+        }
       },
       "financeapp.connectors": {
         "type": "Project",
