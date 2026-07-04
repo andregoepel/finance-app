@@ -13,6 +13,9 @@ namespace AndreGoepel.FinanceApp.Sync;
 internal sealed class DailySyncJob(IAccountSyncService syncService, ILogger<DailySyncJob> logger)
     : IJob
 {
+    /// <summary>Quartz job identity, shared with the schedule service that manages its trigger.</summary>
+    internal const string JobName = "daily-account-sync";
+
     public async Task Execute(IJobExecutionContext context)
     {
         try

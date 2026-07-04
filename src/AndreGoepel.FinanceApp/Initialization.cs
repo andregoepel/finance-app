@@ -28,18 +28,16 @@ public static class Initialization
 
         // Daily scheduled sync via Quartz.NET. The scheduler + hosted service are
         // already registered by app-foundation (identity uses Quartz); this
-        // additive AddQuartz only contributes our job + cron trigger.
+        // additive AddQuartz only contributes our durable job. The trigger is not
+        // static — it is applied from the stored, UI-editable SyncSchedule at
+        // startup (SyncScheduleStartup) and whenever the schedule changes.
         services.AddQuartz(quartz =>
-        {
-            var jobKey = new JobKey("daily-account-sync");
-            quartz.AddJob<DailySyncJob>(jobKey);
-            quartz.AddTrigger(trigger =>
-                trigger
-                    .ForJob(jobKey)
-                    .WithIdentity("daily-account-sync-trigger")
-                    .WithCronSchedule("0 0 3 * * ?") // 03:00 every day
-            );
-        });
+            quartz.AddJob<DailySyncJob>(job =>
+                job.WithIdentity(DailySyncJob.JobName).StoreDurably()
+            )
+        );
+        services.AddSingleton<ISyncScheduleService, SyncScheduleService>();
+        services.AddHostedService<SyncScheduleStartup>();
 
         return services;
     }

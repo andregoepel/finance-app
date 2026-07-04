@@ -4,6 +4,7 @@
 
 @inject IQuerySession QuerySession
 @inject IAccountSyncService SyncService
+@inject ISyncScheduleService ScheduleService
 @inject NotificationService NotificationService
 
 <PageTitle>Sync – Finance</PageTitle>
@@ -19,8 +20,8 @@
         </RadzenStack>
 
         <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
-            API-backed accounts sync automatically once a day; trigger a manual sync here.
-            Configure credentials and bank consents under
+            API-backed accounts sync automatically on the schedule below; trigger a manual sync
+            any time here. Configure credentials and bank consents under
             <RadzenLink Path="settings/connections" Text="Settings → Connections" />.
         </RadzenText>
 
@@ -31,6 +32,45 @@
                 @string.Join(", ", expiringConnections.Select(c => $"{c.Label} ({(c.ConsentExpired ? "expired" : "expires " + c.ConsentExpiresAt?.ToLocalTime().ToString("dd.MM.yyyy"))})")).
             </RadzenAlert>
         }
+
+        @* ---------- Automatic schedule ---------- *@
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Automatic schedule</RadzenText>
+                    <RadzenSwitch @bind-Value=@scheduleEnabled />
+                    <RadzenLabel Text="@(scheduleEnabled ? "Enabled" : "Disabled")" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                    <RadzenFormField Text="Cron expression (Quartz)">
+                        <RadzenTextBox @bind-Value=@cronInput Disabled=@(!scheduleEnabled) Style="min-width: 16rem; font-family: monospace;" />
+                    </RadzenFormField>
+                    <RadzenButton Text="Save schedule" Icon="save" ButtonStyle="ButtonStyle.Primary" Click=@SaveScheduleAsync />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Presets:</RadzenText>
+                    @foreach (var preset in CronPresets)
+                    {
+                        <RadzenButton Text="@preset.Label" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
+                                      Disabled=@(!scheduleEnabled) Click=@(() => cronInput = preset.Cron) />
+                    }
+                </RadzenStack>
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                    @if (!scheduleEnabled)
+                    {
+                        <span>Automatic sync is off — use “Sync all now” to run manually.</span>
+                    }
+                    else if (ScheduleService.NextRun(cronInput) is DateTimeOffset next)
+                    {
+                        <span>Next run: @next.ToLocalTime().ToString("dddd, dd.MM.yyyy HH:mm")</span>
+                    }
+                    else
+                    {
+                        <span style="color: var(--rz-danger);">Not a valid cron expression.</span>
+                    }
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
 
         @if (accounts.Count == 0)
         {
@@ -78,7 +118,36 @@
     private List<ProviderConnection> expiringConnections = [];
     private bool isSyncing;
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    private string cronInput = "0 0 3 * * ?";
+    private bool scheduleEnabled = true;
+
+    private static readonly (string Label, string Cron)[] CronPresets =
+    [
+        ("Daily 03:00", "0 0 3 * * ?"),
+        ("Daily 06:00", "0 0 6 * * ?"),
+        ("Every 6 hours", "0 0 0/6 * * ?"),
+        ("Hourly", "0 0 * * * ?"),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var schedule = await ScheduleService.GetAsync();
+        cronInput = schedule.CronExpression;
+        scheduleEnabled = schedule.Enabled;
+        await LoadAsync();
+    }
+
+    private async Task SaveScheduleAsync()
+    {
+        var result = await ScheduleService.UpdateAsync(cronInput, scheduleEnabled);
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Invalid schedule", result.Error);
+            return;
+        }
+        NotificationService.Notify(NotificationSeverity.Success, "Schedule saved",
+            scheduleEnabled ? "Automatic sync rescheduled." : "Automatic sync disabled.");
+    }
 
     private async Task LoadAsync()
     {
