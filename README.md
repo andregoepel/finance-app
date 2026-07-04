@@ -20,7 +20,7 @@ Requires the .NET SDK pinned in [global.json](global.json) and Docker (Postgres 
 MailHog run as containers via .NET Aspire).
 
 ```
-dotnet run --project src/FinanceApp.AppHost
+dotnet run --project src/AndreGoepel.FinanceApp.AppHost
 ```
 
 On first launch, visit `/Setup` to create the administrator account.

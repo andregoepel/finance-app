@@ -28,19 +28,19 @@ jobs:
       - name: Restore (locked) — deployed app + tests
         run: |
           for proj in \
-            src/FinanceApp/FinanceApp.csproj \
-            src/FinanceApp.Domain/FinanceApp.Domain.csproj \
-            src/FinanceApp.Connectors/FinanceApp.Connectors.csproj \
-            src/FinanceApp.Categorization/FinanceApp.Categorization.csproj \
-            tests/FinanceApp.Tests/FinanceApp.Tests.csproj \
-            tests/FinanceApp.Domain.Tests/FinanceApp.Domain.Tests.csproj \
-            tests/FinanceApp.Connectors.Tests/FinanceApp.Connectors.Tests.csproj \
-            tests/FinanceApp.Categorization.Tests/FinanceApp.Categorization.Tests.csproj; do
+            src/AndreGoepel.FinanceApp/AndreGoepel.FinanceApp.csproj \
+            src/AndreGoepel.FinanceApp.Domain/AndreGoepel.FinanceApp.Domain.csproj \
+            src/AndreGoepel.FinanceApp.Connectors/AndreGoepel.FinanceApp.Connectors.csproj \
+            src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj \
+            tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj; do
             dotnet restore "$proj" --locked-mode
           done
 
       - name: Restore AppHost (dev-only Aspire orchestration)
-        run: dotnet restore src/FinanceApp.AppHost/FinanceApp.AppHost.csproj
+        run: dotnet restore src/AndreGoepel.FinanceApp.AppHost/AndreGoepel.FinanceApp.AppHost.csproj
 
       - name: Restore tools
         run: dotnet tool restore
@@ -57,18 +57,18 @@ jobs:
       # Fail the build on any known-vulnerable package (direct or transitive) in
       # the deployed app or the test surface. The Aspire AppHost is intentionally
       # excluded: it is local-only orchestration (never shipped — the Docker image
-      # builds the FinanceApp project alone).
+      # builds the AndreGoepel.FinanceApp project alone).
       - name: Vulnerability scan
         run: |
           for proj in \
-            src/FinanceApp/FinanceApp.csproj \
-            src/FinanceApp.Domain/FinanceApp.Domain.csproj \
-            src/FinanceApp.Connectors/FinanceApp.Connectors.csproj \
-            src/FinanceApp.Categorization/FinanceApp.Categorization.csproj \
-            tests/FinanceApp.Tests/FinanceApp.Tests.csproj \
-            tests/FinanceApp.Domain.Tests/FinanceApp.Domain.Tests.csproj \
-            tests/FinanceApp.Connectors.Tests/FinanceApp.Connectors.Tests.csproj \
-            tests/FinanceApp.Categorization.Tests/FinanceApp.Categorization.Tests.csproj; do
+            src/AndreGoepel.FinanceApp/AndreGoepel.FinanceApp.csproj \
+            src/AndreGoepel.FinanceApp.Domain/AndreGoepel.FinanceApp.Domain.csproj \
+            src/AndreGoepel.FinanceApp.Connectors/AndreGoepel.FinanceApp.Connectors.csproj \
+            src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj \
+            tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj; do
             dotnet list "$proj" package --vulnerable --include-transitive 2>&1 | tee -a vulnerable.txt
           done
           if grep -qiE '\b(Critical|High|Moderate|Low)\b' vulnerable.txt; then
