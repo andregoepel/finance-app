@@ -224,7 +224,9 @@ public class ClaudeCategorizerTests
         {
             BaseAddress = new Uri("https://api.anthropic.example/"),
         };
-        return new ClaudeCategorizer(httpClient, credentials);
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+        return new ClaudeCategorizer(httpClientFactory, credentials);
     }
 
     private sealed class FakeHandler(HttpStatusCode statusCode, string body) : HttpMessageHandler

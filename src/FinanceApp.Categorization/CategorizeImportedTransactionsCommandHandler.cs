@@ -29,12 +29,10 @@ public class CategorizeImportedTransactionsCommandHandler
         CategorizeImportedTransactionsCommand command,
         IDocumentSession session,
         IClaudeCategorizer claudeCategorizer,
-        ILoggerFactory loggerFactory,
+        ILogger<CategorizeImportedTransactionsCommandHandler> logger,
         CancellationToken cancellationToken
     )
     {
-        var logger = loggerFactory.CreateLogger("FinanceApp.Categorization");
-
         var pending = await session
             .Query<TransactionView>()
             .Where(t => t.ImportBatchId == command.ImportBatchId && t.CategoryId == null)

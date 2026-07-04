@@ -11,9 +11,19 @@ namespace FinanceApp.Categorization.Claude;
 /// forced tool call, temperature 0, Haiku-class model. The API key comes from
 /// the encrypted credential store and is never logged.
 /// </summary>
-internal sealed class ClaudeCategorizer(HttpClient httpClient, ICredentialStore credentialStore)
-    : IClaudeCategorizer
+/// <remarks>
+/// Takes <see cref="IHttpClientFactory"/> (a named client) rather than a typed
+/// <c>HttpClient</c>: Wolverine generates handler code that constructs its
+/// dependencies inline and forbids service location, which a typed-client factory
+/// registration would require. A plain service depending on the factory is
+/// inline-constructable.
+/// </remarks>
+internal sealed class ClaudeCategorizer(
+    IHttpClientFactory httpClientFactory,
+    ICredentialStore credentialStore
+) : IClaudeCategorizer
 {
+    internal const string HttpClientName = "claude";
     internal const string Model = "claude-haiku-4-5-20251001";
     private const string ToolName = "categorize_transactions";
 
@@ -44,6 +54,9 @@ internal sealed class ClaudeCategorizer(HttpClient httpClient, ICredentialStore 
         request.Headers.Add("x-api-key", apiKey);
         request.Headers.Add("anthropic-version", "2023-06-01");
         request.Content = JsonContent.Create(BuildRequestBody(transactions, categories, examples));
+
+        // Factory-created clients are pooled by the factory — do not dispose here.
+        var httpClient = httpClientFactory.CreateClient(HttpClientName);
 
         try
         {
