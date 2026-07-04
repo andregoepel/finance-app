@@ -1,5 +1,9 @@
 using AndreGoepel.FinanceApp.Connectors.Parsing;
 using AndreGoepel.FinanceApp.Connectors.Providers;
+using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
+using AndreGoepel.FinanceApp.Connectors.Providers.Wise;
+using AndreGoepel.FinanceApp.Connectors.Sync;
+using AndreGoepel.FinanceApp.Domain.Providers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AndreGoepel.FinanceApp.Connectors;
@@ -7,9 +11,10 @@ namespace AndreGoepel.FinanceApp.Connectors;
 public static class Initialization
 {
     /// <summary>
-    /// Registers the statement parsers (one per provider format version) and
-    /// the registry that selects them. Wise and DKB export CSV; Revolut and
-    /// Easy Bank only offer XLSX. API connectors arrive with Phase 3.
+    /// Registers the statement parsers (one per provider format version), the
+    /// registry that selects them, and the Phase 3 API clients: Wise (token-only
+    /// balance reads) and Enable Banking (PSD2 transaction sync for DKB + Revolut).
+    /// Wise and DKB export CSV; Revolut and Easy Bank only offer XLSX.
     /// </summary>
     public static IServiceCollection AddConnectors(this IServiceCollection services)
     {
@@ -18,6 +23,38 @@ public static class Initialization
         services.AddSingleton<IStatementParser, DkbCsvParser>();
         services.AddSingleton<IStatementParser, EasyBankXlsxParser>();
         services.AddSingleton<IStatementParserRegistry, StatementParserRegistry>();
+
+        // External bank APIs are deliberately slow; like the Claude client they opt
+        // out of Aspire's default per-attempt resilience timeout and rely on a
+        // generous client timeout plus Result-based graceful degradation.
+#pragma warning disable EXTEXP0001
+        // No BaseAddress — the client builds absolute URLs per call because the
+        // base differs by environment (Wise sandbox vs production).
+        services
+            .AddHttpClient(
+                WiseApiClient.HttpClientName,
+                client => client.Timeout = TimeSpan.FromSeconds(60)
+            )
+            .RemoveAllResilienceHandlers();
+        services
+            .AddHttpClient(
+                EnableBankingClient.HttpClientName,
+                client =>
+                {
+                    client.BaseAddress = new Uri("https://api.enablebanking.com/");
+                    client.Timeout = TimeSpan.FromSeconds(60);
+                }
+            )
+            .RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
+
+        services.AddScoped<IWiseApiClient, WiseApiClient>();
+        services.AddScoped<IEnableBankingClient, EnableBankingClient>();
+
+        // Wise is a token-only balance reader (see WiseBalanceService in the host),
+        // not a transaction connector — only Enable Banking syncs transactions.
+        services.AddScoped<IProviderConnector, EnableBankingConnector>();
+        services.AddScoped<IProviderConnectorRegistry, ProviderConnectorRegistry>();
 
         return services;
     }

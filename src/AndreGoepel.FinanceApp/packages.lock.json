@@ -67,6 +67,15 @@
         "resolved": "1.23.0",
         "contentHash": "2wDnb4umupJZ/1ikgWozFVpggH1mlHQFc0odXVv2ZagL3RYwXgW9zmC15fiqIBzmaC0vLZUnLGwDY+p8ZR7Syw=="
       },
+      "Quartz.Extensions.Hosting": {
+        "type": "Direct",
+        "requested": "[3.18.2, )",
+        "resolved": "3.18.2",
+        "contentHash": "6uSMAm4FArjtVoxBjlkA+gHL1Eln2ngIOnRTrVrYxtSlM5PpLQd2aV+fc/OOwfwt+AyDm69HOAybEFqVvyyG2A==",
+        "dependencies": {
+          "Quartz.Extensions.DependencyInjection": "3.18.2"
+        }
+      },
       "Radzen.Blazor": {
         "type": "Direct",
         "requested": "[11.1.0, )",
@@ -536,14 +545,6 @@
           "Quartz": "3.18.2"
         }
       },
-      "Quartz.Extensions.Hosting": {
-        "type": "Transitive",
-        "resolved": "3.18.2",
-        "contentHash": "6uSMAm4FArjtVoxBjlkA+gHL1Eln2ngIOnRTrVrYxtSlM5PpLQd2aV+fc/OOwfwt+AyDm69HOAybEFqVvyyG2A==",
-        "dependencies": {
-          "Quartz.Extensions.DependencyInjection": "3.18.2"
-        }
-      },
       "Spectre.Console": {
         "type": "Transitive",
         "resolved": "0.55.0",
@@ -680,7 +681,8 @@
       "andregoepel.financeapp.connectors": {
         "type": "Project",
         "dependencies": {
-          "AndreGoepel.FinanceApp.Domain": "[1.0.0, )"
+          "AndreGoepel.FinanceApp.Domain": "[1.0.0, )",
+          "Microsoft.Extensions.Http.Resilience": "[10.7.0, )"
         }
       },
       "andregoepel.financeapp.domain": {

@@ -3,6 +3,7 @@ using AndreGoepel.AppFoundation.Hosting;
 using AndreGoepel.FinanceApp;
 using AndreGoepel.FinanceApp.Categorization;
 using AndreGoepel.FinanceApp.Components;
+using AndreGoepel.FinanceApp.Connections;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.Marten.Identity.Blazor.Components.Account;
 
@@ -49,5 +50,8 @@ app.MapRazorComponents<App>()
     );
 
 app.MapAdditionalIdentityEndpoints();
+
+// Enable Banking consent redirect target (registered as the app's redirect URI).
+app.MapEnableBankingCallback();
 
 app.Run();

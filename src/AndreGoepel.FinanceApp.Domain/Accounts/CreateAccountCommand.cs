@@ -11,7 +11,10 @@ public sealed record CreateAccountCommand(
     bool IsShared,
     IReadOnlyList<Guid> OwnerUserIds,
     SyncMethod SyncMethod,
-    string? Iban
+    string? Iban,
+    Guid? ConnectionId = null,
+    string? ExternalId = null,
+    string? IdentificationHash = null
 );
 
 public static class CreateAccountCommandHandler
@@ -43,6 +46,13 @@ public static class CreateAccountCommandHandler
             OwnerUserIds = owners.Value!,
             SyncMethod = command.SyncMethod,
             Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim(),
+            ConnectionId = command.ConnectionId,
+            ExternalId = string.IsNullOrWhiteSpace(command.ExternalId)
+                ? null
+                : command.ExternalId.Trim(),
+            IdentificationHash = string.IsNullOrWhiteSpace(command.IdentificationHash)
+                ? null
+                : command.IdentificationHash.Trim(),
         };
         session.Store(account);
         await session.SaveChangesAsync(cancellationToken);

@@ -37,6 +37,30 @@ public sealed class Account
     public string? ExternalId { get; set; }
 
     /// <summary>
+    /// The provider login this account is synced through (a Wise profile or a bank
+    /// consent). One connection owns several accounts; API sync needs it to resolve
+    /// the right token/session. <c>null</c> for CSV-only accounts.
+    /// </summary>
+    public Guid? ConnectionId { get; set; }
+
+    /// <summary>
+    /// Enable Banking's stable per-account hash. Its account ids are
+    /// session-specific and rotate on every re-consent, so an account is matched
+    /// to a synced balance via this hash — never the session id.
+    /// </summary>
+    public string? IdentificationHash { get; set; }
+
+    /// <summary>
+    /// Latest balance from an API sync (Wise balances are token-only), in the
+    /// account's own currency. <c>decimal</c> per the money rule; net-worth
+    /// aggregation across currencies is Phase 4.
+    /// </summary>
+    public decimal? CurrentBalance { get; set; }
+
+    /// <summary>When <see cref="CurrentBalance"/> was last refreshed from the provider.</summary>
+    public DateTimeOffset? BalanceUpdatedAt { get; set; }
+
+    /// <summary>
     /// Deactivated accounts are hidden from selection lists (import, new-account
     /// owner pickers) but keep all their transactions and history. Reversible via
     /// reactivation; permanent deletion is a separate, guarded action.

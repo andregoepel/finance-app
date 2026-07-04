@@ -117,6 +117,44 @@
                     <RadzenFormField Text="Sync">
                         <RadzenDropDown @bind-Value=@form.SyncMethod Data=@SyncChoices Disabled=@isSaving Style="min-width: 8rem;" />
                     </RadzenFormField>
+                    @if (form.SyncMethod == SyncMethod.Api)
+                    {
+                        <RadzenFormField Text="Connection">
+                            <RadzenDropDown TValue="Guid?"
+                                            @bind-Value=@form.ConnectionId
+                                            Data=@ProviderConnections
+                                            ValueProperty="Id"
+                                            TextProperty="Label"
+                                            AllowClear="true"
+                                            Disabled=@isSaving
+                                            Placeholder="@(ProviderConnections.Any() ? "Select connection" : "No " + form.Provider + " connection")"
+                                            Style="min-width: 15rem;" />
+                        </RadzenFormField>
+                        @if (form.Provider == ProviderKind.Wise)
+                        {
+                            <RadzenFormField Text="Wise balance id">
+                                <RadzenTextBox @bind-Value=@form.ExternalId Disabled=@isSaving
+                                               Placeholder="e.g. 306149" Style="min-width: 10rem;" />
+                            </RadzenFormField>
+                        }
+                        else
+                        {
+                            <RadzenFormField Text="Bank account">
+                                <RadzenDropDown TValue="string"
+                                                @bind-Value=@form.IdentificationHash
+                                                Data=@LinkedAccounts
+                                                ValueProperty="IdentificationHash"
+                                                AllowClear="true"
+                                                Disabled=@isSaving
+                                                Placeholder="@(LinkedAccounts.Any() ? "Select account" : "Connect the consent first")"
+                                                Style="min-width: 15rem;">
+                                    <Template Context="linked">
+                                        @(((EnableBankingLinkedAccount)linked).Name ?? "account") — @(((EnableBankingLinkedAccount)linked).Currency)
+                                    </Template>
+                                </RadzenDropDown>
+                            </RadzenFormField>
+                        }
+                    }
                     <RadzenFormField Text="IBAN (optional)">
                         <RadzenTextBox @bind-Value=@form.Iban Disabled=@isSaving Style="min-width: 14rem;" />
                     </RadzenFormField>
@@ -145,6 +183,7 @@
 
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
+    private IReadOnlyList<ProviderConnection> connections = [];
     private Guid? editingAccountId;
     private InputModel form = new();
     private bool isSaving;
@@ -152,6 +191,15 @@
 
     private IEnumerable<Account> DisplayedAccounts =>
         showDeactivated ? accounts : accounts.Where(a => a.IsActive);
+
+    // Connections are per provider; a Wise account can only link a Wise connection.
+    private IEnumerable<ProviderConnection> ProviderConnections =>
+        connections.Where(c => c.Provider == form.Provider);
+
+    // Enable Banking accounts exposed by the selected connection's consent.
+    private IEnumerable<EnableBankingLinkedAccount> LinkedAccounts =>
+        connections.FirstOrDefault(c => c.Id == form.ConnectionId)?.LinkedAccounts
+        ?? Enumerable.Empty<EnableBankingLinkedAccount>();
 
     private Guid? SingleOwner
     {
@@ -165,6 +213,9 @@
             .Users.Where(u => !u.Deleted)
             .OrderBy(u => u.UserName)
             .ToListAsync();
+        connections = (await QuerySession.Query<ProviderConnection>().ToListAsync())
+            .OrderBy(c => c.Label)
+            .ToList();
         await ReloadAsync();
     }
 
@@ -204,6 +255,9 @@
             OwnerUserIds = account.OwnerUserIds.ToList(),
             SyncMethod = account.SyncMethod,
             Iban = account.Iban ?? "",
+            ConnectionId = account.ConnectionId,
+            ExternalId = account.ExternalId ?? "",
+            IdentificationHash = account.IdentificationHash,
         };
     }
 
@@ -229,6 +283,13 @@
         try
         {
             var owners = form.OwnerUserIds.ToList();
+            // Only API accounts carry a connection / external id; drop stale values
+            // if the account is set back to CSV upload.
+            var isApi = form.SyncMethod == SyncMethod.Api;
+            var isWise = form.Provider == ProviderKind.Wise;
+            var connectionId = isApi ? form.ConnectionId : null;
+            var externalId = isApi && isWise ? form.ExternalId : null;
+            var identificationHash = isApi && !isWise ? form.IdentificationHash : null;
             var result = editingAccountId is Guid accountId
                 ? await MessageBus.InvokeAsync<Result<Account>>(
                     new UpdateAccountCommand(
@@ -239,7 +300,10 @@
                         form.IsShared,
                         owners,
                         form.SyncMethod,
-                        form.Iban
+                        form.Iban,
+                        connectionId,
+                        externalId,
+                        identificationHash
                     )
                 )
                 : await MessageBus.InvokeAsync<Result<Account>>(
@@ -251,7 +315,10 @@
                         form.IsShared,
                         owners,
                         form.SyncMethod,
-                        form.Iban
+                        form.Iban,
+                        connectionId,
+                        externalId,
+                        identificationHash
                     )
                 );
 
@@ -328,5 +395,8 @@
         public IEnumerable<Guid> OwnerUserIds { get; set; } = [];
         public SyncMethod SyncMethod { get; set; } = SyncMethod.CsvUpload;
         public string Iban { get; set; } = "";
+        public Guid? ConnectionId { get; set; }
+        public string ExternalId { get; set; } = "";
+        public string? IdentificationHash { get; set; }
     }
 }

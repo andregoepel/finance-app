@@ -22,4 +22,16 @@ public sealed class ProviderCredential
 public static class CredentialKeys
 {
     public const string ClaudeApiKey = "claude-api-key";
+
+    /// <summary>Enable Banking registered application id (the JWT <c>kid</c>) — one per app, global.</summary>
+    public const string EnableBankingApplicationId = "enablebanking-application-id";
+
+    /// <summary>PEM-encoded RSA private key that signs Enable Banking JWTs (RS256) — global.</summary>
+    public const string EnableBankingPrivateKey = "enablebanking-private-key";
+
+    /// <summary>
+    /// Wise personal API token (read scope), scoped to one connection: each Wise
+    /// login (profile) has its own token, and one login exposes many balances.
+    /// </summary>
+    public static string WiseApiToken(Guid connectionId) => $"wise-api-token:{connectionId}";
 }

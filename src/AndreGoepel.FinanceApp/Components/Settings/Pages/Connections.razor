@@ -1,0 +1,388 @@
+@page "/settings/connections"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using AndreGoepel.FinanceApp.Connectors.Providers.Wise
+@using AndreGoepel.Marten.Identity.Users
+@using Microsoft.AspNetCore.Identity
+
+@inject ICredentialStore CredentialStore
+@inject IProviderConnectionService ConnectionService
+@inject IWiseBalanceService WiseBalanceService
+@inject IMessageBus MessageBus
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+@inject UserManager<User> UserManager
+
+<PageTitle>Connections – Finance</PageTitle>
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem" Style="max-width: 56rem;">
+
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Connections</RadzenText>
+        <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+            A connection is one login at a provider — a Wise profile or a bank consent — owned
+            by a household user. One connection feeds several accounts, and each of you can have
+            your own. Secrets are stored encrypted and never shown again after saving.
+        </RadzenText>
+
+        @* ---------- Enable Banking application (global) ---------- *@
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Enable Banking application</RadzenText>
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                    One registered application for the whole app (shared by every DKB/Revolut
+                    connection). Set its redirect URI to <code>@CallbackUrl</code>.
+                </RadzenText>
+
+                <RadzenRow Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="4"><RadzenText>Application id</RadzenText></RadzenColumn>
+                    <RadzenColumn Size="8">@StateBadge(ebAppIdInfo)</RadzenColumn>
+                </RadzenRow>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                    <RadzenTextBox @bind-Value=@ebAppIdInput autocomplete="off"
+                                   Placeholder="@(ebAppIdInfo is null ? "Application id (UUID)" : "Enter new id to rotate")"
+                                   Style="flex: 1;" />
+                    <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                  Disabled=@string.IsNullOrWhiteSpace(ebAppIdInput)
+                                  Click=@(() => SaveGlobalCredAsync(CredentialKeys.EnableBankingApplicationId, ebAppIdInput, () => ebAppIdInput = "")) />
+                </RadzenStack>
+
+                <RadzenRow Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="4"><RadzenText>Private key (PEM)</RadzenText></RadzenColumn>
+                    <RadzenColumn Size="8">@StateBadge(ebKeyInfo)</RadzenColumn>
+                </RadzenRow>
+                <RadzenTextArea @bind-Value=@ebKeyInput Rows="4" autocomplete="off"
+                                Placeholder="-----BEGIN PRIVATE KEY-----" Style="width: 100%; font-family: monospace;" />
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                    <RadzenButton Text="Save key" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                  Disabled=@string.IsNullOrWhiteSpace(ebKeyInput)
+                                  Click=@(() => SaveGlobalCredAsync(CredentialKeys.EnableBankingPrivateKey, ebKeyInput, () => ebKeyInput = "")) />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+
+        @* ---------- Add a connection ---------- *@
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Add connection</RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
+                    <RadzenFormField Text="Provider">
+                        <RadzenDropDown @bind-Value=@newProvider Data=@ConnectionProviders Style="min-width: 9rem;" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Label">
+                        <RadzenTextBox @bind-Value=@newLabel Placeholder="e.g. André – Wise" Style="min-width: 14rem;" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Owner">
+                        <RadzenDropDown TValue="Guid?" @bind-Value=@newOwnerUserId Data=@users
+                                        ValueProperty="StreamId" TextProperty="UserName"
+                                        AllowClear="true" Placeholder="Select user" Style="min-width: 13rem;" />
+                    </RadzenFormField>
+                    @if (newProvider == ProviderKind.Wise)
+                    {
+                        <RadzenFormField Text="Environment">
+                            <RadzenDropDown @bind-Value=@newEnvironment Data=@Environments Style="min-width: 9rem;" />
+                        </RadzenFormField>
+                    }
+                    else
+                    {
+                        <RadzenFormField Text="ASPSP (bank)">
+                            <RadzenTextBox @bind-Value=@newAspspName Placeholder="Mock ASPSP / DKB" Style="min-width: 11rem;" />
+                        </RadzenFormField>
+                        <RadzenFormField Text="Country">
+                            <RadzenTextBox @bind-Value=@newAspspCountry Placeholder="DE" Style="width: 5.5rem;" MaxLength="2" />
+                        </RadzenFormField>
+                    }
+                    <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                                  Disabled=@string.IsNullOrWhiteSpace(newLabel) Click=@AddConnectionAsync />
+                </RadzenStack>
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                    Enable Banking sandbox uses <strong>Mock ASPSP</strong> (country DE); for production
+                    use the real bank name (e.g. <strong>DKB</strong>).
+                </RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+
+        @* ---------- Existing connections ---------- *@
+        @if (connections.Count == 0)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                No connections yet. Add one above, then link accounts to it under Accounts.
+            </RadzenText>
+        }
+        else
+        {
+            foreach (var connection in connections)
+            {
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                            <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@connection.Label</RadzenText>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@connection.Provider.ToString()" />
+                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                @OwnerName(connection.OwnerUserId)
+                            </RadzenText>
+                            <div style="flex: 1;"></div>
+                            <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Danger"
+                                          title="Delete connection" Click=@(() => DeleteConnectionAsync(connection)) />
+                        </RadzenStack>
+
+                        @if (connection.Provider == ProviderKind.Wise)
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                                @StateBadge(WiseTokenInfo(connection.Id))
+                                <RadzenPassword Value=@WiseInput(connection.Id) ValueChanged=@(v => wiseInputs[connection.Id] = v)
+                                                autocomplete="off"
+                                                Placeholder="@(WiseTokenInfo(connection.Id) is null ? "Wise API token" : "Enter new token to rotate")"
+                                                Style="flex: 1;" />
+                                <RadzenButton Text="Save token" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                              Disabled=@string.IsNullOrWhiteSpace(WiseInput(connection.Id))
+                                              Click=@(() => SaveWiseTokenAsync(connection.Id)) />
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                                <RadzenText TextStyle="TextStyle.Caption">Environment</RadzenText>
+                                <RadzenDropDown TValue="ProviderEnvironment" Value=@connection.Environment Data=@Environments
+                                                Change=@(args => ChangeEnvironmentAsync(connection.Id, (ProviderEnvironment)args))
+                                                Style="min-width: 9rem;" />
+                                <div style="flex: 1;"></div>
+                                <RadzenButton Text="Sync balances" Icon="sync" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                              Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id)
+                                              IsBusy=@(syncingConnectionId == connection.Id)
+                                              Click=@(() => SyncBalancesAsync(connection.Id)) />
+                            </RadzenStack>
+                            @if (balanceResults.TryGetValue(connection.Id, out var balances))
+                            {
+                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                    @string.Join(" · ", balances.Select(b => $"{b.Amount:N2} {b.Currency} (id {b.Id})"))
+                                </RadzenText>
+                            }
+                        }
+                        else
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                                @ConsentBadge(connection)
+                                @if (connection.LinkedAccounts.Count > 0)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption">@connection.LinkedAccounts.Count linked account(s)</RadzenText>
+                                }
+                                <div style="flex: 1;"></div>
+                                <RadzenButton Text="@(connection.ConsentStatus == ConsentStatus.Authorized ? "Reconnect" : "Connect")"
+                                              Icon="link" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                              Click=@(() => ConnectAsync(connection.Id)) />
+                            </RadzenStack>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        }
+
+    </RadzenStack>
+</div>
+
+@code {
+    private static readonly ProviderKind[] ConnectionProviders =
+        [ProviderKind.Wise, ProviderKind.Dkb, ProviderKind.Revolut];
+    private static readonly ProviderEnvironment[] Environments = Enum.GetValues<ProviderEnvironment>();
+
+    private IReadOnlyList<User> users = [];
+    private IReadOnlyList<ProviderConnection> connections = [];
+
+    private CredentialInfo? ebAppIdInfo;
+    private CredentialInfo? ebKeyInfo;
+    private string ebAppIdInput = "";
+    private string ebKeyInput = "";
+
+    private ProviderKind newProvider = ProviderKind.Wise;
+    private string newLabel = "";
+    private Guid? newOwnerUserId;
+    private ProviderEnvironment newEnvironment = ProviderEnvironment.Sandbox;
+    private string newAspspName = "";
+    private string newAspspCountry = "DE";
+
+    private readonly Dictionary<Guid, string> wiseInputs = [];
+    private readonly Dictionary<Guid, CredentialInfo?> wiseTokenInfos = [];
+    private readonly Dictionary<Guid, IReadOnlyList<WiseBalance>> balanceResults = [];
+    private Guid? syncingConnectionId;
+
+    private string CallbackUrl => new Uri(new Uri(Navigation.BaseUri), "enablebanking/callback").ToString();
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserManager.Users.Where(u => !u.Deleted).OrderBy(u => u.UserName).ToListAsync();
+        await LoadAsync();
+        ShowCallbackFeedback();
+    }
+
+    private async Task LoadAsync()
+    {
+        ebAppIdInfo = await CredentialStore.GetInfoAsync(CredentialKeys.EnableBankingApplicationId);
+        ebKeyInfo = await CredentialStore.GetInfoAsync(CredentialKeys.EnableBankingPrivateKey);
+        connections = (await ConnectionService.GetAllAsync())
+            .OrderBy(c => c.Provider).ThenBy(c => c.Label).ToList();
+
+        wiseTokenInfos.Clear();
+        foreach (var connection in connections.Where(c => c.Provider == ProviderKind.Wise))
+        {
+            wiseTokenInfos[connection.Id] =
+                await CredentialStore.GetInfoAsync(CredentialKeys.WiseApiToken(connection.Id));
+        }
+    }
+
+    private string OwnerName(Guid? ownerUserId) =>
+        ownerUserId is Guid id
+            ? users.FirstOrDefault(u => u.StreamId == id)?.UserName ?? "unknown user"
+            : "no owner";
+
+    private CredentialInfo? WiseTokenInfo(Guid connectionId) =>
+        wiseTokenInfos.TryGetValue(connectionId, out var info) ? info : null;
+
+    private string WiseInput(Guid connectionId) =>
+        wiseInputs.TryGetValue(connectionId, out var value) ? value : "";
+
+    private async Task SaveGlobalCredAsync(string key, string value, Action clearInput)
+    {
+        var result = await MessageBus.InvokeAsync<Result>(new SaveProviderCredentialCommand(key, value));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
+            return;
+        }
+        clearInput();
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Saved", "Stored encrypted.");
+    }
+
+    private async Task AddConnectionAsync()
+    {
+        var result = await ConnectionService.CreateAsync(
+            newProvider, newLabel, newOwnerUserId, newEnvironment, newAspspName, newAspspCountry);
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Could not add connection", result.Error);
+            return;
+        }
+        newLabel = "";
+        newOwnerUserId = null;
+        newEnvironment = ProviderEnvironment.Sandbox;
+        newAspspName = "";
+        newAspspCountry = "DE";
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Connection added", result.Value!.Label);
+    }
+
+    private async Task ChangeEnvironmentAsync(Guid connectionId, ProviderEnvironment environment)
+    {
+        var result = await ConnectionService.SetEnvironmentAsync(connectionId, environment);
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Could not change environment", result.Error);
+            return;
+        }
+        await LoadAsync();
+    }
+
+    private async Task SyncBalancesAsync(Guid connectionId)
+    {
+        syncingConnectionId = connectionId;
+        try
+        {
+            var result = await WiseBalanceService.SyncConnectionAsync(connectionId);
+            if (result.IsFailure)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Balance sync failed", result.Error);
+                return;
+            }
+            balanceResults[connectionId] = result.Value!.Balances;
+            NotificationService.Notify(
+                NotificationSeverity.Success,
+                "Balances synced",
+                $"{result.Value.Balances.Count} balance(s) fetched, {result.Value.AccountsUpdated} account(s) updated."
+            );
+        }
+        finally
+        {
+            syncingConnectionId = null;
+        }
+    }
+
+    private async Task DeleteConnectionAsync(ProviderConnection connection)
+    {
+        var result = await ConnectionService.DeleteAsync(connection.Id);
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
+            return;
+        }
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Connection deleted", connection.Label);
+    }
+
+    private async Task SaveWiseTokenAsync(Guid connectionId)
+    {
+        var result = await ConnectionService.SaveWiseTokenAsync(connectionId, WiseInput(connectionId));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
+            return;
+        }
+        wiseInputs[connectionId] = "";
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Saved", "Wise token stored encrypted.");
+    }
+
+    private async Task ConnectAsync(Guid connectionId)
+    {
+        var result = await ConnectionService.StartConsentAsync(connectionId, CallbackUrl);
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Cannot connect", result.Error);
+            return;
+        }
+        Navigation.NavigateTo(result.Value!, forceLoad: true); // leave for the bank's authorization page
+    }
+
+    private void ShowCallbackFeedback()
+    {
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(new Uri(Navigation.Uri).Query);
+        if (!query.TryGetValue("consent", out var consent))
+        {
+            return;
+        }
+        switch (consent.ToString())
+        {
+            case "ok":
+                NotificationService.Notify(NotificationSeverity.Success, "Consent authorized", "Bank accounts linked.");
+                break;
+            case "failed":
+            case "denied":
+                NotificationService.Notify(NotificationSeverity.Error, "Consent not completed", query["reason"].ToString());
+                break;
+            case "invalid":
+                NotificationService.Notify(NotificationSeverity.Warning, "Consent callback invalid", "Missing code or state.");
+                break;
+        }
+    }
+
+    private static RenderFragment StateBadge(CredentialInfo? info) => builder =>
+    {
+        builder.OpenComponent<RadzenBadge>(0);
+        builder.AddAttribute(1, nameof(RadzenBadge.BadgeStyle), info is null ? BadgeStyle.Warning : BadgeStyle.Success);
+        builder.AddAttribute(2, nameof(RadzenBadge.Text),
+            info is null ? "not configured" : $"configured {(info.RotatedAt ?? info.CreatedAt).ToLocalTime():dd.MM.yyyy}");
+        builder.CloseComponent();
+    };
+
+    private static RenderFragment ConsentBadge(ProviderConnection connection) => builder =>
+    {
+        var (style, text) = connection switch
+        {
+            { ConsentStatus: ConsentStatus.Pending } => (BadgeStyle.Info, "pending"),
+            { ConsentExpired: true } => (BadgeStyle.Danger, "expired"),
+            { ConsentStatus: ConsentStatus.Authorized } c => (BadgeStyle.Success, $"active until {c.ConsentExpiresAt?.ToLocalTime():dd.MM.yyyy}"),
+            _ => (BadgeStyle.Light, "not connected"),
+        };
+        builder.OpenComponent<RadzenBadge>(0);
+        builder.AddAttribute(1, nameof(RadzenBadge.BadgeStyle), style);
+        builder.AddAttribute(2, nameof(RadzenBadge.Text), text);
+        builder.CloseComponent();
+    };
+}
