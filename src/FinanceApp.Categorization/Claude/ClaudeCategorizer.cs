@@ -16,9 +16,11 @@ namespace FinanceApp.Categorization.Claude;
 /// <c>HttpClient</c>: Wolverine generates handler code that constructs its
 /// dependencies inline and forbids service location, which a typed-client factory
 /// registration would require. A plain service depending on the factory is
-/// inline-constructable.
+/// inline-constructable. The class is <c>public</c> (not <c>internal</c>) for the
+/// same reason: Wolverine's generated handler assembly must be able to reference
+/// the concrete type to construct it inline.
 /// </remarks>
-internal sealed class ClaudeCategorizer(
+public sealed class ClaudeCategorizer(
     IHttpClientFactory httpClientFactory,
     ICredentialStore credentialStore
 ) : IClaudeCategorizer
