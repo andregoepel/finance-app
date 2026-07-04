@@ -3,15 +3,7 @@ using AndreGoepel.FinanceApp.Domain.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Parsing;
 
-/// <summary>
-/// Selects the matching format version for an uploaded file. Unknown formats
-/// fail loudly with the list of supported formats — never a best-effort parse.
-/// </summary>
-public interface IStatementParserRegistry
-{
-    Result<StatementParseResult> Parse(ProviderKind provider, StatementFile file);
-}
-
+/// <summary>Implements <see cref="IStatementParserRegistry"/> over the registered parsers.</summary>
 internal sealed class StatementParserRegistry(IEnumerable<IStatementParser> parsers)
     : IStatementParserRegistry
 {
