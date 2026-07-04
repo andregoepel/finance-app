@@ -6,6 +6,7 @@ using FinanceApp.Domain.Imports;
 using FinanceApp.Domain.Transactions;
 using Marten;
 using Microsoft.Extensions.Logging;
+using Wolverine.Attributes;
 
 namespace FinanceApp.Categorization;
 
@@ -17,13 +18,14 @@ namespace FinanceApp.Categorization;
 /// remaining transactions uncategorized — they surface in the review queue and
 /// the next import retries; the import itself has long since succeeded.
 /// </summary>
-public static class CategorizeImportedTransactionsCommandHandler
+[WolverineHandler]
+public class CategorizeImportedTransactionsCommandHandler
 {
     internal const decimal HighConfidenceThreshold = 0.8m;
     private const int BatchSize = 50;
     private const int FewShotExampleCount = 30;
 
-    public static async Task Handle(
+    public async Task Handle(
         CategorizeImportedTransactionsCommand command,
         IDocumentSession session,
         IClaudeCategorizer claudeCategorizer,

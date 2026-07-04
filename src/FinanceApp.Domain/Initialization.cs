@@ -4,9 +4,6 @@ using FinanceApp.Domain.Transactions;
 using JasperFx.Events.Projections;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
-using Wolverine.Attributes;
-
-[assembly: WolverineModule]
 
 namespace FinanceApp.Domain;
 
@@ -16,8 +13,9 @@ public static class Initialization
     /// Registers the finance domain with the Marten store configured by
     /// app-foundation: the inline <see cref="TransactionView"/> projection
     /// (inline so dedup checks see rows imported in the same session), dedup
-    /// indexes, and the default category seed. Wolverine discovers the command
-    /// handlers via the assembly-level <see cref="WolverineModuleAttribute"/>.
+    /// indexes, and the default category seed. The handler assembly is opted into
+    /// Wolverine discovery from <c>Program.cs</c> via
+    /// <c>AppFoundationOptions.ConfigureWolverine</c>.
     /// </summary>
     public static IServiceCollection AddFinanceDomain(this IServiceCollection services)
     {

@@ -1,7 +1,6 @@
 using FinanceApp.Domain.Accounts;
 using FinanceApp.Domain.Transactions;
 using Marten;
-using Wolverine;
 
 namespace FinanceApp.Domain.Imports;
 
@@ -25,7 +24,6 @@ public static class ImportStatementCommandHandler
     public static async Task<Result<ImportBatch>> Handle(
         ImportStatementCommand command,
         IDocumentSession session,
-        IMessageBus messageBus,
         CancellationToken cancellationToken
     )
     {
@@ -88,20 +86,13 @@ public static class ImportStatementCommandHandler
         }
 
         session.Store(batch);
-
-        if (newRows.Count > 0)
-        {
-            // Enrol the follow-up categorization in the SAME transactional outbox
-            // as this import, so it is delivered atomically when SaveChangesAsync
-            // commits. Publishing AFTER the commit would leave the outgoing
-            // envelope unflushed in the durable outbox — enqueued but never
-            // delivered. Categorization failures still never fail the import: the
-            // categorization handler swallows them (rules/Claude are best-effort).
-            await messageBus.PublishAsync(new CategorizeImportedTransactionsCommand(batch.Id));
-        }
-
         await session.SaveChangesAsync(cancellationToken);
 
+        // Categorization is kicked off by the caller after this returns (a
+        // top-level PublishAsync from application code, the same path the
+        // foundation's email uses), not from inside this handler: publishing a
+        // routed message from within an InvokeAsync'd handler does not reliably
+        // deliver it. Failures there never affect this import.
         return Result.Ok(batch);
     }
 
