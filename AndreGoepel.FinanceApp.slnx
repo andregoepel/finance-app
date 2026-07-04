@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+    <File Path="CLAUDE.md" />
+    <File Path="PLAN.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AndreGoepel.FinanceApp/AndreGoepel.FinanceApp.csproj" />
+    <Project Path="src/AndreGoepel.FinanceApp.AppHost/AndreGoepel.FinanceApp.AppHost.csproj" />
+    <Project Path="src/AndreGoepel.FinanceApp.Domain/AndreGoepel.FinanceApp.Domain.csproj" />
+    <Project Path="src/AndreGoepel.FinanceApp.Connectors/AndreGoepel.FinanceApp.Connectors.csproj" />
+    <Project Path="src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj" />
+    <Project Path="tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj" />
+    <Project Path="tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj" />
+    <Project Path="tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj" />
+  </Folder>
+</Solution>

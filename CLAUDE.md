@@ -19,11 +19,11 @@ Identity, management shell, mail, service defaults and OTel come from those pack
 never re-implement what the foundation provides.
 
 **Solution projects:**
-- `FinanceApp` — Blazor host (App.razor, Routes.razor, feature UI)
-- `FinanceApp.AppHost` — .NET Aspire host (Postgres container)
-- `FinanceApp.Domain` — events, aggregates, commands, Wolverine handlers
-- `FinanceApp.Connectors` — provider API clients + CSV statement parsers
-- `FinanceApp.Categorization` — rules engine + Claude API client
+- `AndreGoepel.FinanceApp` — Blazor host (App.razor, Routes.razor, feature UI)
+- `AndreGoepel.FinanceApp.AppHost` — .NET Aspire host (Postgres container)
+- `AndreGoepel.FinanceApp.Domain` — events, aggregates, commands, Wolverine handlers
+- `AndreGoepel.FinanceApp.Connectors` — provider API clients + CSV statement parsers
+- `AndreGoepel.FinanceApp.Categorization` — rules engine + Claude API client
 - `tests/` — one test project per src project
 
 ## Tech Stack

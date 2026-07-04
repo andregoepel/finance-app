@@ -23,18 +23,18 @@ app-foundation (cf. andregoepel.dev):
 
 ```
 src/
-  FinanceApp/                    # Blazor host — App.razor, Routes.razor, feature UI
-  FinanceApp.AppHost/            # .NET Aspire host (Postgres container, app)
-  FinanceApp.Domain/             # events, aggregates, commands, handlers (Wolverine)
-  FinanceApp.Connectors/         # provider connectors (API clients + CSV parsers)
-  FinanceApp.Categorization/     # rules engine + Claude API client
+  AndreGoepel.FinanceApp/                    # Blazor host — App.razor, Routes.razor, feature UI
+  AndreGoepel.FinanceApp.AppHost/            # .NET Aspire host (Postgres container, app)
+  AndreGoepel.FinanceApp.Domain/             # events, aggregates, commands, handlers (Wolverine)
+  AndreGoepel.FinanceApp.Connectors/         # provider connectors (API clients + CSV parsers)
+  AndreGoepel.FinanceApp.Categorization/     # rules engine + Claude API client
 tests/
-  FinanceApp.Domain.Tests/
-  FinanceApp.Connectors.Tests/
-  FinanceApp.Categorization.Tests/
+  AndreGoepel.FinanceApp.Domain.Tests/
+  AndreGoepel.FinanceApp.Connectors.Tests/
+  AndreGoepel.FinanceApp.Categorization.Tests/
 ```
 
-- `FinanceApp` references `AndreGoepel.AppFoundation.Hosting` + `AndreGoepel.AppFoundation`
+- `AndreGoepel.FinanceApp` references `AndreGoepel.AppFoundation.Hosting` + `AndreGoepel.AppFoundation`
   → identity (marten-identity), management shell (Radzen layout, NavMenu, admin section),
   mail, service defaults, OTel come for free.
 - Feature pages injected into the shell via `AppFoundationLayoutOptions.AdminMenu` /
