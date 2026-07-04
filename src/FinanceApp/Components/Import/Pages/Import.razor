@@ -277,10 +277,20 @@
                 return;
             }
 
+            // Kick off async categorization (rules → Claude) as a top-level
+            // publish from application code — the proven Wolverine delivery path.
+            // Fire-and-forget: categorization never blocks or fails the import.
+            if (result.Value!.ImportedCount > 0)
+            {
+                await MessageBus.PublishAsync(
+                    new CategorizeImportedTransactionsCommand(result.Value.Id)
+                );
+            }
+
             NotificationService.Notify(
                 NotificationSeverity.Success,
                 "Import complete",
-                $"{result.Value!.ImportedCount} imported, {result.Value.DuplicateCount} duplicates skipped."
+                $"{result.Value.ImportedCount} imported, {result.Value.DuplicateCount} duplicates skipped."
             );
             preview = null;
             await LoadHistoryAsync();

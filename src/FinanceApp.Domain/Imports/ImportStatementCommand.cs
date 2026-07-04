@@ -87,6 +87,12 @@ public static class ImportStatementCommandHandler
 
         session.Store(batch);
         await session.SaveChangesAsync(cancellationToken);
+
+        // Categorization is kicked off by the caller after this returns (a
+        // top-level PublishAsync from application code, the same path the
+        // foundation's email uses), not from inside this handler: publishing a
+        // routed message from within an InvokeAsync'd handler does not reliably
+        // deliver it. Failures there never affect this import.
         return Result.Ok(batch);
     }
 
