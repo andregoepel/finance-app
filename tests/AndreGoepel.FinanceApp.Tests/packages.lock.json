@@ -627,14 +627,6 @@
           "Quartz": "3.18.2"
         }
       },
-      "Quartz.Extensions.Hosting": {
-        "type": "Transitive",
-        "resolved": "3.18.2",
-        "contentHash": "6uSMAm4FArjtVoxBjlkA+gHL1Eln2ngIOnRTrVrYxtSlM5PpLQd2aV+fc/OOwfwt+AyDm69HOAybEFqVvyyG2A==",
-        "dependencies": {
-          "Quartz.Extensions.DependencyInjection": "3.18.2"
-        }
-      },
       "Spectre.Console": {
         "type": "Transitive",
         "resolved": "0.55.0",
@@ -837,6 +829,7 @@
           "AndreGoepel.Marten.Identity.Blazor": "[1.1.3, )",
           "Marten": "[9.12.0, )",
           "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": "[1.23.0, )",
+          "Quartz.Extensions.Hosting": "[3.18.2, )",
           "Radzen.Blazor": "[11.1.0, )"
         }
       },
@@ -931,6 +924,15 @@
         "requested": "[1.23.0, )",
         "resolved": "1.23.0",
         "contentHash": "2wDnb4umupJZ/1ikgWozFVpggH1mlHQFc0odXVv2ZagL3RYwXgW9zmC15fiqIBzmaC0vLZUnLGwDY+p8ZR7Syw=="
+      },
+      "Quartz.Extensions.Hosting": {
+        "type": "CentralTransitive",
+        "requested": "[3.18.2, )",
+        "resolved": "3.18.2",
+        "contentHash": "6uSMAm4FArjtVoxBjlkA+gHL1Eln2ngIOnRTrVrYxtSlM5PpLQd2aV+fc/OOwfwt+AyDm69HOAybEFqVvyyG2A==",
+        "dependencies": {
+          "Quartz.Extensions.DependencyInjection": "3.18.2"
+        }
       },
       "Radzen.Blazor": {
         "type": "CentralTransitive",

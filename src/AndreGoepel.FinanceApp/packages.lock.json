@@ -67,6 +67,15 @@
         "resolved": "1.23.0",
         "contentHash": "2wDnb4umupJZ/1ikgWozFVpggH1mlHQFc0odXVv2ZagL3RYwXgW9zmC15fiqIBzmaC0vLZUnLGwDY+p8ZR7Syw=="
       },
+      "Quartz.Extensions.Hosting": {
+        "type": "Direct",
+        "requested": "[3.18.2, )",
+        "resolved": "3.18.2",
+        "contentHash": "6uSMAm4FArjtVoxBjlkA+gHL1Eln2ngIOnRTrVrYxtSlM5PpLQd2aV+fc/OOwfwt+AyDm69HOAybEFqVvyyG2A==",
+        "dependencies": {
+          "Quartz.Extensions.DependencyInjection": "3.18.2"
+        }
+      },
       "Radzen.Blazor": {
         "type": "Direct",
         "requested": "[11.1.0, )",
@@ -534,14 +543,6 @@
         "contentHash": "+P0z/WUQZF/QrY5wB1wgvl9/VkiWqGR/K5bdtjW1qiFBraEoe/dqfNTxXQPnSZHnha1qmSBRoa5oA7kwHPsTqA==",
         "dependencies": {
           "Quartz": "3.18.2"
-        }
-      },
-      "Quartz.Extensions.Hosting": {
-        "type": "Transitive",
-        "resolved": "3.18.2",
-        "contentHash": "6uSMAm4FArjtVoxBjlkA+gHL1Eln2ngIOnRTrVrYxtSlM5PpLQd2aV+fc/OOwfwt+AyDm69HOAybEFqVvyyG2A==",
-        "dependencies": {
-          "Quartz.Extensions.DependencyInjection": "3.18.2"
         }
       },
       "Spectre.Console": {

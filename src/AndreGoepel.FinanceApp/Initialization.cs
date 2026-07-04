@@ -4,6 +4,7 @@ using AndreGoepel.FinanceApp.Connectors;
 using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Sync;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Quartz;
 
 namespace AndreGoepel.FinanceApp;
 
@@ -24,7 +25,21 @@ public static class Initialization
         services.AddScoped<IAccountSyncService, AccountSyncService>();
         services.AddScoped<IProviderConnectionService, ProviderConnectionService>();
         services.AddScoped<IWiseBalanceService, WiseBalanceService>();
-        services.AddHostedService<SyncSchedulerService>();
+
+        // Daily scheduled sync via Quartz.NET. The scheduler + hosted service are
+        // already registered by app-foundation (identity uses Quartz); this
+        // additive AddQuartz only contributes our job + cron trigger.
+        services.AddQuartz(quartz =>
+        {
+            var jobKey = new JobKey("daily-account-sync");
+            quartz.AddJob<DailySyncJob>(jobKey);
+            quartz.AddTrigger(trigger =>
+                trigger
+                    .ForJob(jobKey)
+                    .WithIdentity("daily-account-sync-trigger")
+                    .WithCronSchedule("0 0 3 * * ?") // 03:00 every day
+            );
+        });
 
         return services;
     }
