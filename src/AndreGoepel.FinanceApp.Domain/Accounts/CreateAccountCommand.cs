@@ -8,7 +8,8 @@ public sealed record CreateAccountCommand(
     ProviderKind Provider,
     AccountType Type,
     string Currency,
-    AccountOwner Owner,
+    bool IsShared,
+    IReadOnlyList<Guid> OwnerUserIds,
     SyncMethod SyncMethod,
     string? Iban
 );
@@ -26,18 +27,45 @@ public static class CreateAccountCommandHandler
             return Result.Fail<Account>("Account name is required.");
         }
 
+        var owners = AccountOwners.Validate(command.IsShared, command.OwnerUserIds);
+        if (owners.IsFailure)
+        {
+            return Result.Fail<Account>(owners.Error);
+        }
+
         var account = new Account
         {
             Name = command.Name.Trim(),
             Provider = command.Provider,
             Type = command.Type,
             Currency = command.Currency.Trim().ToUpperInvariant(),
-            Owner = command.Owner,
+            IsShared = command.IsShared,
+            OwnerUserIds = owners.Value!,
             SyncMethod = command.SyncMethod,
             Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim(),
         };
         session.Store(account);
         await session.SaveChangesAsync(cancellationToken);
         return Result.Ok(account);
+    }
+}
+
+/// <summary>Shared owner-selection validation for create and update.</summary>
+internal static class AccountOwners
+{
+    public static Result<List<Guid>> Validate(bool isShared, IReadOnlyList<Guid> ownerUserIds)
+    {
+        var owners = (ownerUserIds ?? []).Where(id => id != Guid.Empty).Distinct().ToList();
+        if (owners.Count == 0)
+        {
+            return Result.Fail<List<Guid>>("Select at least one owner for the account.");
+        }
+        if (!isShared && owners.Count > 1)
+        {
+            return Result.Fail<List<Guid>>(
+                "A non-shared account must have exactly one owner; enable “shared” to add more."
+            );
+        }
+        return Result.Ok(owners);
     }
 }
