@@ -189,11 +189,17 @@ internal sealed class AccountSyncService(
             ? DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-DefaultWindowDays)
             : DateOnly.FromDateTime(lastBatch.ImportedAt.UtcDateTime).AddDays(-OverlapDays);
 
-        var sessionReference =
-            connection.UsesEnableBanking
-            && connection is { ConsentStatus: ConsentStatus.Authorized, ConsentExpired: false }
-                ? connection.SessionId
-                : null;
+        // For Enable Banking, resolve the current session account uid from the
+        // connection's linked accounts by the stable identification hash (uids
+        // rotate every re-consent). Only while the consent is active.
+        var providerAccountReference = connection
+            is { ConsentStatus: ConsentStatus.Authorized, ConsentExpired: false }
+            ? connection
+                .LinkedAccounts.FirstOrDefault(a =>
+                    a.IdentificationHash == account.IdentificationHash
+                )
+                ?.Uid
+            : null;
 
         return new ProviderSyncRequest(
             account.Id,
@@ -201,7 +207,7 @@ internal sealed class AccountSyncService(
             connection.Id,
             account.ExternalId,
             account.IdentificationHash,
-            sessionReference,
+            providerAccountReference,
             since
         );
     }

@@ -17,7 +17,8 @@ public sealed record UpdateAccountCommand(
     SyncMethod SyncMethod,
     string? Iban,
     Guid? ConnectionId = null,
-    string? ExternalId = null
+    string? ExternalId = null,
+    string? IdentificationHash = null
 );
 
 public static class UpdateAccountCommandHandler
@@ -56,6 +57,9 @@ public static class UpdateAccountCommandHandler
         account.ExternalId = string.IsNullOrWhiteSpace(command.ExternalId)
             ? null
             : command.ExternalId.Trim();
+        account.IdentificationHash = string.IsNullOrWhiteSpace(command.IdentificationHash)
+            ? null
+            : command.IdentificationHash.Trim();
 
         session.Store(account);
         await session.SaveChangesAsync(cancellationToken);

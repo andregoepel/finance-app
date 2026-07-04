@@ -83,9 +83,22 @@
                             <RadzenDropDown @bind-Value=@newEnvironment Data=@Environments Style="min-width: 9rem;" />
                         </RadzenFormField>
                     }
+                    else
+                    {
+                        <RadzenFormField Text="ASPSP (bank)">
+                            <RadzenTextBox @bind-Value=@newAspspName Placeholder="Mock ASPSP / DKB" Style="min-width: 11rem;" />
+                        </RadzenFormField>
+                        <RadzenFormField Text="Country">
+                            <RadzenTextBox @bind-Value=@newAspspCountry Placeholder="DE" Style="width: 5.5rem;" MaxLength="2" />
+                        </RadzenFormField>
+                    }
                     <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
                                   Disabled=@string.IsNullOrWhiteSpace(newLabel) Click=@AddConnectionAsync />
                 </RadzenStack>
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                    Enable Banking sandbox uses <strong>Mock ASPSP</strong> (country DE); for production
+                    use the real bank name (e.g. <strong>DKB</strong>).
+                </RadzenText>
             </RadzenStack>
         </RadzenCard>
 
@@ -182,6 +195,8 @@
     private string newLabel = "";
     private Guid? newOwnerUserId;
     private ProviderEnvironment newEnvironment = ProviderEnvironment.Sandbox;
+    private string newAspspName = "";
+    private string newAspspCountry = "DE";
 
     private readonly Dictionary<Guid, string> wiseInputs = [];
     private readonly Dictionary<Guid, CredentialInfo?> wiseTokenInfos = [];
@@ -238,7 +253,8 @@
 
     private async Task AddConnectionAsync()
     {
-        var result = await ConnectionService.CreateAsync(newProvider, newLabel, newOwnerUserId, newEnvironment);
+        var result = await ConnectionService.CreateAsync(
+            newProvider, newLabel, newOwnerUserId, newEnvironment, newAspspName, newAspspCountry);
         if (result.IsFailure)
         {
             NotificationService.Notify(NotificationSeverity.Error, "Could not add connection", result.Error);
@@ -247,6 +263,8 @@
         newLabel = "";
         newOwnerUserId = null;
         newEnvironment = ProviderEnvironment.Sandbox;
+        newAspspName = "";
+        newAspspCountry = "DE";
         await LoadAsync();
         NotificationService.Notify(NotificationSeverity.Success, "Connection added", result.Value!.Label);
     }

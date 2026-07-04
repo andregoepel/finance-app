@@ -13,7 +13,8 @@ public sealed record CreateAccountCommand(
     SyncMethod SyncMethod,
     string? Iban,
     Guid? ConnectionId = null,
-    string? ExternalId = null
+    string? ExternalId = null,
+    string? IdentificationHash = null
 );
 
 public static class CreateAccountCommandHandler
@@ -49,6 +50,9 @@ public static class CreateAccountCommandHandler
             ExternalId = string.IsNullOrWhiteSpace(command.ExternalId)
                 ? null
                 : command.ExternalId.Trim(),
+            IdentificationHash = string.IsNullOrWhiteSpace(command.IdentificationHash)
+                ? null
+                : command.IdentificationHash.Trim(),
         };
         session.Store(account);
         await session.SaveChangesAsync(cancellationToken);

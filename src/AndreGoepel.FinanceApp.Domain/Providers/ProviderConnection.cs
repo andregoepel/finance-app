@@ -33,6 +33,12 @@ public sealed class ProviderConnection
 
     // ---- Enable Banking consent (unused for Wise, which authenticates with a token) ----
 
+    /// <summary>Enable Banking ASPSP (bank) name to authorize against, e.g. "DKB" or "Mock ASPSP".</summary>
+    public string? AspspName { get; set; }
+
+    /// <summary>ISO country of the ASPSP, e.g. "DE".</summary>
+    public string? AspspCountry { get; set; }
+
     public ConsentStatus ConsentStatus { get; set; } = ConsentStatus.NotConnected;
 
     /// <summary>Enable Banking session id from the last authorization (rotates on re-consent).</summary>
@@ -55,10 +61,13 @@ public sealed class ProviderConnection
 
 /// <summary>
 /// A single bank account exposed by an Enable Banking consent. Enable Banking's
-/// account ids are session-specific and rotate on every re-consent, so accounts
-/// are matched via the stable <see cref="IdentificationHash"/>, never the id.
+/// account ids (<see cref="Uid"/>) are session-specific and rotate on every
+/// re-consent, so accounts are matched via the stable
+/// <see cref="IdentificationHash"/>; the current <see cref="Uid"/> is what the
+/// transactions call needs.
 /// </summary>
 public sealed record EnableBankingLinkedAccount(
+    string Uid,
     string IdentificationHash,
     string? Iban,
     string? Name,

@@ -33,7 +33,10 @@ public interface IProviderConnector
 /// Enable Banking's stable per-account hash — account ids are session-specific,
 /// so accounts are matched via this hash, never the session id.
 /// </param>
-/// <param name="SessionReference">Active Enable Banking session id for this consent, if any.</param>
+/// <param name="ProviderAccountReference">
+/// Provider-side session account reference resolved by the application layer — the
+/// Enable Banking session account uid matching the account's identification hash.
+/// </param>
 /// <param name="Since">Earliest booking date to fetch (window start).</param>
 public sealed record ProviderSyncRequest(
     Guid AccountId,
@@ -41,7 +44,7 @@ public sealed record ProviderSyncRequest(
     Guid ConnectionId,
     string? ExternalId,
     string? IdentificationHash,
-    string? SessionReference,
+    string? ProviderAccountReference,
     DateOnly Since
 );
 

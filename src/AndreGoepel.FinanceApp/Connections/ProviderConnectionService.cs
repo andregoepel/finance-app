@@ -24,6 +24,8 @@ public interface IProviderConnectionService
         string label,
         Guid? ownerUserId,
         ProviderEnvironment environment,
+        string? aspspName,
+        string? aspspCountry,
         CancellationToken cancellationToken = default
     );
 
@@ -64,6 +66,10 @@ internal sealed class ProviderConnectionService(
     ICredentialStore credentialStore
 ) : IProviderConnectionService
 {
+    /// <summary>Requested AIS consent window; ASPSPs cap this (PSD2 is ~90 days).</summary>
+    private const int ConsentValidityDays = 90;
+    private const string PsuType = "personal";
+
     public async Task<IReadOnlyList<ProviderConnection>> GetAllAsync(
         CancellationToken cancellationToken = default
     ) => await session.Query<ProviderConnection>().ToListAsync(cancellationToken);
@@ -73,6 +79,8 @@ internal sealed class ProviderConnectionService(
         string label,
         Guid? ownerUserId,
         ProviderEnvironment environment,
+        string? aspspName,
+        string? aspspCountry,
         CancellationToken cancellationToken = default
     )
     {
@@ -87,6 +95,8 @@ internal sealed class ProviderConnectionService(
             Label = label.Trim(),
             OwnerUserId = ownerUserId,
             Environment = environment,
+            AspspName = string.IsNullOrWhiteSpace(aspspName) ? null : aspspName.Trim(),
+            AspspCountry = string.IsNullOrWhiteSpace(aspspCountry) ? null : aspspCountry.Trim(),
         };
         session.Store(connection);
         await session.SaveChangesAsync(cancellationToken);
@@ -177,23 +187,39 @@ internal sealed class ProviderConnectionService(
                 $"{connection.Provider} does not use Enable Banking consent."
             );
         }
+        if (
+            string.IsNullOrWhiteSpace(connection.AspspName)
+            || string.IsNullOrWhiteSpace(connection.AspspCountry)
+        )
+        {
+            return Result.Fail<string>(
+                "Set the ASPSP (bank) name and country on the connection before connecting."
+            );
+        }
 
-        var start = await enableBankingClient.StartAuthorizationAsync(
-            connection.Provider,
+        // We generate and persist the CSRF state; the bank echoes it to the callback.
+        var state = Guid.NewGuid().ToString("N");
+        var request = new EnableBankingAuthRequest(
+            connection.AspspName,
+            connection.AspspCountry,
             redirectUri,
-            cancellationToken
+            state,
+            DateTimeOffset.UtcNow.AddDays(ConsentValidityDays),
+            PsuType
         );
+
+        var start = await enableBankingClient.StartAuthorizationAsync(request, cancellationToken);
         if (start.IsFailure)
         {
             return Result.Fail<string>(start.Error!);
         }
 
         connection.ConsentStatus = ConsentStatus.Pending;
-        connection.PendingState = start.Value!.State;
+        connection.PendingState = state;
         session.Store(connection);
         await session.SaveChangesAsync(cancellationToken);
 
-        return Result.Ok(start.Value.AuthorizationUrl);
+        return Result.Ok(start.Value!.AuthorizationUrl);
     }
 
     public async Task<Result<ProviderConnection>> CompleteConsentAsync(
@@ -223,7 +249,16 @@ internal sealed class ProviderConnectionService(
         connection.SessionId = authorized.Value!.SessionId;
         connection.ConsentExpiresAt = authorized.Value.ExpiresAt;
         connection.ConsentAuthorizedAt = DateTimeOffset.UtcNow;
-        connection.LinkedAccounts = [.. authorized.Value.Accounts];
+        connection.LinkedAccounts =
+        [
+            .. authorized.Value.Accounts.Select(a => new EnableBankingLinkedAccount(
+                a.Uid,
+                a.IdentificationHash,
+                a.Iban,
+                a.Name,
+                a.Currency
+            )),
+        ];
         connection.PendingState = null;
         session.Store(connection);
         await session.SaveChangesAsync(cancellationToken);

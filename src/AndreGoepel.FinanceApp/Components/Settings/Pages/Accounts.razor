@@ -130,10 +130,30 @@
                                             Placeholder="@(ProviderConnections.Any() ? "Select connection" : "No " + form.Provider + " connection")"
                                             Style="min-width: 15rem;" />
                         </RadzenFormField>
-                        <RadzenFormField Text="@(form.Provider == ProviderKind.Wise ? "Wise balance id" : "External id")">
-                            <RadzenTextBox @bind-Value=@form.ExternalId Disabled=@isSaving
-                                           Placeholder="e.g. 306149" Style="min-width: 10rem;" />
-                        </RadzenFormField>
+                        @if (form.Provider == ProviderKind.Wise)
+                        {
+                            <RadzenFormField Text="Wise balance id">
+                                <RadzenTextBox @bind-Value=@form.ExternalId Disabled=@isSaving
+                                               Placeholder="e.g. 306149" Style="min-width: 10rem;" />
+                            </RadzenFormField>
+                        }
+                        else
+                        {
+                            <RadzenFormField Text="Bank account">
+                                <RadzenDropDown TValue="string"
+                                                @bind-Value=@form.IdentificationHash
+                                                Data=@LinkedAccounts
+                                                ValueProperty="IdentificationHash"
+                                                AllowClear="true"
+                                                Disabled=@isSaving
+                                                Placeholder="@(LinkedAccounts.Any() ? "Select account" : "Connect the consent first")"
+                                                Style="min-width: 15rem;">
+                                    <Template Context="linked">
+                                        @(((EnableBankingLinkedAccount)linked).Name ?? "account") — @(((EnableBankingLinkedAccount)linked).Currency)
+                                    </Template>
+                                </RadzenDropDown>
+                            </RadzenFormField>
+                        }
                     }
                     <RadzenFormField Text="IBAN (optional)">
                         <RadzenTextBox @bind-Value=@form.Iban Disabled=@isSaving Style="min-width: 14rem;" />
@@ -175,6 +195,11 @@
     // Connections are per provider; a Wise account can only link a Wise connection.
     private IEnumerable<ProviderConnection> ProviderConnections =>
         connections.Where(c => c.Provider == form.Provider);
+
+    // Enable Banking accounts exposed by the selected connection's consent.
+    private IEnumerable<EnableBankingLinkedAccount> LinkedAccounts =>
+        connections.FirstOrDefault(c => c.Id == form.ConnectionId)?.LinkedAccounts
+        ?? Enumerable.Empty<EnableBankingLinkedAccount>();
 
     private Guid? SingleOwner
     {
@@ -232,6 +257,7 @@
             Iban = account.Iban ?? "",
             ConnectionId = account.ConnectionId,
             ExternalId = account.ExternalId ?? "",
+            IdentificationHash = account.IdentificationHash,
         };
     }
 
@@ -260,8 +286,10 @@
             // Only API accounts carry a connection / external id; drop stale values
             // if the account is set back to CSV upload.
             var isApi = form.SyncMethod == SyncMethod.Api;
+            var isWise = form.Provider == ProviderKind.Wise;
             var connectionId = isApi ? form.ConnectionId : null;
-            var externalId = isApi ? form.ExternalId : null;
+            var externalId = isApi && isWise ? form.ExternalId : null;
+            var identificationHash = isApi && !isWise ? form.IdentificationHash : null;
             var result = editingAccountId is Guid accountId
                 ? await MessageBus.InvokeAsync<Result<Account>>(
                     new UpdateAccountCommand(
@@ -274,7 +302,8 @@
                         form.SyncMethod,
                         form.Iban,
                         connectionId,
-                        externalId
+                        externalId,
+                        identificationHash
                     )
                 )
                 : await MessageBus.InvokeAsync<Result<Account>>(
@@ -288,7 +317,8 @@
                         form.SyncMethod,
                         form.Iban,
                         connectionId,
-                        externalId
+                        externalId,
+                        identificationHash
                     )
                 );
 
@@ -367,5 +397,6 @@
         public string Iban { get; set; } = "";
         public Guid? ConnectionId { get; set; }
         public string ExternalId { get; set; } = "";
+        public string? IdentificationHash { get; set; }
     }
 }
