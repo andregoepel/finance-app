@@ -59,5 +59,5 @@ internal sealed class MartenCredentialStore(
 
     /// <summary>Per-credential purpose string, isolating payloads from each other.</summary>
     private IDataProtector Protector(string key) =>
-        dataProtectionProvider.CreateProtector($"FinanceApp.ProviderCredential.{key}");
+        dataProtectionProvider.CreateProtector($"AndreGoepel.FinanceApp.ProviderCredential.{key}");
 }
