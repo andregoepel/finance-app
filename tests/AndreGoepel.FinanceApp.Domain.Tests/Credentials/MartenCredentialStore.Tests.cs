@@ -36,7 +36,9 @@ public class MartenCredentialStoreTests
         Assert.Equal(
             "sk-ant-secret",
             dataProtection
-                .CreateProtector($"AndreGoepel.FinanceApp.ProviderCredential.{CredentialKeys.ClaudeApiKey}")
+                .CreateProtector(
+                    $"AndreGoepel.FinanceApp.ProviderCredential.{CredentialKeys.ClaudeApiKey}"
+                )
                 .Unprotect(stored.ProtectedPayload)
         );
         await session.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
