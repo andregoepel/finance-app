@@ -130,6 +130,11 @@
         }
 
         isSaving = true;
+        // Force the disabled state to render and flush to the browser before the
+        // save round-trip runs; otherwise the UI only repaints once the whole
+        // handler has completed and the disable is never visible.
+        StateHasChanged();
+        await Task.Yield();
         try
         {
             var result = editingAccountId is Guid accountId
