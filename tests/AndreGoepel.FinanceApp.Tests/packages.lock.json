@@ -852,7 +852,8 @@
       "andregoepel.financeapp.connectors": {
         "type": "Project",
         "dependencies": {
-          "AndreGoepel.FinanceApp.Domain": "[1.0.0, )"
+          "AndreGoepel.FinanceApp.Domain": "[1.0.0, )",
+          "Microsoft.Extensions.Http.Resilience": "[10.7.0, )"
         }
       },
       "andregoepel.financeapp.domain": {

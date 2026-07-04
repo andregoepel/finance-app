@@ -1,0 +1,158 @@
+@page "/sync"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject IQuerySession QuerySession
+@inject IAccountSyncService SyncService
+@inject NotificationService NotificationService
+
+<PageTitle>Sync – Finance</PageTitle>
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem">
+
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Sync</RadzenText>
+            <RadzenButton Text="Sync all now" Icon="sync" ButtonStyle="ButtonStyle.Primary"
+                          Disabled=@(isSyncing || accounts.Count == 0) IsBusy=@isSyncing BusyText="Syncing..."
+                          Click=@SyncAllAsync />
+        </RadzenStack>
+
+        <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+            API-backed accounts sync automatically once a day; trigger a manual sync here.
+            Configure credentials and bank consents under
+            <RadzenLink Path="settings/connections" Text="Settings → Connections" />.
+        </RadzenText>
+
+        @if (expiringConnections.Count > 0)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                Consent attention needed:
+                @string.Join(", ", expiringConnections.Select(c => $"{c.Label} ({(c.ConsentExpired ? "expired" : "expires " + c.ConsentExpiresAt?.ToLocalTime().ToString("dd.MM.yyyy"))})")).
+            </RadzenAlert>
+        }
+
+        @if (accounts.Count == 0)
+        {
+            <RadzenCard>
+                <RadzenText>No API-backed accounts yet. Set an account's sync method to API under
+                    <RadzenLink Path="settings/accounts" Text="Accounts" />.</RadzenText>
+            </RadzenCard>
+        }
+        else
+        {
+            <RadzenCard>
+                <RadzenDataGrid TItem="AccountRow" Data=@accounts Density="Density.Compact">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="AccountRow" Title="Account" Property="Name" />
+                        <RadzenDataGridColumn TItem="AccountRow" Title="Provider" Width="120px">
+                            <Template Context="row">@row.Provider</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="AccountRow" Title="Last sync" Width="200px">
+                            <Template Context="row">
+                                @(row.LastSync is null ? "never" : row.LastSync.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="AccountRow" Title="" Width="140px" TextAlign="TextAlign.End">
+                            <Template Context="row">
+                                <RadzenButton Text="Sync now" Icon="sync" Size="ButtonSize.Small"
+                                              ButtonStyle="ButtonStyle.Secondary" Disabled=@isSyncing
+                                              Click=@(() => SyncOneAsync(row.Id)) />
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        }
+
+    </RadzenStack>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private sealed record AccountRow(Guid Id, string Name, ProviderKind Provider, DateTimeOffset? LastSync);
+
+    private List<AccountRow> accounts = [];
+    private List<ProviderConnection> expiringConnections = [];
+    private bool isSyncing;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var apiAccounts = (await QuerySession
+            .Query<Account>()
+            .Where(a => a.SyncMethod == SyncMethod.Api && a.Status == AccountStatus.Active)
+            .ToListAsync()).OrderBy(a => a.Name).ToList();
+
+        var rows = new List<AccountRow>(apiAccounts.Count);
+        foreach (var account in apiAccounts)
+        {
+            var lastBatch = await QuerySession
+                .Query<ImportBatch>()
+                .Where(b => b.AccountId == account.Id)
+                .OrderByDescending(b => b.ImportedAt)
+                .FirstOrDefaultAsync();
+            rows.Add(new AccountRow(account.Id, account.Name, account.Provider, lastBatch?.ImportedAt));
+        }
+        accounts = rows;
+
+        var connections = await QuerySession.Query<ProviderConnection>().ToListAsync();
+        expiringConnections = connections
+            .Where(c => c.UsesEnableBanking
+                && c.ConsentStatus == ConsentStatus.Authorized
+                && (c.ConsentExpired || c.ConsentExpiresAt <= DateTimeOffset.UtcNow.AddDays(14)))
+            .ToList();
+    }
+
+    private async Task<string?> CurrentUserAsync() =>
+        AuthenticationState is null ? null : (await AuthenticationState).User.Identity?.Name;
+
+    private async Task SyncOneAsync(Guid accountId)
+    {
+        isSyncing = true;
+        try
+        {
+            var summary = await SyncService.SyncAccountAsync(accountId, await CurrentUserAsync());
+            NotifySummary(summary);
+            await LoadAsync();
+        }
+        finally
+        {
+            isSyncing = false;
+        }
+    }
+
+    private async Task SyncAllAsync()
+    {
+        isSyncing = true;
+        try
+        {
+            var summaries = await SyncService.SyncAllAsync(await CurrentUserAsync());
+            foreach (var summary in summaries)
+            {
+                NotifySummary(summary);
+            }
+            await LoadAsync();
+        }
+        finally
+        {
+            isSyncing = false;
+        }
+    }
+
+    private void NotifySummary(AccountSyncSummary summary)
+    {
+        if (summary.Success)
+        {
+            NotificationService.Notify(NotificationSeverity.Success, $"{summary.AccountName} synced",
+                $"{summary.Imported} imported, {summary.Duplicates} duplicates.");
+        }
+        else
+        {
+            NotificationService.Notify(NotificationSeverity.Warning, $"{summary.AccountName} not synced", summary.Error);
+        }
+    }
+}
