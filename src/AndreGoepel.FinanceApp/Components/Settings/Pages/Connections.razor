@@ -1,11 +1,13 @@
 @page "/settings/connections"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using AndreGoepel.FinanceApp.Connectors.Providers.Wise
 @using AndreGoepel.Marten.Identity.Users
 @using Microsoft.AspNetCore.Identity
 
 @inject ICredentialStore CredentialStore
 @inject IProviderConnectionService ConnectionService
+@inject IWiseBalanceService WiseBalanceService
 @inject IMessageBus MessageBus
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
@@ -75,6 +77,12 @@
                                         ValueProperty="StreamId" TextProperty="UserName"
                                         AllowClear="true" Placeholder="Select user" Style="min-width: 13rem;" />
                     </RadzenFormField>
+                    @if (newProvider == ProviderKind.Wise)
+                    {
+                        <RadzenFormField Text="Environment">
+                            <RadzenDropDown @bind-Value=@newEnvironment Data=@Environments Style="min-width: 9rem;" />
+                        </RadzenFormField>
+                    }
                     <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
                                   Disabled=@string.IsNullOrWhiteSpace(newLabel) Click=@AddConnectionAsync />
                 </RadzenStack>
@@ -117,6 +125,23 @@
                                               Disabled=@string.IsNullOrWhiteSpace(WiseInput(connection.Id))
                                               Click=@(() => SaveWiseTokenAsync(connection.Id)) />
                             </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                                <RadzenText TextStyle="TextStyle.Caption">Environment</RadzenText>
+                                <RadzenDropDown TValue="ProviderEnvironment" Value=@connection.Environment Data=@Environments
+                                                Change=@(args => ChangeEnvironmentAsync(connection.Id, (ProviderEnvironment)args))
+                                                Style="min-width: 9rem;" />
+                                <div style="flex: 1;"></div>
+                                <RadzenButton Text="Sync balances" Icon="sync" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                              Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id)
+                                              IsBusy=@(syncingConnectionId == connection.Id)
+                                              Click=@(() => SyncBalancesAsync(connection.Id)) />
+                            </RadzenStack>
+                            @if (balanceResults.TryGetValue(connection.Id, out var balances))
+                            {
+                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                    @string.Join(" · ", balances.Select(b => $"{b.Amount:N2} {b.Currency} (id {b.Id})"))
+                                </RadzenText>
+                            }
                         }
                         else
                         {
@@ -143,6 +168,7 @@
 @code {
     private static readonly ProviderKind[] ConnectionProviders =
         [ProviderKind.Wise, ProviderKind.Dkb, ProviderKind.Revolut];
+    private static readonly ProviderEnvironment[] Environments = Enum.GetValues<ProviderEnvironment>();
 
     private IReadOnlyList<User> users = [];
     private IReadOnlyList<ProviderConnection> connections = [];
@@ -155,9 +181,12 @@
     private ProviderKind newProvider = ProviderKind.Wise;
     private string newLabel = "";
     private Guid? newOwnerUserId;
+    private ProviderEnvironment newEnvironment = ProviderEnvironment.Sandbox;
 
     private readonly Dictionary<Guid, string> wiseInputs = [];
     private readonly Dictionary<Guid, CredentialInfo?> wiseTokenInfos = [];
+    private readonly Dictionary<Guid, IReadOnlyList<WiseBalance>> balanceResults = [];
+    private Guid? syncingConnectionId;
 
     private string CallbackUrl => new Uri(new Uri(Navigation.BaseUri), "enablebanking/callback").ToString();
 
@@ -209,7 +238,7 @@
 
     private async Task AddConnectionAsync()
     {
-        var result = await ConnectionService.CreateAsync(newProvider, newLabel, newOwnerUserId);
+        var result = await ConnectionService.CreateAsync(newProvider, newLabel, newOwnerUserId, newEnvironment);
         if (result.IsFailure)
         {
             NotificationService.Notify(NotificationSeverity.Error, "Could not add connection", result.Error);
@@ -217,8 +246,44 @@
         }
         newLabel = "";
         newOwnerUserId = null;
+        newEnvironment = ProviderEnvironment.Sandbox;
         await LoadAsync();
         NotificationService.Notify(NotificationSeverity.Success, "Connection added", result.Value!.Label);
+    }
+
+    private async Task ChangeEnvironmentAsync(Guid connectionId, ProviderEnvironment environment)
+    {
+        var result = await ConnectionService.SetEnvironmentAsync(connectionId, environment);
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Could not change environment", result.Error);
+            return;
+        }
+        await LoadAsync();
+    }
+
+    private async Task SyncBalancesAsync(Guid connectionId)
+    {
+        syncingConnectionId = connectionId;
+        try
+        {
+            var result = await WiseBalanceService.SyncConnectionAsync(connectionId);
+            if (result.IsFailure)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Balance sync failed", result.Error);
+                return;
+            }
+            balanceResults[connectionId] = result.Value!.Balances;
+            NotificationService.Notify(
+                NotificationSeverity.Success,
+                "Balances synced",
+                $"{result.Value.Balances.Count} balance(s) fetched, {result.Value.AccountsUpdated} account(s) updated."
+            );
+        }
+        finally
+        {
+            syncingConnectionId = null;
+        }
     }
 
     private async Task DeleteConnectionAsync(ProviderConnection connection)

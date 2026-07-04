@@ -12,8 +12,8 @@ public static class Initialization
 {
     /// <summary>
     /// Registers the statement parsers (one per provider format version), the
-    /// registry that selects them, and the Phase 3 API connectors: Wise (personal
-    /// API + SCA signing) and Enable Banking (PSD2 aggregator for DKB + Revolut).
+    /// registry that selects them, and the Phase 3 API clients: Wise (token-only
+    /// balance reads) and Enable Banking (PSD2 transaction sync for DKB + Revolut).
     /// Wise and DKB export CSV; Revolut and Easy Bank only offer XLSX.
     /// </summary>
     public static IServiceCollection AddConnectors(this IServiceCollection services)
@@ -28,14 +28,12 @@ public static class Initialization
         // out of Aspire's default per-attempt resilience timeout and rely on a
         // generous client timeout plus Result-based graceful degradation.
 #pragma warning disable EXTEXP0001
+        // No BaseAddress — the client builds absolute URLs per call because the
+        // base differs by environment (Wise sandbox vs production).
         services
             .AddHttpClient(
                 WiseApiClient.HttpClientName,
-                client =>
-                {
-                    client.BaseAddress = new Uri("https://api.transferwise.com/");
-                    client.Timeout = TimeSpan.FromSeconds(60);
-                }
+                client => client.Timeout = TimeSpan.FromSeconds(60)
             )
             .RemoveAllResilienceHandlers();
         services
@@ -53,7 +51,8 @@ public static class Initialization
         services.AddScoped<IWiseApiClient, WiseApiClient>();
         services.AddScoped<IEnableBankingClient, EnableBankingClient>();
 
-        services.AddScoped<IProviderConnector, WiseConnector>();
+        // Wise is a token-only balance reader (see WiseBalanceService in the host),
+        // not a transaction connector — only Enable Banking syncs transactions.
         services.AddScoped<IProviderConnector, EnableBankingConnector>();
         services.AddScoped<IProviderConnectorRegistry, ProviderConnectorRegistry>();
 

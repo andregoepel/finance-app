@@ -23,6 +23,7 @@ public static class Initialization
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IAccountSyncService, AccountSyncService>();
         services.AddScoped<IProviderConnectionService, ProviderConnectionService>();
+        services.AddScoped<IWiseBalanceService, WiseBalanceService>();
         services.AddHostedService<SyncSchedulerService>();
 
         return services;

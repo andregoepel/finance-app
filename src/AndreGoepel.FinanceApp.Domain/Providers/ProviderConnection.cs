@@ -19,6 +19,13 @@ public sealed class ProviderConnection
     /// <summary>The household user this login belongs to (their Wise/bank account).</summary>
     public Guid? OwnerUserId { get; set; }
 
+    /// <summary>
+    /// Which provider environment this login targets. Wise sandbox and production
+    /// are separate systems with separate tokens and base URLs; a connection is
+    /// bound to one.
+    /// </summary>
+    public ProviderEnvironment Environment { get; set; } = ProviderEnvironment.Production;
+
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
 
     /// <summary>True for providers whose connection is an Enable Banking PSD2 consent.</summary>
@@ -64,4 +71,10 @@ public enum ConsentStatus
     Pending,
     Authorized,
     Expired,
+}
+
+public enum ProviderEnvironment
+{
+    Production,
+    Sandbox,
 }

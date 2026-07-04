@@ -130,6 +130,10 @@
                                             Placeholder="@(ProviderConnections.Any() ? "Select connection" : "No " + form.Provider + " connection")"
                                             Style="min-width: 15rem;" />
                         </RadzenFormField>
+                        <RadzenFormField Text="@(form.Provider == ProviderKind.Wise ? "Wise balance id" : "External id")">
+                            <RadzenTextBox @bind-Value=@form.ExternalId Disabled=@isSaving
+                                           Placeholder="e.g. 306149" Style="min-width: 10rem;" />
+                        </RadzenFormField>
                     }
                     <RadzenFormField Text="IBAN (optional)">
                         <RadzenTextBox @bind-Value=@form.Iban Disabled=@isSaving Style="min-width: 14rem;" />
@@ -227,6 +231,7 @@
             SyncMethod = account.SyncMethod,
             Iban = account.Iban ?? "",
             ConnectionId = account.ConnectionId,
+            ExternalId = account.ExternalId ?? "",
         };
     }
 
@@ -252,9 +257,11 @@
         try
         {
             var owners = form.OwnerUserIds.ToList();
-            // Only API accounts carry a connection; drop any stale value if the
-            // account is set back to CSV upload.
-            var connectionId = form.SyncMethod == SyncMethod.Api ? form.ConnectionId : null;
+            // Only API accounts carry a connection / external id; drop stale values
+            // if the account is set back to CSV upload.
+            var isApi = form.SyncMethod == SyncMethod.Api;
+            var connectionId = isApi ? form.ConnectionId : null;
+            var externalId = isApi ? form.ExternalId : null;
             var result = editingAccountId is Guid accountId
                 ? await MessageBus.InvokeAsync<Result<Account>>(
                     new UpdateAccountCommand(
@@ -266,7 +273,8 @@
                         owners,
                         form.SyncMethod,
                         form.Iban,
-                        connectionId
+                        connectionId,
+                        externalId
                     )
                 )
                 : await MessageBus.InvokeAsync<Result<Account>>(
@@ -279,7 +287,8 @@
                         owners,
                         form.SyncMethod,
                         form.Iban,
-                        connectionId
+                        connectionId,
+                        externalId
                     )
                 );
 
@@ -357,5 +366,6 @@
         public SyncMethod SyncMethod { get; set; } = SyncMethod.CsvUpload;
         public string Iban { get; set; } = "";
         public Guid? ConnectionId { get; set; }
+        public string ExternalId { get; set; } = "";
     }
 }

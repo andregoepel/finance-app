@@ -51,6 +51,16 @@ public sealed class Account
     public string? IdentificationHash { get; set; }
 
     /// <summary>
+    /// Latest balance from an API sync (Wise balances are token-only), in the
+    /// account's own currency. <c>decimal</c> per the money rule; net-worth
+    /// aggregation across currencies is Phase 4.
+    /// </summary>
+    public decimal? CurrentBalance { get; set; }
+
+    /// <summary>When <see cref="CurrentBalance"/> was last refreshed from the provider.</summary>
+    public DateTimeOffset? BalanceUpdatedAt { get; set; }
+
+    /// <summary>
     /// Deactivated accounts are hidden from selection lists (import, new-account
     /// owner pickers) but keep all their transactions and history. Reversible via
     /// reactivation; permanent deletion is a separate, guarded action.

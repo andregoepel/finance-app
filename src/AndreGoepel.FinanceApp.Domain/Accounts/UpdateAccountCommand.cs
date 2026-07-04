@@ -16,7 +16,8 @@ public sealed record UpdateAccountCommand(
     IReadOnlyList<Guid> OwnerUserIds,
     SyncMethod SyncMethod,
     string? Iban,
-    Guid? ConnectionId = null
+    Guid? ConnectionId = null,
+    string? ExternalId = null
 );
 
 public static class UpdateAccountCommandHandler
@@ -52,6 +53,9 @@ public static class UpdateAccountCommandHandler
         account.SyncMethod = command.SyncMethod;
         account.Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim();
         account.ConnectionId = command.ConnectionId;
+        account.ExternalId = string.IsNullOrWhiteSpace(command.ExternalId)
+            ? null
+            : command.ExternalId.Trim();
 
         session.Store(account);
         await session.SaveChangesAsync(cancellationToken);

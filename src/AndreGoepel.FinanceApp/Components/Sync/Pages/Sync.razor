@@ -82,9 +82,14 @@
 
     private async Task LoadAsync()
     {
+        // Wise is balance-only; its balances refresh from Settings → Connections,
+        // so it does not appear in this transaction-sync list.
         var apiAccounts = (await QuerySession
             .Query<Account>()
-            .Where(a => a.SyncMethod == SyncMethod.Api && a.Status == AccountStatus.Active)
+            .Where(a =>
+                a.SyncMethod == SyncMethod.Api
+                && a.Status == AccountStatus.Active
+                && a.Provider != ProviderKind.Wise)
             .ToListAsync()).OrderBy(a => a.Name).ToList();
 
         var rows = new List<AccountRow>(apiAccounts.Count);

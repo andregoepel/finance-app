@@ -23,10 +23,18 @@ public interface IProviderConnectionService
         ProviderKind provider,
         string label,
         Guid? ownerUserId,
+        ProviderEnvironment environment,
         CancellationToken cancellationToken = default
     );
 
     Task<Result> DeleteAsync(Guid connectionId, CancellationToken cancellationToken = default);
+
+    /// <summary>Switches a connection between sandbox and production (Wise has separate tokens per env).</summary>
+    Task<Result> SetEnvironmentAsync(
+        Guid connectionId,
+        ProviderEnvironment environment,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>Stores/rotates the Wise API token for a Wise connection (encrypted).</summary>
     Task<Result> SaveWiseTokenAsync(
@@ -64,6 +72,7 @@ internal sealed class ProviderConnectionService(
         ProviderKind provider,
         string label,
         Guid? ownerUserId,
+        ProviderEnvironment environment,
         CancellationToken cancellationToken = default
     )
     {
@@ -77,10 +86,31 @@ internal sealed class ProviderConnectionService(
             Provider = provider,
             Label = label.Trim(),
             OwnerUserId = ownerUserId,
+            Environment = environment,
         };
         session.Store(connection);
         await session.SaveChangesAsync(cancellationToken);
         return Result.Ok(connection);
+    }
+
+    public async Task<Result> SetEnvironmentAsync(
+        Guid connectionId,
+        ProviderEnvironment environment,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var connection = await session.LoadAsync<ProviderConnection>(
+            connectionId,
+            cancellationToken
+        );
+        if (connection is null)
+        {
+            return Result.Fail("Connection not found.");
+        }
+        connection.Environment = environment;
+        session.Store(connection);
+        await session.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
     }
 
     public async Task<Result> DeleteAsync(
