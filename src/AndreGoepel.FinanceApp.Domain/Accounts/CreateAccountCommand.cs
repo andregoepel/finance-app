@@ -11,7 +11,8 @@ public sealed record CreateAccountCommand(
     bool IsShared,
     IReadOnlyList<Guid> OwnerUserIds,
     SyncMethod SyncMethod,
-    string? Iban
+    string? Iban,
+    Guid? ConnectionId = null
 );
 
 public static class CreateAccountCommandHandler
@@ -43,6 +44,7 @@ public static class CreateAccountCommandHandler
             OwnerUserIds = owners.Value!,
             SyncMethod = command.SyncMethod,
             Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim(),
+            ConnectionId = command.ConnectionId,
         };
         session.Store(account);
         await session.SaveChangesAsync(cancellationToken);

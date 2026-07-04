@@ -15,7 +15,8 @@ public sealed record UpdateAccountCommand(
     bool IsShared,
     IReadOnlyList<Guid> OwnerUserIds,
     SyncMethod SyncMethod,
-    string? Iban
+    string? Iban,
+    Guid? ConnectionId = null
 );
 
 public static class UpdateAccountCommandHandler
@@ -50,6 +51,7 @@ public static class UpdateAccountCommandHandler
         account.OwnerUserIds = owners.Value!;
         account.SyncMethod = command.SyncMethod;
         account.Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim();
+        account.ConnectionId = command.ConnectionId;
 
         session.Store(account);
         await session.SaveChangesAsync(cancellationToken);
