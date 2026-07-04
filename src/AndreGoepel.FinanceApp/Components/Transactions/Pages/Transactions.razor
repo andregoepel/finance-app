@@ -1,9 +1,12 @@
 @page "/transactions"
 @attribute [Authorize]
+@using AndreGoepel.Marten.Identity.Users
+@using Microsoft.AspNetCore.Identity
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
+@inject UserManager<User> UserManager
 
 <PageTitle>Transactions – Finance</PageTitle>
 
@@ -40,12 +43,14 @@
                                     Change=@(_ => ReloadAsync()) />
                 </RadzenFormField>
                 <RadzenFormField Text="Owner">
-                    <RadzenDropDown TValue="AccountOwner?"
+                    <RadzenDropDown TValue="Guid?"
                                     @bind-Value=@ownerFilter
-                                    Data=@OwnerChoices
+                                    Data=@users
+                                    ValueProperty="StreamId"
+                                    TextProperty="UserName"
                                     AllowClear="true"
                                     Placeholder="All"
-                                    Style="min-width: 9rem;"
+                                    Style="min-width: 12rem;"
                                     Change=@(_ => ReloadAsync()) />
                 </RadzenFormField>
                 <RadzenFormField Text="Category">
@@ -139,17 +144,15 @@
 @code {
     private const int MaxRows = 1000;
 
-    private static readonly AccountOwner?[] OwnerChoices =
-        Enum.GetValues<AccountOwner>().Cast<AccountOwner?>().ToArray();
-
     private List<Account> accounts = [];
+    private IReadOnlyList<User> users = [];
     private List<CategoryChoice> categoryChoices = [];
     private List<TransactionView> transactions = [];
     private IList<TransactionView> selected = [];
 
     private RuleOffer? ruleOffer;
     private Guid? accountFilter;
-    private AccountOwner? ownerFilter;
+    private Guid? ownerFilter;
     private Guid? categoryFilter;
     private DateOnly? fromFilter;
     private DateOnly? toFilter;
@@ -158,6 +161,10 @@
     protected override async Task OnInitializedAsync()
     {
         accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+        users = await UserManager
+            .Users.Where(u => !u.Deleted)
+            .OrderBy(u => u.UserName)
+            .ToListAsync();
         var categories = await QuerySession.Query<Category>().ToListAsync();
         categoryChoices = CategoryChoice.Build(categories);
         await ReloadAsync();
@@ -199,9 +206,9 @@
     private Guid[] FilteredAccountIds()
     {
         var candidates = accounts.AsEnumerable();
-        if (ownerFilter is AccountOwner owner)
+        if (ownerFilter is Guid owner)
         {
-            candidates = candidates.Where(a => a.Owner == owner);
+            candidates = candidates.Where(a => a.OwnerUserIds.Contains(owner));
         }
         if (accountFilter is Guid accountId)
         {

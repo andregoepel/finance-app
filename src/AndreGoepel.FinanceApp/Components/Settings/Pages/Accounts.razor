@@ -1,33 +1,62 @@
 @page "/settings/accounts"
 @attribute [Authorize]
+@using AndreGoepel.Marten.Identity.Users
+@using Microsoft.AspNetCore.Identity
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject UserManager<User> UserManager
 
 <PageTitle>Accounts – Finance</PageTitle>
 
 <div class="rz-p-4 rz-p-md-6">
-    <RadzenStack Gap="1.5rem" Style="max-width: 70rem;">
+    <RadzenStack Gap="1.5rem" Style="max-width: 78rem;">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Accounts</RadzenText>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Accounts</RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                <RadzenSwitch @bind-Value=@showDeactivated Change=@(_ => StateHasChanged()) />
+                <RadzenLabel Text="Show deactivated" />
+            </RadzenStack>
+        </RadzenStack>
 
         <RadzenCard>
-            <RadzenDataGrid TItem="Account" Data=@accounts Density="Density.Compact">
+            <RadzenDataGrid TItem="Account" Data=@DisplayedAccounts Density="Density.Compact">
                 <Columns>
                     <RadzenDataGridColumn TItem="Account" Property="Name" Title="Name" />
-                    <RadzenDataGridColumn TItem="Account" Property="Provider" Title="Provider" Width="110px" />
-                    <RadzenDataGridColumn TItem="Account" Property="Type" Title="Type" Width="120px" />
-                    <RadzenDataGridColumn TItem="Account" Property="Currency" Title="Currency" Width="90px" />
-                    <RadzenDataGridColumn TItem="Account" Property="Owner" Title="Owner" Width="90px" />
-                    <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="Sync" Width="110px" />
-                    <RadzenDataGridColumn TItem="Account" Property="Iban" Title="IBAN" Width="220px" />
-                    <RadzenDataGridColumn TItem="Account" Title="" Width="70px" Sortable="false">
+                    <RadzenDataGridColumn TItem="Account" Property="Provider" Title="Provider" Width="100px" />
+                    <RadzenDataGridColumn TItem="Account" Property="Type" Title="Type" Width="110px" />
+                    <RadzenDataGridColumn TItem="Account" Property="Currency" Title="Currency" Width="80px" />
+                    <RadzenDataGridColumn TItem="Account" Title="Owner" Width="180px" Sortable="false">
+                        <Template Context="account">@OwnerLabel(account)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="Sync" Width="100px" />
+                    <RadzenDataGridColumn TItem="Account" Title="Status" Width="110px" Sortable="false">
                         <Template Context="account">
-                            <RadzenButton Icon="edit"
-                                          Size="ButtonSize.ExtraSmall"
-                                          ButtonStyle="ButtonStyle.Light"
-                                          Click=@(() => StartEdit(account)) />
+                            <RadzenBadge BadgeStyle="@(account.IsActive ? BadgeStyle.Success : BadgeStyle.Light)"
+                                         Text="@(account.IsActive ? "Active" : "Deactivated")" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Account" Title="" Width="140px" Sortable="false">
+                        <Template Context="account">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <RadzenButton Icon="edit" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light"
+                                              title="Edit" Click=@(() => StartEdit(account)) />
+                                @if (account.IsActive)
+                                {
+                                    <RadzenButton Icon="block" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Warning"
+                                                  title="Deactivate" Click=@(() => DeactivateAsync(account)) />
+                                }
+                                else
+                                {
+                                    <RadzenButton Icon="restart_alt" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Success"
+                                                  title="Reactivate" Click=@(() => ReactivateAsync(account)) />
+                                }
+                                <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Danger"
+                                              title="Delete permanently" Click=@(() => DeleteAsync(account)) />
+                            </RadzenStack>
                         </Template>
                     </RadzenDataGridColumn>
                 </Columns>
@@ -53,9 +82,38 @@
                     <RadzenFormField Text="Currency">
                         <RadzenTextBox @bind-Value=@form.Currency Disabled=@isSaving Style="width: 5.5rem;" MaxLength="3" />
                     </RadzenFormField>
-                    <RadzenFormField Text="Owner">
-                        <RadzenDropDown @bind-Value=@form.Owner Data=@OwnerChoices Disabled=@isSaving Style="min-width: 8rem;" />
-                    </RadzenFormField>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <RadzenSwitch @bind-Value=@form.IsShared Disabled=@isSaving Change=@OnSharedChanged />
+                        <RadzenLabel Text="Shared" />
+                    </RadzenStack>
+                    @if (form.IsShared)
+                    {
+                        <RadzenFormField Text="Owners">
+                            <RadzenDropDown TValue="IEnumerable<Guid>"
+                                            @bind-Value=@form.OwnerUserIds
+                                            Data=@users
+                                            ValueProperty="StreamId"
+                                            TextProperty="UserName"
+                                            Multiple="true" AllowClear="true" Chips="true"
+                                            Disabled=@isSaving
+                                            Placeholder="Select users"
+                                            Style="min-width: 18rem;" />
+                        </RadzenFormField>
+                    }
+                    else
+                    {
+                        <RadzenFormField Text="Owner">
+                            <RadzenDropDown TValue="Guid?"
+                                            @bind-Value=@SingleOwner
+                                            Data=@users
+                                            ValueProperty="StreamId"
+                                            TextProperty="UserName"
+                                            AllowClear="true"
+                                            Disabled=@isSaving
+                                            Placeholder="Select user"
+                                            Style="min-width: 13rem;" />
+                        </RadzenFormField>
+                    }
                     <RadzenFormField Text="Sync">
                         <RadzenDropDown @bind-Value=@form.SyncMethod Data=@SyncChoices Disabled=@isSaving Style="min-width: 8rem;" />
                     </RadzenFormField>
@@ -83,22 +141,54 @@
 @code {
     private static readonly ProviderKind[] ProviderChoices = Enum.GetValues<ProviderKind>();
     private static readonly AccountType[] TypeChoices = Enum.GetValues<AccountType>();
-    private static readonly AccountOwner[] OwnerChoices = Enum.GetValues<AccountOwner>();
     private static readonly SyncMethod[] SyncChoices = Enum.GetValues<SyncMethod>();
 
     private List<Account> accounts = [];
+    private IReadOnlyList<User> users = [];
     private Guid? editingAccountId;
     private InputModel form = new();
     private bool isSaving;
+    private bool showDeactivated;
+
+    private IEnumerable<Account> DisplayedAccounts =>
+        showDeactivated ? accounts : accounts.Where(a => a.IsActive);
+
+    private Guid? SingleOwner
+    {
+        get => form.OwnerUserIds.FirstOrDefault() is var id && id != Guid.Empty ? id : null;
+        set => form.OwnerUserIds = value is Guid g ? [g] : [];
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        users = await UserManager
+            .Users.Where(u => !u.Deleted)
+            .OrderBy(u => u.UserName)
+            .ToListAsync();
         await ReloadAsync();
     }
 
     private async Task ReloadAsync()
     {
         accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+    }
+
+    private string OwnerLabel(Account account)
+    {
+        var names = account
+            .OwnerUserIds.Select(id => users.FirstOrDefault(u => u.StreamId == id)?.UserName ?? "?")
+            .ToList();
+        var joined = names.Count == 0 ? "—" : string.Join(", ", names);
+        return account.IsShared ? $"{joined} (shared)" : joined;
+    }
+
+    private void OnSharedChanged()
+    {
+        // Collapsing to a single-owner account keeps only the first selected user.
+        if (!form.IsShared)
+        {
+            form.OwnerUserIds = form.OwnerUserIds.Take(1).ToList();
+        }
     }
 
     private void StartEdit(Account account)
@@ -110,7 +200,8 @@
             Provider = account.Provider,
             Type = account.Type,
             Currency = account.Currency,
-            Owner = account.Owner,
+            IsShared = account.IsShared,
+            OwnerUserIds = account.OwnerUserIds.ToList(),
             SyncMethod = account.SyncMethod,
             Iban = account.Iban ?? "",
         };
@@ -137,6 +228,7 @@
         await Task.Yield();
         try
         {
+            var owners = form.OwnerUserIds.ToList();
             var result = editingAccountId is Guid accountId
                 ? await MessageBus.InvokeAsync<Result<Account>>(
                     new UpdateAccountCommand(
@@ -144,7 +236,8 @@
                         form.Name,
                         form.Type,
                         form.Currency,
-                        form.Owner,
+                        form.IsShared,
+                        owners,
                         form.SyncMethod,
                         form.Iban
                     )
@@ -155,7 +248,8 @@
                         form.Provider,
                         form.Type,
                         form.Currency,
-                        form.Owner,
+                        form.IsShared,
+                        owners,
                         form.SyncMethod,
                         form.Iban
                     )
@@ -176,13 +270,62 @@
         }
     }
 
+    private async Task DeactivateAsync(Account account)
+    {
+        var result = await MessageBus.InvokeAsync<Result<Account>>(
+            new DeactivateAccountCommand(account.Id)
+        );
+        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account deactivated");
+    }
+
+    private async Task ReactivateAsync(Account account)
+    {
+        var result = await MessageBus.InvokeAsync<Result<Account>>(
+            new ReactivateAccountCommand(account.Id)
+        );
+        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account reactivated");
+    }
+
+    private async Task DeleteAsync(Account account)
+    {
+        var confirmed = await DialogService.Confirm(
+            $"Permanently delete “{account.Name}”? This cannot be undone.",
+            "Delete account",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" }
+        );
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result>(new DeleteAccountCommand(account.Id));
+        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account deleted");
+    }
+
+    private async Task AfterLifecycleAsync(string? error, string successMessage)
+    {
+        if (error is not null)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Action failed", error);
+            return;
+        }
+
+        NotificationService.Notify(NotificationSeverity.Success, successMessage);
+        if (editingAccountId is not null)
+        {
+            ResetForm();
+        }
+        await ReloadAsync();
+    }
+
     private sealed class InputModel
     {
         public string Name { get; set; } = "";
         public ProviderKind Provider { get; set; } = ProviderKind.Dkb;
         public AccountType Type { get; set; } = AccountType.Checking;
         public string Currency { get; set; } = "EUR";
-        public AccountOwner Owner { get; set; } = AccountOwner.Joint;
+        public bool IsShared { get; set; }
+        public IEnumerable<Guid> OwnerUserIds { get; set; } = [];
         public SyncMethod SyncMethod { get; set; } = SyncMethod.CsvUpload;
         public string Iban { get; set; } = "";
     }

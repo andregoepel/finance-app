@@ -4,14 +4,16 @@ namespace AndreGoepel.FinanceApp.Domain.Accounts;
 
 /// <summary>
 /// Edits the mutable account fields. Provider is fixed at creation — imported
-/// transactions and parsers depend on it.
+/// transactions and parsers depend on it. Lifecycle (activate/deactivate/delete)
+/// is handled by dedicated commands.
 /// </summary>
 public sealed record UpdateAccountCommand(
     Guid AccountId,
     string Name,
     AccountType Type,
     string Currency,
-    AccountOwner Owner,
+    bool IsShared,
+    IReadOnlyList<Guid> OwnerUserIds,
     SyncMethod SyncMethod,
     string? Iban
 );
@@ -29,6 +31,12 @@ public static class UpdateAccountCommandHandler
             return Result.Fail<Account>("Account name is required.");
         }
 
+        var owners = AccountOwners.Validate(command.IsShared, command.OwnerUserIds);
+        if (owners.IsFailure)
+        {
+            return Result.Fail<Account>(owners.Error);
+        }
+
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
@@ -38,7 +46,8 @@ public static class UpdateAccountCommandHandler
         account.Name = command.Name.Trim();
         account.Type = command.Type;
         account.Currency = command.Currency.Trim().ToUpperInvariant();
-        account.Owner = command.Owner;
+        account.IsShared = command.IsShared;
+        account.OwnerUserIds = owners.Value!;
         account.SyncMethod = command.SyncMethod;
         account.Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim();
 

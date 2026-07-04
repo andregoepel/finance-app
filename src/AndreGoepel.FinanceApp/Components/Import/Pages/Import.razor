@@ -162,7 +162,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+        accounts = (
+            await QuerySession
+                .Query<Account>()
+                .Where(a => a.Status == AccountStatus.Active)
+                .ToListAsync()
+        )
+            .OrderBy(a => a.Name)
+            .ToList();
     }
 
     private async Task OnAccountChangedAsync()
