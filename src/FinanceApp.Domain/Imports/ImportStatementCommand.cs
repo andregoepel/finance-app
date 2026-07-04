@@ -88,14 +88,19 @@ public static class ImportStatementCommandHandler
         }
 
         session.Store(batch);
-        await session.SaveChangesAsync(cancellationToken);
 
         if (newRows.Count > 0)
         {
-            // Async fire-and-forget: categorization failures (rules or Claude
-            // API) must never fail an import.
+            // Enrol the follow-up categorization in the SAME transactional outbox
+            // as this import, so it is delivered atomically when SaveChangesAsync
+            // commits. Publishing AFTER the commit would leave the outgoing
+            // envelope unflushed in the durable outbox — enqueued but never
+            // delivered. Categorization failures still never fail the import: the
+            // categorization handler swallows them (rules/Claude are best-effort).
             await messageBus.PublishAsync(new CategorizeImportedTransactionsCommand(batch.Id));
         }
+
+        await session.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(batch);
     }
