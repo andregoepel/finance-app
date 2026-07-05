@@ -3,6 +3,7 @@ using AndreGoepel.FinanceApp.Connections;
 using AndreGoepel.FinanceApp.Connectors;
 using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Insights;
+using AndreGoepel.FinanceApp.Planning;
 using AndreGoepel.FinanceApp.Sync;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Quartz;
@@ -43,6 +44,7 @@ public static class Initialization
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<INetWorthService, NetWorthService>();
         services.AddScoped<IRecurringService, RecurringService>();
+        services.AddScoped<IPlanningService, PlanningService>();
 
         return services;
     }
