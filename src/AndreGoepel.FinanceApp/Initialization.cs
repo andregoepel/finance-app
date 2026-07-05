@@ -2,6 +2,7 @@ using AndreGoepel.FinanceApp.Categorization;
 using AndreGoepel.FinanceApp.Connections;
 using AndreGoepel.FinanceApp.Connectors;
 using AndreGoepel.FinanceApp.Domain;
+using AndreGoepel.FinanceApp.Insights;
 using AndreGoepel.FinanceApp.Sync;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Quartz;
@@ -38,6 +39,8 @@ public static class Initialization
         );
         services.AddSingleton<ISyncScheduleService, SyncScheduleService>();
         services.AddHostedService<SyncScheduleStartup>();
+
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }

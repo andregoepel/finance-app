@@ -1,39 +1,153 @@
 @page "/"
 @attribute [Authorize]
+@rendermode InteractiveServer
+@using AndreGoepel.FinanceApp.Insights
+
+@inject IDashboardService DashboardService
 
 <PageTitle>Dashboard – Finance</PageTitle>
 
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Dashboard</RadzenText>
-
-        <RadzenCard>
-            <RadzenStack Gap="0.5rem">
-                <RadzenText TextStyle="TextStyle.H6">Net worth</RadzenText>
-                <RadzenText TextStyle="TextStyle.Body1">
-                    No data yet. Accounts and transactions arrive with the first import.
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Dashboard</RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                              Click=@(() => ShiftMonthAsync(-1)) />
+                <RadzenText TextStyle="TextStyle.Subtitle1" Style="min-width: 9rem; text-align: center;">
+                    @MonthStart.ToString("MMMM yyyy")
                 </RadzenText>
+                <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                              Disabled=@IsCurrentMonth Click=@(() => ShiftMonthAsync(1)) />
             </RadzenStack>
-        </RadzenCard>
+        </RadzenStack>
 
-        <RadzenCard>
-            <RadzenStack Gap="0.5rem">
-                <RadzenText TextStyle="TextStyle.H6">Spending by category</RadzenText>
-                <RadzenText TextStyle="TextStyle.Body1">
-                    No data yet. Categories are assigned once transactions are imported.
-                </RadzenText>
-            </RadzenStack>
-        </RadzenCard>
+        @if (overview is null)
+        {
+            <RadzenText>Loading…</RadzenText>
+        }
+        else
+        {
+            @if (overview.UnconvertedCount > 0)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+                    @overview.UnconvertedCount transaction(s) this month are awaiting EUR conversion and
+                    are not yet included in the totals.
+                </RadzenAlert>
+            }
 
-        <RadzenCard>
-            <RadzenStack Gap="0.5rem">
-                <RadzenText TextStyle="TextStyle.H6">Budgets</RadzenText>
-                <RadzenText TextStyle="TextStyle.Body1">
-                    No budgets defined yet.
-                </RadzenText>
-            </RadzenStack>
-        </RadzenCard>
+            @* ---------- Month totals ---------- *@
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="12" SizeMd="4">
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Income</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-success);">@Eur(overview.Income)</RadzenText>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMd="4">
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Expenses</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-danger);">@Eur(overview.Expenses)</RadzenText>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMd="4">
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Net</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H5" Style="@($"color: {(overview.Net >= 0 ? "var(--rz-success)" : "var(--rz-danger)")};")">@Eur(overview.Net)</RadzenText>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+
+            @* ---------- Spending by category ---------- *@
+            <RadzenCard>
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Spending by category</RadzenText>
+                    @if (overview.SpendingByCategory.Count == 0)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                            No expenses recorded for this month.
+                        </RadzenText>
+                    }
+                    else
+                    {
+                        <RadzenRow Gap="1rem" AlignItems="AlignItems.Center">
+                            <RadzenColumn Size="12" SizeMd="6">
+                                <RadzenChart>
+                                    <RadzenDonutSeries Data="@overview.SpendingByCategory" CategoryProperty="Category" ValueProperty="Amount">
+                                        <TitleTemplate>
+                                            <div class="rz-donut-content">
+                                                <RadzenText TextStyle="TextStyle.Caption">Expenses</RadzenText>
+                                            </div>
+                                        </TitleTemplate>
+                                    </RadzenDonutSeries>
+                                    <RadzenLegend Position="LegendPosition.Bottom" />
+                                </RadzenChart>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMd="6">
+                                <RadzenDataGrid TItem="CategorySpend" Data="@overview.SpendingByCategory" Density="Density.Compact" AllowPaging="false">
+                                    <Columns>
+                                        <RadzenDataGridColumn TItem="CategorySpend" Property="Category" Title="Category" />
+                                        <RadzenDataGridColumn TItem="CategorySpend" Property="Amount" Title="Amount" TextAlign="TextAlign.Right" Width="120px">
+                                            <Template Context="row">@Eur(row.Amount)</Template>
+                                        </RadzenDataGridColumn>
+                                    </Columns>
+                                </RadzenDataGrid>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    }
+                    @if (overview.UncategorizedCount > 0)
+                    {
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                            @overview.UncategorizedCount transaction(s) are uncategorized —
+                            <RadzenLink Path="review" Text="review them" />.
+                        </RadzenText>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+
+            @* ---------- Placeholders for later Phase 4 slices ---------- *@
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="12" SizeMd="6">
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.H6">Net worth</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                            Net-worth history arrives in a later Phase 4 slice.
+                        </RadzenText>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMd="6">
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.H6">Budgets</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                            Budget progress arrives in a later Phase 4 slice.
+                        </RadzenText>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+        }
 
     </RadzenStack>
 </div>
+
+@code {
+    private DateOnly MonthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private MonthlyOverview? overview;
+
+    private bool IsCurrentMonth =>
+        MonthStart.Year == DateTime.Today.Year && MonthStart.Month == DateTime.Today.Month;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() =>
+        overview = await DashboardService.GetMonthlyOverviewAsync(MonthStart.Year, MonthStart.Month);
+
+    private async Task ShiftMonthAsync(int months)
+    {
+        MonthStart = MonthStart.AddMonths(months);
+        overview = null;
+        await LoadAsync();
+    }
+
+    private static string Eur(decimal amount) => $"{amount:N2} €";
+}
