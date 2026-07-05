@@ -42,6 +42,9 @@ public sealed class TransactionView
 
     public bool IsTransfer => TransferCounterpartId is not null;
 
+    /// <summary>The planned item this transaction is matched to, if any.</summary>
+    public Guid? PlannedItemId { get; set; }
+
     public static TransactionView Create(TransactionImported imported) =>
         new()
         {
@@ -86,5 +89,15 @@ public sealed class TransactionView
     public void Apply(TransactionTransferUnlinked _)
     {
         TransferCounterpartId = null;
+    }
+
+    public void Apply(TransactionMatchedToPlannedItem matched)
+    {
+        PlannedItemId = matched.PlannedItemId;
+    }
+
+    public void Apply(TransactionPlannedMatchCleared _)
+    {
+        PlannedItemId = null;
     }
 }

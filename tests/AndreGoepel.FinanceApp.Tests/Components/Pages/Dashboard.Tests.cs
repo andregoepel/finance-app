@@ -27,6 +27,16 @@ public class DashboardTests : BunitContext
             .GetAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new NetWorthOverview(0m, [], 0)));
         Services.AddSingleton(netWorth);
+
+        var planning = Substitute.For<AndreGoepel.FinanceApp.Planning.IPlanningService>();
+        planning
+            .GetUpcomingAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(
+                Task.FromResult<
+                    IReadOnlyList<AndreGoepel.FinanceApp.Domain.Planning.PlannedOccurrence>
+                >([])
+            );
+        Services.AddSingleton(planning);
     }
 
     [Fact]

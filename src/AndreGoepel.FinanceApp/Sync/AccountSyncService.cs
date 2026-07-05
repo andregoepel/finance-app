@@ -2,6 +2,7 @@ using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Imports;
+using AndreGoepel.FinanceApp.Domain.Planning;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using Marten;
 using Wolverine;
@@ -107,6 +108,7 @@ internal sealed class AccountSyncService(
             await messageBus.PublishAsync(
                 new CategorizeImportedTransactionsCommand(import.Value.Id)
             );
+            await messageBus.PublishAsync(new MatchPlannedTransactionsCommand());
         }
 
         return new AccountSyncSummary(
