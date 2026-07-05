@@ -61,7 +61,8 @@ public sealed record PlannedOccurrence(
     Guid? CategoryId,
     DateOnly DueDate,
     PlannedOccurrenceStatus Status,
-    Guid? MatchedTransactionId
+    Guid? MatchedTransactionId,
+    decimal? MatchedAmount
 );
 
 public enum PlannedOccurrenceStatus

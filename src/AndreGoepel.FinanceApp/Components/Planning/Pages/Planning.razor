@@ -16,30 +16,30 @@
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
             <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Planning</RadzenText>
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenButton Text="Match now" Icon="join_inner" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                              IsBusy=@matching Disabled=@matching Click=@MatchNowAsync />
                 <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click=@(() => ShiftMonthAsync(-1)) />
                 <RadzenText TextStyle="TextStyle.Subtitle1" Style="min-width: 9rem; text-align: center;">@monthStart.ToString("MMMM yyyy")</RadzenText>
                 <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click=@(() => ShiftMonthAsync(1)) />
             </RadzenStack>
         </RadzenStack>
 
-        @* ---------- Plan vs actual for the month ---------- *@
+        @* ---------- Plan vs actual ---------- *@
         <RadzenRow Gap="1rem">
-            <RadzenColumn Size="12" SizeMd="4">
+            <RadzenColumn Size="12" SizeMd="6">
                 <RadzenCard>
-                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Planned income</RadzenText>
-                    <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-success);">@Eur(plan?.PlannedIncome ?? 0)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Expenses — planned vs actual</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-danger);">
+                        @Eur(plan?.ActualExpenses ?? 0) <span style="color: var(--rz-text-secondary-color); font-weight: 400;">/ @Eur(plan?.PlannedExpenses ?? 0)</span>
+                    </RadzenText>
                 </RadzenCard>
             </RadzenColumn>
-            <RadzenColumn Size="12" SizeMd="4">
+            <RadzenColumn Size="12" SizeMd="6">
                 <RadzenCard>
-                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Planned expenses</RadzenText>
-                    <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-danger);">@Eur(plan?.PlannedExpenses ?? 0)</RadzenText>
-                </RadzenCard>
-            </RadzenColumn>
-            <RadzenColumn Size="12" SizeMd="4">
-                <RadzenCard>
-                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Planned net</RadzenText>
-                    <RadzenText TextStyle="TextStyle.H6">@Eur((plan?.PlannedIncome ?? 0) - (plan?.PlannedExpenses ?? 0))</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Income — planned vs actual</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-success);">
+                        @Eur(plan?.ActualIncome ?? 0) <span style="color: var(--rz-text-secondary-color); font-weight: 400;">/ @Eur(plan?.PlannedIncome ?? 0)</span>
+                    </RadzenText>
                 </RadzenCard>
             </RadzenColumn>
         </RadzenRow>
@@ -57,25 +57,72 @@
                 {
                     <RadzenDataGrid TItem="PlannedOccurrence" Data=@plan.Occurrences Density="Density.Compact" AllowPaging="false">
                         <Columns>
-                            <RadzenDataGridColumn TItem="PlannedOccurrence" Property="DueDate" Title="Due" Width="110px">
+                            <RadzenDataGridColumn TItem="PlannedOccurrence" Property="DueDate" Title="Due" Width="105px">
                                 <Template Context="o">@o.DueDate.ToString("dd.MM.yyyy")</Template>
                             </RadzenDataGridColumn>
                             <RadzenDataGridColumn TItem="PlannedOccurrence" Property="Description" Title="Description" />
-                            <RadzenDataGridColumn TItem="PlannedOccurrence" Title="Category" Width="150px">
+                            <RadzenDataGridColumn TItem="PlannedOccurrence" Title="Category" Width="130px">
                                 <Template Context="o">@CategoryName(o.CategoryId)</Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="PlannedOccurrence" Property="Amount" Title="Amount" Width="120px" TextAlign="TextAlign.Right">
-                                <Template Context="o">
-                                    <span style="@(o.Amount < 0 ? "color: var(--rz-danger);" : "color: var(--rz-success);")">@Eur(o.Amount)</span>
-                                </Template>
+                            <RadzenDataGridColumn TItem="PlannedOccurrence" Property="Amount" Title="Planned" Width="110px" TextAlign="TextAlign.Right">
+                                <Template Context="o"><span style="@AmountColor(o.Amount)">@Eur(o.Amount)</span></Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="PlannedOccurrence" Property="Status" Title="Status" Width="110px">
+                            <RadzenDataGridColumn TItem="PlannedOccurrence" Title="Actual" Width="110px" TextAlign="TextAlign.Right">
+                                <Template Context="o">@(o.MatchedAmount is decimal a ? Eur(a) : "—")</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="PlannedOccurrence" Property="Status" Title="Status" Width="100px">
+                                <Template Context="o"><RadzenBadge BadgeStyle="@StatusStyle(o.Status)" Text="@o.Status.ToString()" /></Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="PlannedOccurrence" Title="" Width="90px" TextAlign="TextAlign.End">
                                 <Template Context="o">
-                                    <RadzenBadge BadgeStyle="@StatusStyle(o.Status)" Text="@o.Status.ToString()" />
+                                    @if (o.Status == PlannedOccurrenceStatus.Matched)
+                                    {
+                                        <RadzenButton Text="Unmatch" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" Click=@(() => UnmatchAsync(o)) />
+                                    }
+                                    else
+                                    {
+                                        <RadzenButton Text="Match" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.ExtraSmall" Click=@(() => StartMatchAsync(o)) />
+                                    }
                                 </Template>
                             </RadzenDataGridColumn>
                         </Columns>
                     </RadzenDataGrid>
+                }
+
+                @if (matchingOccurrence is not null)
+                {
+                    <RadzenCard Style="background: var(--rz-base-200);">
+                        <RadzenStack Gap="0.75rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">
+                                    Match “@matchingOccurrence.Description” (@matchingOccurrence.DueDate.ToString("dd.MM.yyyy"))
+                                </RadzenText>
+                                <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" Click=@(() => matchingOccurrence = null) />
+                            </RadzenStack>
+                            @if (candidates.Count == 0)
+                            {
+                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">No unmatched transactions near this date.</RadzenText>
+                            }
+                            else
+                            {
+                                <RadzenDataGrid TItem="TransactionView" Data=@candidates Density="Density.Compact" AllowPaging="true" PageSize="8">
+                                    <Columns>
+                                        <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="105px">
+                                            <Template Context="t">@t.BookingDate.ToString("dd.MM.yyyy")</Template>
+                                        </RadzenDataGridColumn>
+                                        <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="Counterparty" Width="160px" />
+                                        <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
+                                        <RadzenDataGridColumn TItem="TransactionView" Property="AmountEur" Title="EUR" Width="110px" TextAlign="TextAlign.Right">
+                                            <Template Context="t">@(t.AmountEur is decimal a ? Eur(a) : "—")</Template>
+                                        </RadzenDataGridColumn>
+                                        <RadzenDataGridColumn TItem="TransactionView" Title="" Width="70px" TextAlign="TextAlign.End">
+                                            <Template Context="t"><RadzenButton Text="Use" Size="ButtonSize.ExtraSmall" Click=@(() => UseMatchAsync(t)) /></Template>
+                                        </RadzenDataGridColumn>
+                                    </Columns>
+                                </RadzenDataGrid>
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
                 }
             </RadzenStack>
         </RadzenCard>
@@ -89,16 +136,14 @@
                         <RadzenTextBox @bind-Value=@form.Description Style="min-width: 14rem;" />
                     </RadzenFormField>
                     <RadzenFormField Text="Type">
-                        <RadzenDropDown TValue="bool" @bind-Value=@form.IsExpense Data=@TypeChoices
-                                        TextProperty="Label" ValueProperty="IsExpense" Style="min-width: 8rem;" />
+                        <RadzenDropDown TValue="bool" @bind-Value=@form.IsExpense Data=@TypeChoices TextProperty="Label" ValueProperty="IsExpense" Style="min-width: 8rem;" />
                     </RadzenFormField>
                     <RadzenFormField Text="Amount (€)">
                         <RadzenNumeric TValue="decimal" @bind-Value=@form.Amount Min="0" Style="width: 9rem;" />
                     </RadzenFormField>
                     <RadzenFormField Text="Category">
-                        <RadzenDropDown TValue="Guid?" @bind-Value=@form.CategoryId Data=@categoryOptions
-                                        ValueProperty="Id" TextProperty="Path" AllowClear="true" AllowFiltering="true"
-                                        Placeholder="(none)" Style="min-width: 15rem;" />
+                        <RadzenDropDown TValue="Guid?" @bind-Value=@form.CategoryId Data=@categoryOptions ValueProperty="Id" TextProperty="Path"
+                                        AllowClear="true" AllowFiltering="true" Placeholder="(none)" Style="min-width: 15rem;" />
                     </RadzenFormField>
                     <RadzenFormField Text="Frequency">
                         <RadzenDropDown TValue="PlannedFrequency" @bind-Value=@form.Frequency Data=@Frequencies Style="min-width: 9rem;" />
@@ -113,15 +158,14 @@
                         </RadzenFormField>
                     }
                     <RadzenFormField Text="Expected account">
-                        <RadzenDropDown TValue="Guid?" @bind-Value=@form.ExpectedAccountId Data=@accounts
-                                        ValueProperty="Id" TextProperty="Name" AllowClear="true"
-                                        Placeholder="(any)" Style="min-width: 12rem;" />
+                        <RadzenDropDown TValue="Guid?" @bind-Value=@form.ExpectedAccountId Data=@accounts ValueProperty="Id" TextProperty="Name"
+                                        AllowClear="true" Placeholder="(any)" Style="min-width: 12rem;" />
                     </RadzenFormField>
                     <RadzenFormField Text="Counterparty contains">
                         <RadzenTextBox @bind-Value=@form.CounterpartyPattern Placeholder="match hint" Style="min-width: 12rem;" />
                     </RadzenFormField>
-                    <RadzenFormField Text="Amount tolerance (%)">
-                        <RadzenNumeric TValue="decimal" @bind-Value=@form.TolerancePercent Min="0" Max="100" Style="width: 8rem;" />
+                    <RadzenFormField Text="Tolerance (%)">
+                        <RadzenNumeric TValue="decimal" @bind-Value=@form.TolerancePercent Min="0" Max="100" Style="width: 7rem;" />
                     </RadzenFormField>
                     <RadzenFormField Text="Date window (± days)">
                         <RadzenNumeric TValue="int" @bind-Value=@form.DateWindowDays Min="0" Style="width: 8rem;" />
@@ -147,7 +191,7 @@
                         <Columns>
                             <RadzenDataGridColumn TItem="PlannedItem" Property="Description" Title="Description" />
                             <RadzenDataGridColumn TItem="PlannedItem" Title="Amount" Width="120px" TextAlign="TextAlign.Right">
-                                <Template Context="i"><span style="@(i.Amount < 0 ? "color: var(--rz-danger);" : "color: var(--rz-success);")">@Eur(i.Amount)</span></Template>
+                                <Template Context="i"><span style="@AmountColor(i.Amount)">@Eur(i.Amount)</span></Template>
                             </RadzenDataGridColumn>
                             <RadzenDataGridColumn TItem="PlannedItem" Title="Schedule" Width="150px">
                                 <Template Context="i">@ScheduleLabel(i)</Template>
@@ -186,6 +230,10 @@
     private List<AccountOption> accounts = [];
     private Guid? editingId;
     private ItemForm form = new();
+    private bool matching;
+
+    private PlannedOccurrence? matchingOccurrence;
+    private List<TransactionView> candidates = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -219,8 +267,60 @@
     private async Task ShiftMonthAsync(int months)
     {
         monthStart = monthStart.AddMonths(months);
+        matchingOccurrence = null;
         plan = null;
         plan = await PlanningService.GetMonthAsync(monthStart.Year, monthStart.Month);
+    }
+
+    private async Task MatchNowAsync()
+    {
+        matching = true;
+        try
+        {
+            await MessageBus.InvokeAsync(new MatchPlannedTransactionsCommand());
+            await LoadAsync();
+            NotificationService.Notify(NotificationSeverity.Success, "Matching complete");
+        }
+        finally
+        {
+            matching = false;
+        }
+    }
+
+    private async Task StartMatchAsync(PlannedOccurrence occurrence)
+    {
+        matchingOccurrence = occurrence;
+        candidates = (await PlanningService.GetMatchCandidatesAsync(occurrence.DueDate)).ToList();
+    }
+
+    private async Task UseMatchAsync(TransactionView transaction)
+    {
+        if (matchingOccurrence is not PlannedOccurrence o)
+        {
+            return;
+        }
+        var result = await MessageBus.InvokeAsync<Result>(
+            new SetPlannedMatchCommand(o.PlannedItemId, o.DueDate, transaction.Id));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Match failed", result.Error);
+            return;
+        }
+        matchingOccurrence = null;
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Matched");
+    }
+
+    private async Task UnmatchAsync(PlannedOccurrence occurrence)
+    {
+        var result = await MessageBus.InvokeAsync<Result>(
+            new ClearPlannedMatchCommand(occurrence.PlannedItemId, occurrence.DueDate));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Unmatch failed", result.Error);
+            return;
+        }
+        await LoadAsync();
     }
 
     private void StartEdit(PlannedItem item)
@@ -256,16 +356,15 @@
         DateOnly? end = form.Frequency != PlannedFrequency.OneTime && form.EndDate is DateTime e
             ? DateOnly.FromDateTime(e)
             : null;
-        var pattern = form.CounterpartyPattern;
         var tolerance = form.TolerancePercent / 100m;
 
         Result result = editingId is Guid id
             ? await MessageBus.InvokeAsync<Result<PlannedItem>>(new UpdatePlannedItemCommand(
                 id, form.Description, amount, form.CategoryId, form.Frequency, start, end,
-                form.ExpectedAccountId, pattern, tolerance, form.DateWindowDays, form.Active))
+                form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays, form.Active))
             : await MessageBus.InvokeAsync<Result<PlannedItem>>(new CreatePlannedItemCommand(
                 form.Description, amount, form.CategoryId, form.Frequency, start, end,
-                form.ExpectedAccountId, pattern, tolerance, form.DateWindowDays));
+                form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays));
 
         if (result.IsFailure)
         {
@@ -300,6 +399,9 @@
         item.Schedule.Frequency == PlannedFrequency.OneTime
             ? $"Once, {item.Schedule.StartDate:dd.MM.yyyy}"
             : $"{item.Schedule.Frequency} from {item.Schedule.StartDate:dd.MM.yyyy}";
+
+    private static string AmountColor(decimal amount) =>
+        amount < 0 ? "color: var(--rz-danger);" : "color: var(--rz-success);";
 
     private static BadgeStyle StatusStyle(PlannedOccurrenceStatus status) => status switch
     {

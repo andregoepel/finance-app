@@ -55,6 +55,17 @@ public sealed record TransactionLinkedAsTransfer(Guid CounterpartTransactionId);
 /// <summary>Reverts an erroneous transfer link.</summary>
 public sealed record TransactionTransferUnlinked;
 
+/// <summary>
+/// Links this transaction to a planned item's occurrence (auto or manual match)
+/// — the actual that satisfies a planned cost/income. The
+/// <c>PlannedMatch</c> document is the source of truth for plan-vs-actual; this
+/// event lets the transactions grid show the link.
+/// </summary>
+public sealed record TransactionMatchedToPlannedItem(Guid PlannedItemId, DateOnly DueDate);
+
+/// <summary>Clears a planned-item match from this transaction.</summary>
+public sealed record TransactionPlannedMatchCleared;
+
 public enum CategorySource
 {
     Provider,

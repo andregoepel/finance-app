@@ -1,10 +1,12 @@
 using AndreGoepel.FinanceApp.Domain.Planning;
+using AndreGoepel.FinanceApp.Domain.Transactions;
 
 namespace AndreGoepel.FinanceApp.Planning;
 
 /// <summary>
 /// Read side for planning: the planned items and, per month, their expanded
-/// occurrences with plan-vs-actual totals.
+/// occurrences (with match status) plus plan-vs-actual totals. Also supplies
+/// candidate transactions for manual matching.
 /// </summary>
 public interface IPlanningService
 {
@@ -15,11 +17,19 @@ public interface IPlanningService
         int month,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>Unmatched transactions near a due date, offered for a manual match.</summary>
+    Task<IReadOnlyList<TransactionView>> GetMatchCandidatesAsync(
+        DateOnly dueDate,
+        CancellationToken cancellationToken = default
+    );
 }
 
-/// <summary>A month's planned occurrences and the planned income/expense totals (EUR).</summary>
+/// <summary>A month's occurrences with planned vs. actual (matched) totals (EUR).</summary>
 public sealed record PlanMonth(
     IReadOnlyList<PlannedOccurrence> Occurrences,
     decimal PlannedIncome,
-    decimal PlannedExpenses
+    decimal PlannedExpenses,
+    decimal ActualIncome,
+    decimal ActualExpenses
 );

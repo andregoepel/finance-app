@@ -1,4 +1,5 @@
 using AndreGoepel.FinanceApp.Domain.Exchange;
+using AndreGoepel.FinanceApp.Domain.Planning;
 using Quartz;
 using Wolverine;
 
@@ -41,8 +42,9 @@ internal sealed class DailySyncJob(
             );
 
             // Retry any transactions still missing an EUR amount (e.g. a rate
-            // lookup that failed earlier).
+            // lookup that failed earlier), then auto-match planned items.
             await messageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
+            await messageBus.PublishAsync(new MatchPlannedTransactionsCommand());
         }
         catch (Exception exception)
         {
