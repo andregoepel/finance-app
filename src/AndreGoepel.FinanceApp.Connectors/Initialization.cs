@@ -1,8 +1,10 @@
+using AndreGoepel.FinanceApp.Connectors.Exchange;
 using AndreGoepel.FinanceApp.Connectors.Parsing;
 using AndreGoepel.FinanceApp.Connectors.Providers;
 using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 using AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 using AndreGoepel.FinanceApp.Connectors.Sync;
+using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -46,10 +48,21 @@ public static class Initialization
                 }
             )
             .RemoveAllResilienceHandlers();
+        services
+            .AddHttpClient(
+                FrankfurterExchangeRateProvider.HttpClientName,
+                client =>
+                {
+                    client.BaseAddress = new Uri("https://api.frankfurter.dev/v1/");
+                    client.Timeout = TimeSpan.FromSeconds(30);
+                }
+            )
+            .RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
 
         services.AddScoped<IWiseApiClient, WiseApiClient>();
         services.AddScoped<IEnableBankingClient, EnableBankingClient>();
+        services.AddScoped<IExchangeRateProvider, FrankfurterExchangeRateProvider>();
 
         // Wise is a token-only balance reader (see WiseBalanceService in the host),
         // not a transaction connector — only Enable Banking syncs transactions.
