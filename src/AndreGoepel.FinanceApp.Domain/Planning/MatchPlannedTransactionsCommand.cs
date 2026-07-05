@@ -37,15 +37,19 @@ public static class MatchPlannedTransactionsCommandHandler
         var existing = await session.Query<PlannedMatch>().ToListAsync(cancellationToken);
         var matchedKeys = existing.Select(m => m.Id).ToHashSet();
 
+        // Precompute the candidate window bounds — Marten can't translate
+        // `from.AddDays(-window)` inline (a captured-variable negation/method call).
         var window = items.Max(i => i.DateWindowDays);
+        var candidateFrom = from.AddDays(-window);
+        var candidateTo = to.AddDays(window);
         var pool = (
             await session
                 .Query<TransactionView>()
                 .Where(t =>
                     t.AmountEur != null
                     && t.PlannedItemId == null
-                    && t.BookingDate >= from.AddDays(-window)
-                    && t.BookingDate <= to.AddDays(window)
+                    && t.BookingDate >= candidateFrom
+                    && t.BookingDate <= candidateTo
                 )
                 .ToListAsync(cancellationToken)
         )
