@@ -1,3 +1,4 @@
+using AndreGoepel.FinanceApp.Domain.Budgets;
 using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
@@ -35,22 +36,58 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
             await session.Query<Category>().ToListAsync(cancellationToken)
         ).ToDictionary(c => c.Id);
 
-        var spending = transactions
-            .Where(t => t.AmountEur < 0)
+        var expenseTransactions = transactions.Where(t => t.AmountEur < 0).ToList();
+
+        var spending = expenseTransactions
             .GroupBy(t => TopLevelName(t.CategoryId, categoriesById))
             .Select(g => new CategorySpend(g.Key, -g.Sum(t => t.AmountEur!.Value)))
             .OrderByDescending(s => s.Amount)
             .ToList();
+
+        var budgets = await BuildBudgetProgressAsync(
+            expenseTransactions,
+            categoriesById,
+            cancellationToken
+        );
 
         return new MonthlyOverview(
             income,
             expenses,
             income - expenses,
             spending,
+            budgets,
             UnconvertedCount: transactions.Count(t => t.AmountEur is null),
             UncategorizedCount: transactions.Count(t => t.CategoryId is null)
         );
     }
+
+    private async Task<IReadOnlyList<BudgetProgress>> BuildBudgetProgressAsync(
+        IReadOnlyList<TransactionView> expenseTransactions,
+        IReadOnlyDictionary<Guid, Category> categoriesById,
+        CancellationToken cancellationToken
+    )
+    {
+        var budgets = await session.Query<Budget>().ToListAsync(cancellationToken);
+        if (budgets.Count == 0)
+        {
+            return [];
+        }
+
+        var parents = categoriesById.Values.ToDictionary(c => c.Id, c => c.ParentId);
+        var expenses = expenseTransactions
+            .Select(t => (t.CategoryId, Amount: -t.AmountEur!.Value))
+            .ToList();
+        var limits = budgets.ToDictionary(b => b.Id, b => b.MonthlyLimit);
+
+        return BudgetCalculator
+            .Compute(parents, expenses, limits)
+            .Select(b => new BudgetProgress(NameOf(b.CategoryId, categoriesById), b.Limit, b.Spent))
+            .OrderByDescending(b => b.Percent)
+            .ToList();
+    }
+
+    private static string NameOf(Guid categoryId, IReadOnlyDictionary<Guid, Category> byId) =>
+        byId.TryGetValue(categoryId, out var category) ? category.Name : "Unknown";
 
     /// <summary>Walks a category up to its top-level ancestor; "Uncategorized" when unset/unknown.</summary>
     private static string TopLevelName(Guid? categoryId, IReadOnlyDictionary<Guid, Category> byId)

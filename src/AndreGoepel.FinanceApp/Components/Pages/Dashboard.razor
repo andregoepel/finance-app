@@ -118,10 +118,32 @@
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMd="6">
                     <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.H6">Budgets</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                            Budget progress arrives in a later Phase 4 slice.
-                        </RadzenText>
+                        <RadzenStack Gap="0.75rem">
+                            <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Budgets</RadzenText>
+                            @if (overview.Budgets.Count == 0)
+                            {
+                                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                                    No budgets set — <RadzenLink Path="settings/budgets" Text="add one" />.
+                                </RadzenText>
+                            }
+                            else
+                            {
+                                @foreach (var budget in overview.Budgets)
+                                {
+                                    <div>
+                                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
+                                            <RadzenText TextStyle="TextStyle.Caption">@budget.Category</RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Caption" Style="@(budget.IsOver ? "color: var(--rz-danger);" : "")">
+                                                @Eur(budget.Spent) / @Eur(budget.Limit)
+                                            </RadzenText>
+                                        </RadzenStack>
+                                        <RadzenProgressBar Value="@((double)Math.Min(budget.Percent, 100))" ShowValue="false"
+                                                           ProgressBarStyle="@(budget.IsOver ? ProgressBarStyle.Danger : ProgressBarStyle.Primary)"
+                                                           Style="height: 0.5rem;" />
+                                    </div>
+                                }
+                            }
+                        </RadzenStack>
                     </RadzenCard>
                 </RadzenColumn>
             </RadzenRow>

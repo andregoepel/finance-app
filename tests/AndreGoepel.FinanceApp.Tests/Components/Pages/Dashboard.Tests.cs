@@ -24,7 +24,7 @@ public class DashboardTests : BunitContext
     {
         // Arrange
         JSInterop.Mode = JSRuntimeMode.Loose;
-        RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], 0, 0));
+        RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
 
         // Act
         var cut = Render<Dashboard>();
@@ -48,6 +48,7 @@ public class DashboardTests : BunitContext
                 Expenses: 150m,
                 Net: 1850m,
                 SpendingByCategory: [new CategorySpend("Groceries", 150m)],
+                Budgets: [],
                 UnconvertedCount: 0,
                 UncategorizedCount: 0
             )
