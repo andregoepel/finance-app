@@ -5,6 +5,8 @@
 @using AndreGoepel.FinanceApp.Insights
 
 @inject IRecurringService RecurringService
+@inject IMessageBus MessageBus
+@inject NotificationService NotificationService
 
 <PageTitle>Recurring – Finance</PageTitle>
 
@@ -51,6 +53,12 @@
                         <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="Next expected" Width="130px">
                             <Template Context="row">@row.NextExpected.ToString("dd.MM.yyyy")</Template>
                         </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End">
+                            <Template Context="row">
+                                <RadzenButton Text="Add as planned" Icon="event_note" Size="ButtonSize.ExtraSmall"
+                                              ButtonStyle="ButtonStyle.Secondary" Click=@(() => AddAsPlannedAsync(row)) />
+                            </Template>
+                        </RadzenDataGridColumn>
                     </Columns>
                 </RadzenDataGrid>
             </RadzenCard>
@@ -63,4 +71,42 @@
     private IReadOnlyList<RecurringSeries>? series;
 
     protected override async Task OnInitializedAsync() => series = await RecurringService.GetAsync();
+
+    private async Task AddAsPlannedAsync(RecurringSeries s)
+    {
+        // Weekly/biweekly cadences map to Monthly (planning steps by whole months) —
+        // the user can fine-tune on the Planning page.
+        var frequency = s.Interval switch
+        {
+            RecurrenceInterval.Quarterly => PlannedFrequency.Quarterly,
+            RecurrenceInterval.Yearly => PlannedFrequency.Yearly,
+            _ => PlannedFrequency.Monthly,
+        };
+
+        var result = await MessageBus.InvokeAsync<Result<PlannedItem>>(
+            new CreatePlannedItemCommand(
+                s.Counterparty,
+                s.TypicalAmount,
+                CategoryId: null,
+                frequency,
+                s.NextExpected,
+                EndDate: null,
+                ExpectedAccountId: null,
+                CounterpartyPattern: s.Counterparty,
+                AmountTolerance: 0.1m,
+                DateWindowDays: 7
+            )
+        );
+
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Could not add", result.Error);
+            return;
+        }
+        NotificationService.Notify(
+            NotificationSeverity.Success,
+            "Added to planning",
+            $"“{s.Counterparty}” — adjust it on the Planning page."
+        );
+    }
 }

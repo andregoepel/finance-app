@@ -2,9 +2,11 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @using AndreGoepel.FinanceApp.Insights
+@using AndreGoepel.FinanceApp.Planning
 
 @inject IDashboardService DashboardService
 @inject INetWorthService NetWorthService
+@inject IPlanningService PlanningService
 
 <PageTitle>Dashboard – Finance</PageTitle>
 
@@ -169,6 +171,34 @@
                     </RadzenCard>
                 </RadzenColumn>
             </RadzenRow>
+
+            @* ---------- Upcoming & overdue planned items ---------- *@
+            <RadzenCard>
+                <RadzenStack Gap="0.75rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Upcoming &amp; overdue</RadzenText>
+                        <RadzenLink Path="planning" Text="Planning" />
+                    </RadzenStack>
+                    @if (upcoming.Count == 0)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                            Nothing upcoming — <RadzenLink Path="planning" Text="add planned items" />.
+                        </RadzenText>
+                    }
+                    else
+                    {
+                        @foreach (var o in upcoming)
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                                <RadzenBadge BadgeStyle="@(o.Status == PlannedOccurrenceStatus.Overdue ? BadgeStyle.Danger : BadgeStyle.Info)"
+                                             Text="@o.DueDate.ToString("dd.MM")" />
+                                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; flex: 1;">@o.Description</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" Style="@($"margin: 0; {(o.Amount < 0 ? "color: var(--rz-danger);" : "color: var(--rz-success);")}")">@Eur(o.Amount)</RadzenText>
+                            </RadzenStack>
+                        }
+                    }
+                </RadzenStack>
+            </RadzenCard>
         }
 
     </RadzenStack>
@@ -181,6 +211,7 @@
     private MonthlyOverview? overview;
     private NetWorthOverview? netWorth;
     private IReadOnlyList<ChartPoint> netWorthChart = [];
+    private IReadOnlyList<PlannedOccurrence> upcoming = [];
 
     private bool IsCurrentMonth =>
         MonthStart.Year == DateTime.Today.Year && MonthStart.Month == DateTime.Today.Month;
@@ -192,6 +223,7 @@
         netWorthChart = netWorth
             .Series.Select(p => new ChartPoint(p.Date.ToString("MMM yy"), p.Amount))
             .ToList();
+        upcoming = await PlanningService.GetUpcomingAsync();
     }
 
     private async Task LoadAsync() =>

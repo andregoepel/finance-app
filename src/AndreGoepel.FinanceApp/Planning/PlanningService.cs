@@ -6,13 +6,14 @@ namespace AndreGoepel.FinanceApp.Planning;
 
 /// <summary>
 /// Implements <see cref="IPlanningService"/> by expanding active planned items into
-/// a month's occurrences and folding in <see cref="PlannedMatch"/> records: a
-/// matched occurrence carries its transaction's actual amount; an unmatched past
-/// occurrence is overdue; otherwise pending.
+/// occurrences and folding in <see cref="PlannedMatch"/> records: a matched
+/// occurrence carries its transaction's actual amount; an unmatched past occurrence
+/// is overdue; otherwise pending.
 /// </summary>
 internal sealed class PlanningService(IQuerySession session) : IPlanningService
 {
     private const int CandidateWindowDays = 45;
+    private const int UpcomingLimit = 10;
 
     public async Task<IReadOnlyList<PlannedItem>> GetItemsAsync(
         CancellationToken cancellationToken = default
@@ -26,8 +27,41 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
     {
         var from = new DateOnly(year, month, 1);
         var to = from.AddMonths(1).AddDays(-1);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var occurrences = await BuildOccurrencesAsync(from, to, cancellationToken);
 
+        return new PlanMonth(
+            occurrences,
+            occurrences.Where(o => o.Amount > 0).Sum(o => o.Amount),
+            -occurrences.Where(o => o.Amount < 0).Sum(o => o.Amount),
+            occurrences.Where(o => o.MatchedAmount > 0).Sum(o => o.MatchedAmount!.Value),
+            -occurrences.Where(o => o.MatchedAmount < 0).Sum(o => o.MatchedAmount!.Value)
+        );
+    }
+
+    public async Task<IReadOnlyList<PlannedOccurrence>> GetUpcomingAsync(
+        int daysAhead = 30,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var occurrences = await BuildOccurrencesAsync(
+            today.AddMonths(-2),
+            today.AddDays(daysAhead),
+            cancellationToken
+        );
+        return occurrences
+            .Where(o => o.Status != PlannedOccurrenceStatus.Matched)
+            .Take(UpcomingLimit)
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<PlannedOccurrence>> BuildOccurrencesAsync(
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken
+    )
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
         var items = await session
             .Query<PlannedItem>()
             .Where(i => i.Active)
@@ -45,60 +79,49 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
         var matches =
             keys.Length == 0
                 ? []
-                : (
-                    await session
-                        .Query<PlannedMatch>()
-                        .Where(m => m.Id.IsOneOf(keys))
-                        .ToListAsync(cancellationToken)
-                );
+                : await session
+                    .Query<PlannedMatch>()
+                    .Where(m => m.Id.IsOneOf(keys))
+                    .ToListAsync(cancellationToken);
         var matchByKey = matches.ToDictionary(m => m.Id);
 
         var transactionIds = matches.Select(m => m.TransactionId).Distinct().ToArray();
-        var transactions =
+        var txnById = (
             transactionIds.Length == 0
                 ? []
-                : (
-                    await session
-                        .Query<TransactionView>()
-                        .Where(t => t.Id.IsOneOf(transactionIds))
-                        .ToListAsync(cancellationToken)
-                );
-        var txnById = transactions.ToDictionary(t => t.Id);
+                : await session
+                    .Query<TransactionView>()
+                    .Where(t => t.Id.IsOneOf(transactionIds))
+                    .ToListAsync(cancellationToken)
+        ).ToDictionary(t => t.Id);
 
-        var occurrences = new List<PlannedOccurrence>();
-        foreach (var (item, date) in due)
-        {
-            matchByKey.TryGetValue(PlannedMatch.KeyFor(item.Id, date), out var match);
-            var matchedTxn =
-                match is not null && txnById.TryGetValue(match.TransactionId, out var t) ? t : null;
+        return due.Select(o =>
+            {
+                matchByKey.TryGetValue(PlannedMatch.KeyFor(o.Item.Id, o.Date), out var match);
+                var matchedTxn =
+                    match is not null && txnById.TryGetValue(match.TransactionId, out var t)
+                        ? t
+                        : null;
 
-            var status =
-                match is not null ? PlannedOccurrenceStatus.Matched
-                : date < today ? PlannedOccurrenceStatus.Overdue
-                : PlannedOccurrenceStatus.Pending;
+                var status =
+                    match is not null ? PlannedOccurrenceStatus.Matched
+                    : o.Date < today ? PlannedOccurrenceStatus.Overdue
+                    : PlannedOccurrenceStatus.Pending;
 
-            occurrences.Add(
-                new PlannedOccurrence(
-                    item.Id,
-                    item.Description,
-                    item.Amount,
-                    item.CategoryId,
-                    date,
+                return new PlannedOccurrence(
+                    o.Item.Id,
+                    o.Item.Description,
+                    o.Item.Amount,
+                    o.Item.CategoryId,
+                    o.Date,
                     status,
                     match?.TransactionId,
                     matchedTxn?.AmountEur
-                )
-            );
-        }
-
-        occurrences = occurrences.OrderBy(o => o.DueDate).ThenBy(o => o.Description).ToList();
-        return new PlanMonth(
-            occurrences,
-            occurrences.Where(o => o.Amount > 0).Sum(o => o.Amount),
-            -occurrences.Where(o => o.Amount < 0).Sum(o => o.Amount),
-            occurrences.Where(o => o.MatchedAmount > 0).Sum(o => o.MatchedAmount!.Value),
-            -occurrences.Where(o => o.MatchedAmount < 0).Sum(o => o.MatchedAmount!.Value)
-        );
+                );
+            })
+            .OrderBy(o => o.DueDate)
+            .ThenBy(o => o.Description)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<TransactionView>> GetMatchCandidatesAsync(

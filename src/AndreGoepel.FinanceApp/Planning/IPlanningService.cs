@@ -23,6 +23,15 @@ public interface IPlanningService
         DateOnly dueDate,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// Unmatched occurrences that are overdue or due within <paramref name="daysAhead"/>
+    /// days — for the dashboard's upcoming/overdue tile.
+    /// </summary>
+    Task<IReadOnlyList<PlannedOccurrence>> GetUpcomingAsync(
+        int daysAhead = 30,
+        CancellationToken cancellationToken = default
+    );
 }
 
 /// <summary>A month's occurrences with planned vs. actual (matched) totals (EUR).</summary>
