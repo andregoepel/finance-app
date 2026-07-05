@@ -59,6 +59,11 @@ public sealed class TransactionView
             ImportBatchId = imported.ImportBatchId,
         };
 
+    public void Apply(TransactionEurAmountAssigned converted)
+    {
+        AmountEur = converted.AmountEur;
+    }
+
     public void Apply(TransactionCategorized categorized)
     {
         CategoryId = categorized.CategoryId;

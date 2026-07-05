@@ -1,5 +1,6 @@
 using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Domain.Accounts;
+using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using Marten;
@@ -98,10 +99,11 @@ internal sealed class AccountSyncService(
             return Failed(account.Id, account.Name, import.Error!);
         }
 
-        // Fire-and-forget categorization — the same top-level publish the upload
-        // page uses. Categorization never blocks or fails a sync.
+        // Fire-and-forget EUR conversion + categorization — the same top-level
+        // publish the upload page uses. Neither blocks or fails a sync.
         if (import.Value!.ImportedCount > 0)
         {
+            await messageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
             await messageBus.PublishAsync(
                 new CategorizeImportedTransactionsCommand(import.Value.Id)
             );

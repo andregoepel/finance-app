@@ -1,4 +1,6 @@
+using AndreGoepel.FinanceApp.Domain.Exchange;
 using Quartz;
+using Wolverine;
 
 namespace AndreGoepel.FinanceApp.Sync;
 
@@ -10,8 +12,11 @@ namespace AndreGoepel.FinanceApp.Sync;
 /// from overlapping the next tick; failures are logged, never fatal.
 /// </summary>
 [DisallowConcurrentExecution]
-internal sealed class DailySyncJob(IAccountSyncService syncService, ILogger<DailySyncJob> logger)
-    : IJob
+internal sealed class DailySyncJob(
+    IAccountSyncService syncService,
+    IMessageBus messageBus,
+    ILogger<DailySyncJob> logger
+) : IJob
 {
     /// <summary>Quartz job identity, shared with the schedule service that manages its trigger.</summary>
     internal const string JobName = "daily-account-sync";
@@ -34,6 +39,10 @@ internal sealed class DailySyncJob(IAccountSyncService syncService, ILogger<Dail
                 summaries.Count,
                 summaries.Sum(s => s.Imported)
             );
+
+            // Retry any transactions still missing an EUR amount (e.g. a rate
+            // lookup that failed earlier).
+            await messageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
         }
         catch (Exception exception)
         {

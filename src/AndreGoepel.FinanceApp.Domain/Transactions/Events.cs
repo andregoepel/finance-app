@@ -22,6 +22,17 @@ public sealed record TransactionImported(
     string? RawData
 );
 
+/// <summary>
+/// The EUR value of a non-EUR transaction, converted at the ECB reference rate
+/// for the booking date. <see cref="RateDate"/> is the actual rate date used
+/// (the nearest prior business day when the booking date is a weekend/holiday).
+/// </summary>
+public sealed record TransactionEurAmountAssigned(
+    decimal AmountEur,
+    decimal EurPerUnit,
+    DateOnly RateDate
+);
+
 /// <summary>First category assignment. Corrections are separate events.</summary>
 public sealed record TransactionCategorized(
     Guid CategoryId,

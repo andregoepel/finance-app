@@ -1,10 +1,12 @@
 @page "/settings/accounts"
 @attribute [Authorize]
+@using AndreGoepel.FinanceApp.Domain.Exchange
 @using AndreGoepel.Marten.Identity.Users
 @using Microsoft.AspNetCore.Identity
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
+@inject IExchangeRateProvider ExchangeRateProvider
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject UserManager<User> UserManager
@@ -158,6 +160,10 @@
                     <RadzenFormField Text="IBAN (optional)">
                         <RadzenTextBox @bind-Value=@form.Iban Disabled=@isSaving Style="min-width: 14rem;" />
                     </RadzenFormField>
+                    <RadzenFormField Text="@($"Current balance ({(string.IsNullOrWhiteSpace(form.Currency) ? "EUR" : form.Currency)})")">
+                        <RadzenNumeric TValue="decimal?" @bind-Value=@form.CurrentBalance Disabled=@isSaving
+                                       Placeholder="for net worth" Style="width: 10rem;" />
+                    </RadzenFormField>
                     <RadzenButton Text="@(editingAccountId is null ? "Add" : "Save")"
                                   Icon="save"
                                   ButtonStyle="ButtonStyle.Primary"
@@ -186,6 +192,7 @@
     private IReadOnlyList<ProviderConnection> connections = [];
     private Guid? editingAccountId;
     private InputModel form = new();
+    private decimal? loadedBalance; // balance shown when editing, to detect a change
     private bool isSaving;
     private bool showDeactivated;
 
@@ -258,13 +265,16 @@
             ConnectionId = account.ConnectionId,
             ExternalId = account.ExternalId ?? "",
             IdentificationHash = account.IdentificationHash,
+            CurrentBalance = account.CurrentBalance,
         };
+        loadedBalance = account.CurrentBalance;
     }
 
     private void ResetForm()
     {
         editingAccountId = null;
         form = new InputModel();
+        loadedBalance = null;
     }
 
     private async Task SaveAsync()
@@ -328,6 +338,12 @@
                 return;
             }
 
+            // Persist the balance anchor (for net worth) when the user set/changed it.
+            if (form.CurrentBalance is decimal balance && balance != loadedBalance)
+            {
+                await SaveBalanceAsync(result.Value!.Id, balance, result.Value.Currency);
+            }
+
             ResetForm();
             await ReloadAsync();
         }
@@ -335,6 +351,35 @@
         {
             isSaving = false;
         }
+    }
+
+    private async Task SaveBalanceAsync(Guid accountId, decimal balance, string currency)
+    {
+        decimal? balanceEur = string.Equals(currency, "EUR", StringComparison.OrdinalIgnoreCase)
+            ? balance
+            : null;
+        if (balanceEur is null)
+        {
+            var rate = await ExchangeRateProvider.GetEurRateAsync(
+                currency,
+                DateOnly.FromDateTime(DateTime.UtcNow)
+            );
+            if (rate.IsSuccess)
+            {
+                balanceEur = balance * rate.Value!.EurPerUnit;
+            }
+            else
+            {
+                NotificationService.Notify(
+                    NotificationSeverity.Warning,
+                    "Balance saved without EUR value",
+                    "The exchange rate was unavailable, so this account is left out of net worth for now."
+                );
+            }
+        }
+        await MessageBus.InvokeAsync<Result>(
+            new SetAccountBalanceCommand(accountId, balance, balanceEur, DateTimeOffset.UtcNow)
+        );
     }
 
     private async Task DeactivateAsync(Account account)
@@ -398,5 +443,6 @@
         public Guid? ConnectionId { get; set; }
         public string ExternalId { get; set; } = "";
         public string? IdentificationHash { get; set; }
+        public decimal? CurrentBalance { get; set; }
     }
 }
