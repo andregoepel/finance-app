@@ -2,6 +2,7 @@ using AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Credentials;
+using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using Marten;
 
@@ -11,6 +12,7 @@ namespace AndreGoepel.FinanceApp.Connections;
 internal sealed class WiseBalanceService(
     IWiseApiClient wiseApiClient,
     ICredentialStore credentialStore,
+    IExchangeRateProvider exchangeRateProvider,
     IDocumentSession session
 ) : IWiseBalanceService
 {
@@ -86,6 +88,7 @@ internal sealed class WiseBalanceService(
             .ToListAsync(cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
         var updated = 0;
         foreach (var account in accounts)
         {
@@ -95,6 +98,12 @@ internal sealed class WiseBalanceService(
                 continue;
             }
             account.CurrentBalance = balance.Amount;
+            account.CurrentBalanceEur = await ToEurAsync(
+                balance.Amount,
+                balance.Currency,
+                today,
+                cancellationToken
+            );
             account.BalanceUpdatedAt = now;
             session.Store(account);
             updated++;
@@ -105,5 +114,17 @@ internal sealed class WiseBalanceService(
             await session.SaveChangesAsync(cancellationToken);
         }
         return updated;
+    }
+
+    /// <summary>Balance in EUR for the net-worth anchor; <c>null</c> if the rate is unavailable.</summary>
+    private async Task<decimal?> ToEurAsync(
+        decimal amount,
+        string currency,
+        DateOnly date,
+        CancellationToken cancellationToken
+    )
+    {
+        var rate = await exchangeRateProvider.GetEurRateAsync(currency, date, cancellationToken);
+        return rate.IsSuccess ? amount * rate.Value!.EurPerUnit : null;
     }
 }

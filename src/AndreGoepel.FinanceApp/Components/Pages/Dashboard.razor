@@ -4,6 +4,7 @@
 @using AndreGoepel.FinanceApp.Insights
 
 @inject IDashboardService DashboardService
+@inject INetWorthService NetWorthService
 
 <PageTitle>Dashboard – Finance</PageTitle>
 
@@ -110,10 +111,31 @@
             <RadzenRow Gap="1rem">
                 <RadzenColumn Size="12" SizeMd="6">
                     <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.H6">Net worth</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                            Net-worth history arrives in a later Phase 4 slice.
-                        </RadzenText>
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Net worth</RadzenText>
+                            @if (netWorth is null)
+                            {
+                                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">Loading…</RadzenText>
+                            }
+                            else
+                            {
+                                <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Eur(netWorth.Current)</RadzenText>
+                                @if (netWorthChart.Count > 1)
+                                {
+                                    <RadzenChart Style="height: 130px;">
+                                        <RadzenAreaSeries Data="@netWorthChart" CategoryProperty="Label" ValueProperty="Amount" />
+                                        <RadzenValueAxis Formatter="@(v => $"{v:N0} €")" />
+                                    </RadzenChart>
+                                }
+                                @if (netWorth.AccountsWithoutBalance > 0)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                        @netWorth.AccountsWithoutBalance account(s) have no balance set —
+                                        <RadzenLink Path="settings/accounts" Text="set one" /> to include them.
+                                    </RadzenText>
+                                }
+                            }
+                        </RadzenStack>
                     </RadzenCard>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMd="6">
@@ -153,13 +175,24 @@
 </div>
 
 @code {
+    private sealed record ChartPoint(string Label, decimal Amount);
+
     private DateOnly MonthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private MonthlyOverview? overview;
+    private NetWorthOverview? netWorth;
+    private IReadOnlyList<ChartPoint> netWorthChart = [];
 
     private bool IsCurrentMonth =>
         MonthStart.Year == DateTime.Today.Year && MonthStart.Month == DateTime.Today.Month;
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        netWorth = await NetWorthService.GetAsync();
+        netWorthChart = netWorth
+            .Series.Select(p => new ChartPoint(p.Date.ToString("MMM yy"), p.Amount))
+            .ToList();
+    }
 
     private async Task LoadAsync() =>
         overview = await DashboardService.GetMonthlyOverviewAsync(MonthStart.Year, MonthStart.Month);

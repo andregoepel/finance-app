@@ -17,6 +17,12 @@ public class DashboardTests : BunitContext
             .GetMonthlyOverviewAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(overview));
         Services.AddSingleton(service);
+
+        var netWorth = Substitute.For<INetWorthService>();
+        netWorth
+            .GetAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new NetWorthOverview(0m, [], 0)));
+        Services.AddSingleton(netWorth);
     }
 
     [Fact]

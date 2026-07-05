@@ -41,6 +41,7 @@ public static class Initialization
         services.AddHostedService<SyncScheduleStartup>();
 
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<INetWorthService, NetWorthService>();
 
         return services;
     }

@@ -51,13 +51,19 @@ public sealed class Account
     public string? IdentificationHash { get; set; }
 
     /// <summary>
-    /// Latest balance from an API sync (Wise balances are token-only), in the
-    /// account's own currency. <c>decimal</c> per the money rule; net-worth
-    /// aggregation across currencies is Phase 4.
+    /// Latest known balance in the account's own currency — the net-worth anchor.
+    /// Set by API sync (Wise) or entered manually. <c>decimal</c> per the money rule.
     /// </summary>
     public decimal? CurrentBalance { get; set; }
 
-    /// <summary>When <see cref="CurrentBalance"/> was last refreshed from the provider.</summary>
+    /// <summary>
+    /// <see cref="CurrentBalance"/> converted to EUR at <see cref="BalanceUpdatedAt"/>.
+    /// Net-worth history reconstructs each account's EUR balance from this anchor
+    /// plus/minus the EUR transactions around the anchor date.
+    /// </summary>
+    public decimal? CurrentBalanceEur { get; set; }
+
+    /// <summary>When the balance was last set — the "as of" date of the anchor.</summary>
     public DateTimeOffset? BalanceUpdatedAt { get; set; }
 
     /// <summary>
