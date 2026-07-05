@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Radzen;
 
 namespace AndreGoepel.FinanceApp.Tests.Components.Pages;
 
@@ -12,6 +13,9 @@ public class DashboardTests : BunitContext
 {
     private void RegisterDashboardService(MonthlyOverview overview)
     {
+        // RadzenChart resolves TooltipService (and friends) from DI.
+        Services.AddRadzenComponents();
+
         var service = Substitute.For<IDashboardService>();
         service
             .GetMonthlyOverviewAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
@@ -44,17 +48,17 @@ public class DashboardTests : BunitContext
     }
 
     [Fact]
-    public void Render_WithExpenses_ListsTheCategory()
+    public void Render_WithBudget_ShowsBudgetProgress()
     {
-        // Arrange
+        // Arrange — no spending list (keeps RadzenChart out of bUnit), one budget.
         JSInterop.Mode = JSRuntimeMode.Loose;
         RegisterDashboardService(
             new MonthlyOverview(
                 Income: 2000m,
                 Expenses: 150m,
                 Net: 1850m,
-                SpendingByCategory: [new CategorySpend("Groceries", 150m)],
-                Budgets: [],
+                SpendingByCategory: [],
+                Budgets: [new BudgetProgress("Groceries", 400m, 150m)],
                 UnconvertedCount: 0,
                 UncategorizedCount: 0
             )
