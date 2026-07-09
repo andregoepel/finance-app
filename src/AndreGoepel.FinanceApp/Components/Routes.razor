@@ -1,5 +1,6 @@
 <Router AppAssembly="@typeof(Program).Assembly"
-        AdditionalAssemblies="new[] { typeof(AndreGoepel.AppFoundation.AppFoundationLayoutOptions).Assembly, typeof(AndreGoepel.Marten.Identity.Blazor.Initialization).Assembly }">
+        AdditionalAssemblies="new[] { typeof(AndreGoepel.AppFoundation.AppFoundationLayoutOptions).Assembly, typeof(AndreGoepel.Marten.Identity.Blazor.Initialization).Assembly }"
+        NotFoundPage="typeof(AndreGoepel.AppFoundation.Components.Pages.NotFound)">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
             <NotAuthorized Context="_">
@@ -16,7 +17,4 @@
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
-    <NotFound>
-        <AndreGoepel.AppFoundation.Components.Pages.NotFound />
-    </NotFound>
 </Router>

@@ -34,7 +34,7 @@ builder.Services.Configure<AppFoundationLayoutOptions>(options =>
 {
     options.BrandName = "Finance";
     options.Copyright = "Finance © 2026";
-    options.AdminMenu = typeof(FinanceNavMenu);
+    options.Menu = typeof(FinanceNavMenu);
 });
 
 var app = builder.Build();

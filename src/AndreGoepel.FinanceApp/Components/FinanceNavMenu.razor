@@ -1,17 +1,23 @@
 @* Finance menu entries, injected into the AppFoundation management shell via
-   AppFoundationLayoutOptions.AdminMenu. Both household users carry the
-   Administrator role in this private app. *@
-<RadzenPanelMenuItem Text="Finance" Icon="account_balance_wallet">
-    <RadzenPanelMenuItem Text="Transactions" Icon="receipt_long" Path="transactions" />
-    <RadzenPanelMenuItem Text="Review" Icon="rule" Path="review" />
-    <RadzenPanelMenuItem Text="Recurring" Icon="repeat" Path="recurring" />
-    <RadzenPanelMenuItem Text="Planning" Icon="event_note" Path="planning" />
-    <RadzenPanelMenuItem Text="Import" Icon="upload_file" Path="import" />
-    <RadzenPanelMenuItem Text="Sync" Icon="sync" Path="sync" />
-    <RadzenPanelMenuItem Text="Accounts" Icon="account_balance" Path="settings/accounts" />
-    <RadzenPanelMenuItem Text="Categories" Icon="category" Path="settings/categories" />
-    <RadzenPanelMenuItem Text="Budgets" Icon="savings" Path="settings/budgets" />
-    <RadzenPanelMenuItem Text="Rules" Icon="alt_route" Path="settings/rules" />
-    <RadzenPanelMenuItem Text="Connections" Icon="hub" Path="settings/connections" />
-    <RadzenPanelMenuItem Text="API Keys" Icon="key" Path="settings/credentials" />
-</RadzenPanelMenuItem>
+   AppFoundationLayoutOptions.Menu. Rendered with the design system's ag-nav-*
+   markup so the entries match the shell's own sections. Both household users
+   carry the Administrator role in this private app. *@
+<div class="ag-nav-section">FINANCE</div>
+<div class="ag-nav-group">
+    <NavLink class="ag-nav-item" href="transactions">Transactions</NavLink>
+    <NavLink class="ag-nav-item" href="review">Review</NavLink>
+    <NavLink class="ag-nav-item" href="recurring">Recurring</NavLink>
+    <NavLink class="ag-nav-item" href="planning">Planning</NavLink>
+    <NavLink class="ag-nav-item" href="import">Import</NavLink>
+    <NavLink class="ag-nav-item" href="sync">Sync</NavLink>
+</div>
+
+<div class="ag-nav-section">FINANCE SETTINGS</div>
+<div class="ag-nav-group">
+    <NavLink class="ag-nav-item" href="settings/accounts">Accounts</NavLink>
+    <NavLink class="ag-nav-item" href="settings/categories">Categories</NavLink>
+    <NavLink class="ag-nav-item" href="settings/budgets">Budgets</NavLink>
+    <NavLink class="ag-nav-item" href="settings/rules">Rules</NavLink>
+    <NavLink class="ag-nav-item" href="settings/connections">Connections</NavLink>
+    <NavLink class="ag-nav-item" href="settings/credentials">API Keys</NavLink>
+</div>
