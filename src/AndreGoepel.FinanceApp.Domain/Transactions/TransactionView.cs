@@ -22,6 +22,10 @@ public sealed class TransactionView
 
     public decimal? AmountEur { get; set; }
 
+    public decimal? OriginalAmount { get; set; }
+
+    public string? OriginalCurrency { get; set; }
+
     public string? Counterparty { get; set; }
 
     public string Description { get; set; } = "";
@@ -55,6 +59,8 @@ public sealed class TransactionView
             Amount = imported.Amount,
             Currency = imported.Currency,
             AmountEur = imported.AmountEur,
+            OriginalAmount = imported.OriginalAmount,
+            OriginalCurrency = imported.OriginalCurrency,
             Counterparty = imported.Counterparty,
             Description = imported.Description,
             ExternalId = imported.ExternalId,

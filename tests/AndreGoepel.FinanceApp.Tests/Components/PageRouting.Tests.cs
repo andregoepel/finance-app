@@ -13,6 +13,7 @@ public class PageRoutingTests
     [InlineData(typeof(Import), "/import")]
     [InlineData(typeof(Accounts), "/settings/accounts")]
     [InlineData(typeof(Categories), "/settings/categories")]
+    [InlineData(typeof(CryptoHoldings), "/settings/crypto")]
     public void Page_HasExpectedRoute_AndRequiresAuthorization(Type pageType, string route)
     {
         // Act

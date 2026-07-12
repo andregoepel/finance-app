@@ -44,6 +44,17 @@ public class DkbCsvParserTests
     }
 
     [Fact]
+    public void Parse_EurOnlyExport_LeavesOriginalFieldsNull()
+    {
+        // Act
+        var result = parser.Parse(file);
+
+        // Assert
+        Assert.All(result.Rows, row => Assert.Null(row.OriginalAmount));
+        Assert.All(result.Rows, row => Assert.Null(row.OriginalCurrency));
+    }
+
+    [Fact]
     public void Parse_ShortDates_AreParsed()
     {
         // Act

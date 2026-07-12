@@ -19,7 +19,9 @@ public class TransactionViewTests
                 ExternalId: "ext-1",
                 DedupHash: "hash-1",
                 ImportBatchId: Guid.NewGuid(),
-                RawData: "raw"
+                RawData: "raw",
+                OriginalAmount: -27.30m,
+                OriginalCurrency: "USD"
             )
         );
 
@@ -32,6 +34,8 @@ public class TransactionViewTests
         // Assert
         Assert.Equal(-23.45m, view.Amount);
         Assert.Equal("EUR", view.Currency);
+        Assert.Equal(-27.30m, view.OriginalAmount);
+        Assert.Equal("USD", view.OriginalCurrency);
         Assert.Equal("REWE", view.Counterparty);
         Assert.Equal("hash-1", view.DedupHash);
         Assert.Null(view.CategoryId);

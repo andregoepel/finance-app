@@ -44,6 +44,7 @@ public static class Initialization
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<INetWorthService, NetWorthService>();
         services.AddScoped<IRecurringService, RecurringService>();
+        services.AddScoped<ICryptoService, CryptoService>();
         services.AddScoped<IPlanningService, PlanningService>();
 
         return services;

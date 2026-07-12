@@ -20,9 +20,11 @@ internal sealed class WiseCsvParser : IStatementParser
     private const int CurrencyColumn = 4;
     private const int DescriptionColumn = 5;
     private const int PaymentReferenceColumn = 6;
+    private const int ExchangeToColumn = 9;
     private const int PayerNameColumn = 11;
     private const int PayeeNameColumn = 12;
     private const int MerchantColumn = 14;
+    private const int ExchangeToAmountColumn = 20;
     private const int TransactionTypeColumn = 21;
 
     public string ParserId => "wise-csv-v1";
@@ -102,17 +104,43 @@ internal sealed class WiseCsvParser : IStatementParser
                 .Trim()
                 .Equals("DEBIT", StringComparison.OrdinalIgnoreCase);
 
+            var currency = record.Fields[CurrencyColumn].Trim().ToUpperInvariant();
+
+            // Converted transactions carry the foreign leg in Exchange To /
+            // Exchange To Amount (unsigned — mirror the booked sign). When
+            // Exchange To equals the booked currency the foreign leg would be
+            // Exchange From, but the export has no Exchange From Amount and
+            // deriving it from Exchange Rate invites rounding drift — skip.
+            decimal? originalAmount = null;
+            string? originalCurrency = null;
+            var exchangeTo = record.Fields[ExchangeToColumn].Trim().ToUpperInvariant();
+            if (
+                exchangeTo.Length > 0
+                && exchangeTo != currency
+                && FieldParser.TryParseInvariantDecimal(
+                    record.Fields[ExchangeToAmountColumn],
+                    out var exchangeToAmount
+                )
+            )
+            {
+                originalAmount =
+                    amount < 0 ? -Math.Abs(exchangeToAmount) : Math.Abs(exchangeToAmount);
+                originalCurrency = exchangeTo;
+            }
+
             rows.Add(
                 new NormalizedTransaction(
                     record.LineNumber,
                     bookingDate,
                     ValueDate: null,
                     amount,
-                    record.Fields[CurrencyColumn].Trim().ToUpperInvariant(),
+                    currency,
                     Counterparty: merchant ?? (isDebit ? payee : payer),
                     description ?? paymentReference ?? "(no description)",
                     ExternalId: FieldParser.NullIfEmpty(record.Fields[IdColumn]),
-                    record.RawLine
+                    record.RawLine,
+                    OriginalAmount: originalAmount,
+                    OriginalCurrency: originalCurrency
                 )
             );
         }

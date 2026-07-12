@@ -14,7 +14,9 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers;
 /// column C the booking date (empty while pending). Pending rows (Status
 /// "vorgemerkt") are surfaced as skipped — they would change on settlement and
 /// defeat deduplication. Foreign-currency originals (Originalbetrag) are kept
-/// in the description. Built against a real export (2026-07).
+/// in the description (verbatim, so dedup hashes stay stable) and additionally
+/// captured as structured OriginalAmount/OriginalCurrency. Built against a
+/// real export (2026-07).
 /// </summary>
 internal sealed class EasyBankXlsxParser : IStatementParser
 {
@@ -107,10 +109,26 @@ internal sealed class EasyBankXlsxParser : IStatementParser
                 : counterparty ?? "(no description)";
 
             // Foreign-currency purchases carry the original amount separately.
+            // The description suffix must stay byte-identical — it feeds the
+            // dedup hash of already-imported rows.
+            decimal? originalForeignAmount = null;
+            string? originalForeignCurrency = null;
             var originalAmount = FieldParser.NullIfEmpty(row.Cell("I"));
             if (originalAmount is not null && !originalAmount.EndsWith('€'))
             {
                 description = $"{description} (Original: {originalAmount})";
+                if (
+                    FieldParser.TryParseAmountWithCurrency(
+                        originalAmount,
+                        out var parsedOriginal,
+                        out var parsedCurrency
+                    )
+                    && parsedCurrency != "EUR"
+                )
+                {
+                    originalForeignAmount = parsedOriginal;
+                    originalForeignCurrency = parsedCurrency;
+                }
             }
 
             rows.Add(
@@ -123,7 +141,9 @@ internal sealed class EasyBankXlsxParser : IStatementParser
                     counterparty,
                     description,
                     ExternalId: FieldParser.NullIfEmpty(row.Cell("A")),
-                    raw
+                    raw,
+                    OriginalAmount: originalForeignAmount,
+                    OriginalCurrency: originalForeignCurrency
                 )
             );
         }

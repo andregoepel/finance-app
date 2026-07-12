@@ -1,9 +1,10 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace AndreGoepel.FinanceApp.Connectors.Parsing;
 
 /// <summary>Culture-aware field parsing shared by the statement parsers.</summary>
-internal static class FieldParser
+internal static partial class FieldParser
 {
     private static readonly CultureInfo German = CultureInfo.GetCultureInfo("de-DE");
 
@@ -52,6 +53,38 @@ internal static class FieldParser
     /// <summary>German currency string with € suffix, e.g. <c>+1.500,00 €</c> (Easy Bank).</summary>
     public static bool TryParseGermanEuroAmount(string value, out decimal amount) =>
         TryParseGermanDecimal(value.Replace("€", "").Replace(' ', ' '), out amount);
+
+    /// <summary>
+    /// German amount followed by a three-letter currency code, e.g.
+    /// <c>−25,00 USD</c> (Easy Bank Originalbetrag). Fails for €-suffixed
+    /// values, missing codes and unreadable numbers.
+    /// </summary>
+    public static bool TryParseAmountWithCurrency(
+        string value,
+        out decimal amount,
+        out string currency
+    )
+    {
+        amount = 0;
+        currency = "";
+
+        var match = AmountWithCurrencyPattern().Match(value.Trim());
+        if (!match.Success || !TryParseGermanDecimal(match.Groups["amount"].Value, out amount))
+        {
+            return false;
+        }
+
+        currency = match.Groups["currency"].Value.ToUpperInvariant();
+        return true;
+    }
+
+    /// <summary>
+    /// Splits an amount from a trailing three-letter currency code: the number
+    /// (validated afterwards via <see cref="TryParseGermanDecimal"/>) then
+    /// whitespace then exactly three ASCII letters. A € suffix does not match.
+    /// </summary>
+    [GeneratedRegex(@"^(?<amount>\S.*?)\s+(?<currency>[A-Za-z]{3})$")]
+    private static partial Regex AmountWithCurrencyPattern();
 
     /// <summary>Some exports use the typographic minus (U+2212) instead of a hyphen.</summary>
     private static string NormalizeMinus(string value) => value.Trim().Replace('−', '-');
