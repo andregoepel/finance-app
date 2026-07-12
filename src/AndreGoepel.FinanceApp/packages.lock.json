@@ -695,7 +695,7 @@
           "AndreGoepel.FinanceApp.Domain": "[1.0.0, )",
           "Marten": "[9.14.1, )",
           "Microsoft.Extensions.Http.Resilience": "[10.7.0, )",
-          "WolverineFx.Marten": "[6.16.0, )"
+          "WolverineFx.Marten": "[6.17.1, )"
         }
       },
       "andregoepel.financeapp.connectors": {
@@ -709,7 +709,7 @@
         "type": "Project",
         "dependencies": {
           "Marten": "[9.14.1, )",
-          "WolverineFx.Marten": "[6.16.0, )"
+          "WolverineFx.Marten": "[6.17.1, )"
         }
       },
       "Microsoft.Extensions.Http.Resilience": {
@@ -724,7 +724,7 @@
       },
       "WolverineFx.Marten": {
         "type": "CentralTransitive",
-        "requested": "[6.16.0, )",
+        "requested": "[6.17.1, )",
         "resolved": "6.17.1",
         "contentHash": "51AgFoNxn3Ib0ko4ix1Lk3Q8Fjxa5JIonKu1/toI33ZCf1NmcJHmtuTnBzl0vmoiipRshcr5GPJ0s77PjywjQA==",
         "dependencies": {
