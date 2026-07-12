@@ -1,0 +1,233 @@
+@page "/settings/crypto"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using AndreGoepel.FinanceApp.Insights
+
+@inject IQuerySession QuerySession
+@inject IMessageBus MessageBus
+@inject NotificationService NotificationService
+@inject ICryptoService CryptoService
+
+<AppFoundationPageTitle Title="Crypto" Breadcrumb="Settings / Crypto" />
+
+<div class="rz-p-4 rz-p-md-6">
+    <RadzenStack Gap="1.5rem" Style="max-width: 56rem;">
+
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Crypto holdings</RadzenText>
+            <RadzenButton Text="Refresh values" Icon="refresh" ButtonStyle="ButtonStyle.Secondary"
+                          Disabled=@refreshing Click=@RefreshAsync />
+        </RadzenStack>
+        <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
+            Track how much of each asset a crypto account holds. Values are priced in EUR via
+            CoinGecko (daily and on refresh) and anchor the account balance for net worth.
+            Set the crypto account's currency to EUR — its balance is the EUR sum of its holdings.
+        </RadzenText>
+
+        @if (cryptoAccounts.Count == 0)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+                No active crypto account yet — create one under
+                <RadzenLink Path="settings/accounts" Text="Accounts" /> with type "Crypto" first.
+            </RadzenAlert>
+        }
+        else
+        {
+            <RadzenCard>
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Set a holding</RadzenText>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                        <RadzenFormField Text="Account">
+                            <RadzenDropDown TValue="Guid?" @bind-Value=@selectedAccountId
+                                            Data=@cryptoAccounts ValueProperty="Id" TextProperty="Name"
+                                            Placeholder="Select account" Style="min-width: 14rem;" />
+                        </RadzenFormField>
+                        <RadzenFormField Text="Symbol">
+                            <RadzenTextBox @bind-Value=@symbolInput Placeholder="BTC" Style="width: 7rem;" />
+                        </RadzenFormField>
+                        <RadzenFormField Text="CoinGecko id">
+                            <RadzenTextBox @bind-Value=@coinGeckoIdInput Placeholder="bitcoin" Style="width: 11rem;" />
+                        </RadzenFormField>
+                        <RadzenFormField Text="Quantity">
+                            <RadzenNumeric TValue="decimal" @bind-Value=@quantityInput Min="0" Format="0.########" Style="width: 10rem;" />
+                        </RadzenFormField>
+                        <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                      Disabled=@(!CanSave) Click=@SaveAsync />
+                    </RadzenStack>
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                        The CoinGecko id is the last part of the coin's coingecko.com URL,
+                        e.g. "bitcoin" or "ethereum". An unknown id gets no price.
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+
+            <RadzenCard>
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Current holdings</RadzenText>
+                    @if (overview is null || overview.Positions.Count == 0)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                            No holdings yet.
+                        </RadzenText>
+                    }
+                    else
+                    {
+                        <RadzenDataGrid TItem="CryptoPosition" Data=@overview.Positions Density="Density.Compact" AllowPaging="false">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="CryptoPosition" Property="AccountName" Title="Account" />
+                                <RadzenDataGridColumn TItem="CryptoPosition" Property="Symbol" Title="Symbol" Width="90px" />
+                                <RadzenDataGridColumn TItem="CryptoPosition" Property="Quantity" Title="Quantity" Width="130px" TextAlign="TextAlign.Right">
+                                    <Template Context="row">@row.Quantity.ToString("0.########")</Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="CryptoPosition" Title="Price" Width="130px" TextAlign="TextAlign.Right">
+                                    <Template Context="row">
+                                        @if (row.EurPrice is decimal price)
+                                        {
+                                            @Eur(price)
+                                        }
+                                        else
+                                        {
+                                            <span style="color: var(--rz-text-secondary-color);">no price yet</span>
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="CryptoPosition" Title="Value" Width="130px" TextAlign="TextAlign.Right">
+                                    <Template Context="row">@(row.EurValue is decimal value ? Eur(value) : "—")</Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="CryptoPosition" Title="" Width="90px" TextAlign="TextAlign.End">
+                                    <Template Context="row">
+                                        <RadzenButton Icon="edit" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light"
+                                                      title="Edit" Click=@(() => StartEdit(row)) />
+                                        <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Danger"
+                                                      title="Delete" Click=@(() => DeleteAsync(row)) />
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
+                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                @if (overview.OldestPriceAt is DateTimeOffset asOf)
+                                {
+                                    <text>Prices as of @asOf.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</text>
+                                }
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">
+                                Total: @Eur(overview.TotalEur)
+                            </RadzenText>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+    </RadzenStack>
+</div>
+
+@code {
+    private sealed record AccountOption(Guid Id, string Name);
+
+    private List<AccountOption> cryptoAccounts = [];
+    private CryptoOverview? overview;
+    private Guid? selectedAccountId;
+    private string? symbolInput;
+    private string? coinGeckoIdInput;
+    private decimal quantityInput;
+    private bool refreshing;
+
+    private bool CanSave =>
+        selectedAccountId is not null
+        && !string.IsNullOrWhiteSpace(symbolInput)
+        && !string.IsNullOrWhiteSpace(coinGeckoIdInput)
+        && quantityInput > 0;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        cryptoAccounts = (
+            await QuerySession
+                .Query<Account>()
+                .Where(a => a.Type == AccountType.Crypto && a.Status == AccountStatus.Active)
+                .ToListAsync()
+        )
+            .Select(a => new AccountOption(a.Id, a.Name))
+            .OrderBy(a => a.Name)
+            .ToList();
+        overview = await CryptoService.GetOverviewAsync();
+    }
+
+    private void StartEdit(CryptoPosition row)
+    {
+        selectedAccountId = row.AccountId;
+        symbolInput = row.Symbol;
+        coinGeckoIdInput = row.CoinGeckoId;
+        quantityInput = row.Quantity;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (selectedAccountId is not Guid accountId)
+        {
+            return;
+        }
+        var result = await MessageBus.InvokeAsync<Result<CryptoHolding>>(
+            new SetCryptoHoldingCommand(accountId, symbolInput!, coinGeckoIdInput!, quantityInput));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
+            return;
+        }
+        selectedAccountId = null;
+        symbolInput = null;
+        coinGeckoIdInput = null;
+        quantityInput = 0;
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Holding saved");
+    }
+
+    private async Task DeleteAsync(CryptoPosition row)
+    {
+        var result = await MessageBus.InvokeAsync<Result>(
+            new DeleteCryptoHoldingCommand(row.AccountId, row.CoinGeckoId));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
+            return;
+        }
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Holding removed");
+    }
+
+    private async Task RefreshAsync()
+    {
+        refreshing = true;
+        try
+        {
+            var result = await MessageBus.InvokeAsync<Result<CryptoValuationSummary>>(
+                new RefreshCryptoValuationsCommand());
+            if (result.IsFailure)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Refresh failed", result.Error);
+                return;
+            }
+            var summary = result.Value!;
+            if (summary.UsedCachedPrices)
+            {
+                NotificationService.Notify(NotificationSeverity.Warning, "Prices unavailable",
+                    "CoinGecko could not be reached — cached prices were used.");
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Success, "Values refreshed",
+                    $"{summary.AccountsUpdated} account(s) updated.");
+            }
+            await LoadAsync();
+        }
+        finally
+        {
+            refreshing = false;
+        }
+    }
+
+    private static string Eur(decimal amount) => $"{amount:N2} €";
+}
