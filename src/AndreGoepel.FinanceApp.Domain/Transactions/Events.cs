@@ -5,6 +5,9 @@ namespace AndreGoepel.FinanceApp.Domain.Transactions;
 /// normalized fields plus the dedup hash and the raw provider data for audit.
 /// Money is <c>decimal</c> only; <see cref="AmountEur"/> is set when the
 /// original currency is EUR and back-filled via ECB rates in Phase 4 otherwise.
+/// <see cref="OriginalAmount"/>/<see cref="OriginalCurrency"/> carry the
+/// pre-conversion foreign leg when the provider reports one in a currency
+/// different from the booked <see cref="Currency"/>.
 /// </summary>
 public sealed record TransactionImported(
     Guid TransactionId,
@@ -19,7 +22,9 @@ public sealed record TransactionImported(
     string? ExternalId,
     string DedupHash,
     Guid ImportBatchId,
-    string? RawData
+    string? RawData,
+    decimal? OriginalAmount = null,
+    string? OriginalCurrency = null
 );
 
 /// <summary>

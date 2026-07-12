@@ -54,6 +54,17 @@ public class RevolutXlsxParserTests
     }
 
     [Fact]
+    public void Parse_NativeCurrencyRows_LeaveOriginalFieldsNull()
+    {
+        // Act
+        var result = parser.Parse(file);
+
+        // Assert
+        Assert.All(result.Rows, row => Assert.Null(row.OriginalAmount));
+        Assert.All(result.Rows, row => Assert.Null(row.OriginalCurrency));
+    }
+
+    [Fact]
     public void Parse_CardPayment_UsesDescriptionAsCounterparty()
     {
         // Act

@@ -104,6 +104,12 @@
                         <span style="color: @(transaction.Amount < 0 ? "var(--rz-danger)" : "var(--rz-success)");">
                             @transaction.Amount.ToString("N2") @transaction.Currency
                         </span>
+                        @if (transaction.OriginalAmount is not null)
+                        {
+                            <div style="font-size: 0.75rem; color: var(--rz-text-disabled-color);">
+                                @transaction.OriginalAmount.Value.ToString("N2") @transaction.OriginalCurrency
+                            </div>
+                        }
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="TransactionView" Title="Category" Width="220px" Sortable="false">

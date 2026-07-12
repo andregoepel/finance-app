@@ -60,11 +60,34 @@ public class EasyBankXlsxParserTests
         // Act
         var fxRow = parser.Parse(file).Rows[2];
 
-        // Assert
+        // Assert — the suffix must stay byte-identical: it feeds the dedup
+        // hash of already-imported foreign-currency rows.
         Assert.Equal(-17.80m, fxRow.Amount);
         Assert.Equal("Sample Cafe", fxRow.Counterparty);
         Assert.Contains("(Original: -25,00 USD)", fxRow.Description);
         Assert.Contains("SAMPLE CAFE_APS SAMPLE CITY US", fxRow.Description);
+    }
+
+    [Fact]
+    public void Parse_ForeignCurrency_SetsOriginalAmountAndCurrency()
+    {
+        // Act
+        var fxRow = parser.Parse(file).Rows[2];
+
+        // Assert
+        Assert.Equal(-25.00m, fxRow.OriginalAmount);
+        Assert.Equal("USD", fxRow.OriginalCurrency);
+    }
+
+    [Fact]
+    public void Parse_EuroRow_LeavesOriginalFieldsNull()
+    {
+        // Act
+        var row = parser.Parse(file).Rows[1];
+
+        // Assert
+        Assert.Null(row.OriginalAmount);
+        Assert.Null(row.OriginalCurrency);
     }
 
     [Fact]

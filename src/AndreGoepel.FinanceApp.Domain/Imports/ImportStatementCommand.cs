@@ -80,7 +80,9 @@ public static class ImportStatementCommandHandler
                     row.ExternalId,
                     hash,
                     batch.Id,
-                    row.RawData
+                    row.RawData,
+                    OriginalAmount: row.OriginalAmount,
+                    OriginalCurrency: row.OriginalCurrency
                 )
             );
         }

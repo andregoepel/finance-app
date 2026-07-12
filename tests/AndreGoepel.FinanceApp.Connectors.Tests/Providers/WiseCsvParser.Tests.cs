@@ -66,6 +66,42 @@ public class WiseCsvParserTests
     }
 
     [Fact]
+    public void Parse_ForeignCurrencyCardTransaction_SetsOriginalAmountWithBookedSign()
+    {
+        // Act
+        var row = parser.Parse(file).Rows[0];
+
+        // Assert
+        Assert.Equal(-25.00m, row.Amount);
+        Assert.Equal("EUR", row.Currency);
+        Assert.Equal(-27.30m, row.OriginalAmount);
+        Assert.Equal("USD", row.OriginalCurrency);
+    }
+
+    [Fact]
+    public void Parse_BalanceConversion_RecordsExchangeToLeg()
+    {
+        // Act
+        var row = parser.Parse(file).Rows[4];
+
+        // Assert
+        Assert.Equal(-50.00m, row.Amount);
+        Assert.Equal(-54.32m, row.OriginalAmount);
+        Assert.Equal("USD", row.OriginalCurrency);
+    }
+
+    [Fact]
+    public void Parse_EurOnlyRow_LeavesOriginalFieldsNull()
+    {
+        // Act
+        var row = parser.Parse(file).Rows[1];
+
+        // Assert
+        Assert.Null(row.OriginalAmount);
+        Assert.Null(row.OriginalCurrency);
+    }
+
+    [Fact]
     public void Parse_CashbackWithoutParties_HasNoCounterparty()
     {
         // Act
