@@ -93,3 +93,8 @@ Identical to app-foundation — see its CLAUDE.md for the full set. Highlights:
 - CSV parsers are tested against fixture files per provider (`tests/fixtures/<provider>/`);
   add a new fixture whenever a provider format changes
 - Claude API and provider APIs are always mocked in tests (NSubstitute); no network in tests
+- **E2E tests are the one exception to "no network / mocked".** `tests/AndreGoepel.FinanceApp.E2ETests`
+  boots the real app (Postgres + MailHog via Aspire) and drives the Blazor UI in Chromium
+  (Playwright). It needs a running Docker/Podman + installed Playwright browsers, so it is
+  **excluded from the default `dotnet test`** (`--filter "FullyQualifiedName!~E2ETests"`) and runs
+  in the dedicated `e2e.yml` workflow. See that project's `README.md`.
