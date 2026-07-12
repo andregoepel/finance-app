@@ -1,9 +1,10 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace AndreGoepel.FinanceApp.Connectors.Parsing;
 
 /// <summary>Culture-aware field parsing shared by the statement parsers.</summary>
-internal static class FieldParser
+internal static partial class FieldParser
 {
     private static readonly CultureInfo German = CultureInfo.GetCultureInfo("de-DE");
 
@@ -67,35 +68,23 @@ internal static class FieldParser
         amount = 0;
         currency = "";
 
-        var trimmed = value.Trim();
-        var split = -1;
-        for (var i = trimmed.Length - 1; i >= 0; i--)
-        {
-            if (char.IsWhiteSpace(trimmed[i]))
-            {
-                split = i;
-                break;
-            }
-        }
-        if (split < 1)
+        var match = AmountWithCurrencyPattern().Match(value.Trim());
+        if (!match.Success || !TryParseGermanDecimal(match.Groups["amount"].Value, out amount))
         {
             return false;
         }
 
-        var code = trimmed[(split + 1)..];
-        if (code.Length != 3 || !code.All(char.IsAsciiLetter))
-        {
-            return false;
-        }
-
-        if (!TryParseGermanDecimal(trimmed[..split], out amount))
-        {
-            return false;
-        }
-
-        currency = code.ToUpperInvariant();
+        currency = match.Groups["currency"].Value.ToUpperInvariant();
         return true;
     }
+
+    /// <summary>
+    /// Splits an amount from a trailing three-letter currency code: the number
+    /// (validated afterwards via <see cref="TryParseGermanDecimal"/>) then
+    /// whitespace then exactly three ASCII letters. A € suffix does not match.
+    /// </summary>
+    [GeneratedRegex(@"^(?<amount>\S.*?)\s+(?<currency>[A-Za-z]{3})$")]
+    private static partial Regex AmountWithCurrencyPattern();
 
     /// <summary>Some exports use the typographic minus (U+2212) instead of a hyphen.</summary>
     private static string NormalizeMinus(string value) => value.Trim().Replace('−', '-');
