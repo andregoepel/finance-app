@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Convenience settings for running the E2E suite against Podman instead of Docker.
+  Pass this file to "dotnet test" via its settings option:
+    dotnet test tests/AndreGoepel.FinanceApp.E2ETests /Settings:tests/AndreGoepel.FinanceApp.E2ETests/podman.runsettings
+  This forces Aspire's orchestrator to use the Podman runtime (Docker Desktop's docker.exe
+  may be first on PATH but pointing at a stopped daemon). Requires a running Podman machine.
+-->
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <DOTNET_ASPIRE_CONTAINER_RUNTIME>podman</DOTNET_ASPIRE_CONTAINER_RUNTIME>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

@@ -39,8 +39,13 @@ jobs:
             dotnet restore "$proj" --locked-mode
           done
 
+      # The AppHost and the E2E project both pull RID-specific Aspire packages, so they carry no
+      # lock file and are restored plainly (outside the locked-mode loop above).
       - name: Restore AppHost (dev-only Aspire orchestration)
         run: dotnet restore src/AndreGoepel.FinanceApp.AppHost/AndreGoepel.FinanceApp.AppHost.csproj
+
+      - name: Restore E2E tests (Aspire test host)
+        run: dotnet restore tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj
 
       - name: Restore tools
         run: dotnet tool restore
@@ -51,8 +56,10 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -c Release
 
+      # The E2E suite boots real containers via Playwright and is slow, so it is excluded here
+      # and runs in the dedicated e2e.yml workflow instead.
       - name: Test
-        run: dotnet test --no-build -c Release
+        run: dotnet test --no-build -c Release --filter "FullyQualifiedName!~E2ETests"
 
       # Fail the build on any known-vulnerable package (direct or transitive) in
       # the deployed app or the test surface. The Aspire AppHost is intentionally
