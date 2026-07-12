@@ -35,6 +35,8 @@ builder.Services.Configure<AppFoundationLayoutOptions>(options =>
     options.BrandName = "Finance";
     options.Copyright = "Finance © 2026";
     options.Menu = typeof(FinanceNavMenu);
+    // The finance dashboard lives at "/", not at the packaged /dashboard page.
+    options.HomeUrl = "/";
 });
 
 var app = builder.Build();
