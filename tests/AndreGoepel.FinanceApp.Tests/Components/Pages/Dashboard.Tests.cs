@@ -11,7 +11,10 @@ namespace AndreGoepel.FinanceApp.Tests.Components.Pages;
 
 public class DashboardTests : BunitContext
 {
-    private void RegisterDashboardService(MonthlyOverview overview)
+    private void RegisterDashboardService(
+        MonthlyOverview overview,
+        CryptoOverview? cryptoOverview = null
+    )
     {
         // RadzenChart resolves TooltipService (and friends) from DI.
         Services.AddRadzenComponents();
@@ -37,6 +40,12 @@ public class DashboardTests : BunitContext
                 >([])
             );
         Services.AddSingleton(planning);
+
+        var crypto = Substitute.For<ICryptoService>();
+        crypto
+            .GetOverviewAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(cryptoOverview ?? new CryptoOverview(0m, [], null)));
+        Services.AddSingleton(crypto);
     }
 
     [Fact]
@@ -79,6 +88,54 @@ public class DashboardTests : BunitContext
 
         // Assert
         Assert.Contains("Groceries", cut.Markup);
+    }
+
+    [Fact]
+    public void Render_WithCryptoPositions_ShowsCryptoTile()
+    {
+        // Arrange
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            new CryptoOverview(
+                TotalEur: 47_500m,
+                Positions:
+                [
+                    new CryptoPosition(
+                        Guid.NewGuid(),
+                        "Crypto.com",
+                        "BTC",
+                        "bitcoin",
+                        0.5m,
+                        95_000m,
+                        47_500m
+                    ),
+                ],
+                OldestPriceAt: DateTimeOffset.UtcNow
+            )
+        );
+
+        // Act
+        var cut = Render<Dashboard>();
+
+        // Assert
+        Assert.Contains("Crypto", cut.Markup);
+        Assert.Contains("BTC", cut.Markup);
+        Assert.Contains($"{47_500m:N2} €", cut.Markup); // same format the page uses
+    }
+
+    [Fact]
+    public void Render_WithoutCryptoPositions_HidesCryptoTile()
+    {
+        // Arrange
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
+
+        // Act
+        var cut = Render<Dashboard>();
+
+        // Assert — no crypto section without holdings.
+        Assert.DoesNotContain("settings/crypto", cut.Markup);
     }
 
     [Fact]

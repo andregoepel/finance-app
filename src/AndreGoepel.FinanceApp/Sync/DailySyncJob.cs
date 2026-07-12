@@ -1,3 +1,4 @@
+using AndreGoepel.FinanceApp.Domain.Crypto;
 using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Planning;
 using Quartz;
@@ -42,9 +43,11 @@ internal sealed class DailySyncJob(
             );
 
             // Retry any transactions still missing an EUR amount (e.g. a rate
-            // lookup that failed earlier), then auto-match planned items.
+            // lookup that failed earlier), then auto-match planned items and
+            // revalue crypto accounts at today's prices.
             await messageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
             await messageBus.PublishAsync(new MatchPlannedTransactionsCommand());
+            await messageBus.PublishAsync(new RefreshCryptoValuationsCommand());
         }
         catch (Exception exception)
         {
