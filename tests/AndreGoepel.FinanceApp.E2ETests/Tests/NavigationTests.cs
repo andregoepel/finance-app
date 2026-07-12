@@ -48,8 +48,11 @@ public sealed class NavigationTests(E2EAppFixture fixture) : E2ETestBase(fixture
     [MemberData(nameof(Pages))]
     public async Task AnonymousVisitor_IsRedirectedToLogin(string path, string heading)
     {
-        // Arrange — a fresh context per test means no session cookie.
+        // Arrange — ensure first-run setup is complete (otherwise the app funnels everyone to
+        // /Setup, not the login page); this provisions the admin in a throwaway context and does
+        // NOT sign in this test's own context, which stays anonymous (fresh context, no cookie).
         _ = heading;
+        await Fixture.ProvisionAdminAsync();
 
         // Act
         await Page.GotoAsync(path);
