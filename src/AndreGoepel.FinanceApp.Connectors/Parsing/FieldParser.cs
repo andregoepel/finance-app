@@ -53,6 +53,50 @@ internal static class FieldParser
     public static bool TryParseGermanEuroAmount(string value, out decimal amount) =>
         TryParseGermanDecimal(value.Replace("€", "").Replace(' ', ' '), out amount);
 
+    /// <summary>
+    /// German amount followed by a three-letter currency code, e.g.
+    /// <c>−25,00 USD</c> (Easy Bank Originalbetrag). Fails for €-suffixed
+    /// values, missing codes and unreadable numbers.
+    /// </summary>
+    public static bool TryParseAmountWithCurrency(
+        string value,
+        out decimal amount,
+        out string currency
+    )
+    {
+        amount = 0;
+        currency = "";
+
+        var trimmed = value.Trim();
+        var split = -1;
+        for (var i = trimmed.Length - 1; i >= 0; i--)
+        {
+            if (char.IsWhiteSpace(trimmed[i]))
+            {
+                split = i;
+                break;
+            }
+        }
+        if (split < 1)
+        {
+            return false;
+        }
+
+        var code = trimmed[(split + 1)..];
+        if (code.Length != 3 || !code.All(char.IsAsciiLetter))
+        {
+            return false;
+        }
+
+        if (!TryParseGermanDecimal(trimmed[..split], out amount))
+        {
+            return false;
+        }
+
+        currency = code.ToUpperInvariant();
+        return true;
+    }
+
     /// <summary>Some exports use the typographic minus (U+2212) instead of a hyphen.</summary>
     private static string NormalizeMinus(string value) => value.Trim().Replace('−', '-');
 
