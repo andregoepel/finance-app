@@ -25,6 +25,7 @@ public sealed class NavigationTests(E2EAppFixture fixture) : E2ETestBase(fixture
             { "/settings/rules", "Categorization rules" },
             { "/settings/connections", "Connections" },
             { "/settings/credentials", "API Keys" },
+            { "/settings/crypto", "Crypto holdings" },
         };
 
     [Theory]
