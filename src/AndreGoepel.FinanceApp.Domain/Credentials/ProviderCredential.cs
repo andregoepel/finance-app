@@ -32,6 +32,9 @@ public static class CredentialKeys
     /// <summary>
     /// Wise personal API token (read scope), scoped to one connection: each Wise
     /// login (profile) has its own token, and one login exposes many balances.
+    /// Wise personal accounts cannot register SCA public keys anymore, so the
+    /// token is deliberately the only Wise credential — everything the app reads
+    /// (profiles, balances, activities) is token-only.
     /// </summary>
     public static string WiseApiToken(Guid connectionId) => $"wise-api-token:{connectionId}";
 }

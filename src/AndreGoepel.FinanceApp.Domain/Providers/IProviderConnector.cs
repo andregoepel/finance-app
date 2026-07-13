@@ -38,6 +38,14 @@ public interface IProviderConnector
 /// Enable Banking session account uid matching the account's identification hash.
 /// </param>
 /// <param name="Since">Earliest booking date to fetch (window start).</param>
+/// <param name="Environment">
+/// Provider environment of the connection (Wise sandbox and production are separate
+/// systems with separate tokens and base URLs).
+/// </param>
+/// <param name="Currency">
+/// The account's currency. Wise activities span every currency of the profile, so
+/// the connector keeps only rows matching the account being synced.
+/// </param>
 public sealed record ProviderSyncRequest(
     Guid AccountId,
     ProviderKind Provider,
@@ -45,7 +53,9 @@ public sealed record ProviderSyncRequest(
     string? ExternalId,
     string? IdentificationHash,
     string? ProviderAccountReference,
-    DateOnly Since
+    DateOnly Since,
+    ProviderEnvironment Environment = ProviderEnvironment.Production,
+    string? Currency = null
 );
 
 /// <summary>
