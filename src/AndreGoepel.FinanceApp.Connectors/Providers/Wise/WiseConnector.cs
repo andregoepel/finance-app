@@ -78,9 +78,9 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
         var rows = activities
             .Value!.Where(a =>
                 string.Equals(a.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase)
-                && string.Equals(a.Currency, request.Currency, StringComparison.OrdinalIgnoreCase)
             )
-            .Select(Normalize)
+            .Select(a => MapForCurrency(a, request.Currency!))
+            .OfType<NormalizedTransaction>()
             .ToList();
 
         return Result.Ok(new ProviderSyncResult(SyncSource, rows, []));
@@ -124,14 +124,56 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
         );
     }
 
-    /// <summary>Maps one activity to the shared import shape.</summary>
-    internal static NormalizedTransaction Normalize(WiseActivity a) =>
+    /// <summary>
+    /// Maps one activity to the account being synced, or null when the activity
+    /// does not touch that account's currency. Balance conversions (INTERBALANCE)
+    /// book both sides: the secondary amount is the source currency spent (money
+    /// out), the primary amount is the target currency received (money in) — the
+    /// two rows land in their respective accounts and can be linked as a transfer.
+    /// </summary>
+    internal static NormalizedTransaction? MapForCurrency(WiseActivity a, string accountCurrency)
+    {
+        var isConversion = string.Equals(
+            a.Type,
+            "INTERBALANCE",
+            StringComparison.OrdinalIgnoreCase
+        );
+
+        if (isConversion)
+        {
+            if (
+                string.Equals(
+                    a.SecondaryCurrency,
+                    accountCurrency,
+                    StringComparison.OrdinalIgnoreCase
+                ) && a.SecondaryAmount is decimal spent
+            )
+            {
+                return Normalize(a, -Math.Abs(spent), a.SecondaryCurrency!);
+            }
+            if (string.Equals(a.Currency, accountCurrency, StringComparison.OrdinalIgnoreCase))
+            {
+                return Normalize(a, Math.Abs(a.Amount), a.Currency);
+            }
+            return null;
+        }
+
+        return string.Equals(a.Currency, accountCurrency, StringComparison.OrdinalIgnoreCase)
+            ? Normalize(a, a.Amount, a.Currency)
+            : null;
+    }
+
+    private static NormalizedTransaction Normalize(
+        WiseActivity a,
+        decimal amount,
+        string currency
+    ) =>
         new(
             SourceRow: 0,
             BookingDate: a.Date,
             ValueDate: null,
-            Amount: a.Amount,
-            Currency: a.Currency,
+            Amount: amount,
+            Currency: currency,
             Counterparty: a.Title,
             Description: string.IsNullOrWhiteSpace(a.Description)
                 ? a.Title ?? "Wise transaction"

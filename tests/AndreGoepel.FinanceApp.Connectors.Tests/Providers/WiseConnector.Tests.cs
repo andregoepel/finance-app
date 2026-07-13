@@ -112,6 +112,37 @@ public class WiseConnectorTests
     }
 
     [Fact]
+    public void MapForCurrency_Conversion_BooksBothSidesWithCorrectSigns()
+    {
+        // Arrange — the live sandbox conversion: 11,002 EUR spent → 9,329.84 GBP received.
+        var conversion = new WiseActivity(
+            Id: "conversion-id",
+            Type: "INTERBALANCE",
+            Status: "COMPLETED",
+            Date: new DateOnly(2026, 7, 13),
+            Amount: -9329.84m, // primary parses as money out; the mapper corrects per side
+            Currency: "GBP",
+            Title: "To GBP",
+            Description: "Moved",
+            RawJson: "{}",
+            SecondaryAmount: 11002m,
+            SecondaryCurrency: "EUR"
+        );
+
+        // Act
+        var eurSide = WiseConnector.MapForCurrency(conversion, "EUR");
+        var gbpSide = WiseConnector.MapForCurrency(conversion, "GBP");
+        var usdSide = WiseConnector.MapForCurrency(conversion, "USD");
+
+        // Assert — source account books money out, target account money in.
+        Assert.Equal(-11002m, eurSide!.Amount);
+        Assert.Equal("EUR", eurSide.Currency);
+        Assert.Equal(9329.84m, gbpSide!.Amount);
+        Assert.Equal("GBP", gbpSide.Currency);
+        Assert.Null(usdSide);
+    }
+
+    [Fact]
     public async Task FetchAsync_MissingBalanceId_FailsActionably()
     {
         // Arrange

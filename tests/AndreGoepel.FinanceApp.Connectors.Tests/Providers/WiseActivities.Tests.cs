@@ -43,6 +43,17 @@ public class WiseActivitiesTests
               "primaryAmount": "",
               "status": "COMPLETED",
               "createdOn": "2026-07-02T08:00:00.000Z"
+            },
+            {
+              "id": "conversion-id",
+              "type": "INTERBALANCE",
+              "resource": { "type": "BALANCE_TRANSACTION", "id": "6285840" },
+              "title": "To <strong>GBP</strong>",
+              "description": "Moved",
+              "primaryAmount": "9,329.84 GBP",
+              "secondaryAmount": "11,002 EUR",
+              "status": "COMPLETED",
+              "createdOn": "2026-07-13T05:07:00.060Z"
             }
           ]
         }
@@ -72,6 +83,15 @@ public class WiseActivitiesTests
                 Assert.Equal(1500.25m, credit.Amount);
                 Assert.Equal("Erika Beispiel", credit.Title);
                 Assert.Equal("credit-activity-id", credit.Id);
+            },
+            conversion =>
+            {
+                // Live sandbox shape: primary = target received, secondary = source spent.
+                Assert.Equal("INTERBALANCE", conversion.Type);
+                Assert.Equal("GBP", conversion.Currency);
+                Assert.Equal(11002m, conversion.SecondaryAmount);
+                Assert.Equal("EUR", conversion.SecondaryCurrency);
+                Assert.Equal("To GBP", conversion.Title);
             }
         );
     }

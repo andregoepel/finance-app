@@ -50,8 +50,11 @@ public sealed record WiseBalance(long Id, string Currency, decimal Amount);
 
 /// <summary>
 /// One entry of the Wise activity feed. <paramref name="Amount"/> is the signed
-/// balance impact parsed from the display amount (credits are marked up by Wise,
-/// everything else is money out). <paramref name="Id"/> is the stable activity id
+/// balance impact parsed from the primary display amount (credits are marked up
+/// by Wise, everything else is money out). Balance conversions (INTERBALANCE)
+/// carry both sides: the primary amount is the target currency received, the
+/// secondary amount (<paramref name="SecondaryAmount"/>/<paramref name="SecondaryCurrency"/>)
+/// is the source currency spent. <paramref name="Id"/> is the stable activity id
 /// used for dedup; <paramref name="Status"/> lets the caller keep only COMPLETED
 /// entries (in-progress ones still change).
 /// </summary>
@@ -64,5 +67,7 @@ public sealed record WiseActivity(
     string Currency,
     string? Title,
     string? Description,
-    string RawJson
+    string RawJson,
+    decimal? SecondaryAmount = null,
+    string? SecondaryCurrency = null
 );

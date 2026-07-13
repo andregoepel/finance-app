@@ -166,6 +166,24 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
                 continue;
             }
 
+            // Conversions carry the source side ("11,002 EUR" spent) in the
+            // secondary amount; keep it so the caller can book both balances.
+            decimal? secondaryAmount = null;
+            string? secondaryCurrency = null;
+            if (
+                item.TryGetProperty("secondaryAmount", out var secondaryElement)
+                && !string.IsNullOrWhiteSpace(secondaryElement.GetString())
+                && TryParseDisplayAmount(
+                    secondaryElement.GetString()!,
+                    out var parsedSecondary,
+                    out var parsedSecondaryCurrency
+                )
+            )
+            {
+                secondaryAmount = Math.Abs(parsedSecondary);
+                secondaryCurrency = parsedSecondaryCurrency;
+            }
+
             target.Add(
                 new WiseActivity(
                     Id: item.GetProperty("id").GetString() ?? "",
@@ -186,7 +204,9 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
                             ? description.GetString()
                             : null
                     ),
-                    RawJson: item.GetRawText()
+                    RawJson: item.GetRawText(),
+                    SecondaryAmount: secondaryAmount,
+                    SecondaryCurrency: secondaryCurrency
                 )
             );
         }
