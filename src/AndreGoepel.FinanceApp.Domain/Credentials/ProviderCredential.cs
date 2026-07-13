@@ -34,4 +34,12 @@ public static class CredentialKeys
     /// login (profile) has its own token, and one login exposes many balances.
     /// </summary>
     public static string WiseApiToken(Guid connectionId) => $"wise-api-token:{connectionId}";
+
+    /// <summary>
+    /// PEM-encoded RSA private key that answers Wise's SCA challenge on statement
+    /// reads (the public half is registered on the Wise account). Scoped to one
+    /// connection, like the token it belongs to.
+    /// </summary>
+    public static string WiseScaPrivateKey(Guid connectionId) =>
+        $"wise-sca-private-key:{connectionId}";
 }

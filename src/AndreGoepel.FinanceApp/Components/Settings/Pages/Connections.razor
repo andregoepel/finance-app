@@ -139,6 +139,20 @@
                                               Click=@(() => SaveWiseTokenAsync(connection.Id)) />
                             </RadzenStack>
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                                @StateBadge(WiseScaKeyInfo(connection.Id))
+                                <RadzenPassword Value=@WiseScaInput(connection.Id) ValueChanged=@(v => wiseScaInputs[connection.Id] = v)
+                                                autocomplete="off"
+                                                Placeholder="@(WiseScaKeyInfo(connection.Id) is null ? "SCA private key (RSA, PEM) — enables transaction sync" : "Enter new private key to rotate")"
+                                                Style="flex: 1;" />
+                                <RadzenButton Text="Save key" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                              Disabled=@string.IsNullOrWhiteSpace(WiseScaInput(connection.Id))
+                                              Click=@(() => SaveWiseScaKeyAsync(connection.Id)) />
+                            </RadzenStack>
+                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                Statement (transaction) sync needs SCA signing: register the public key on the
+                                Wise account, store the matching private key here. Balances work with the token alone.
+                            </RadzenText>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
                                 <RadzenText TextStyle="TextStyle.Caption">Environment</RadzenText>
                                 <RadzenDropDown TValue="ProviderEnvironment" Value=@connection.Environment Data=@Environments
                                                 Change=@(args => ChangeEnvironmentAsync(connection.Id, (ProviderEnvironment)args))
@@ -200,6 +214,8 @@
 
     private readonly Dictionary<Guid, string> wiseInputs = [];
     private readonly Dictionary<Guid, CredentialInfo?> wiseTokenInfos = [];
+    private readonly Dictionary<Guid, string> wiseScaInputs = [];
+    private readonly Dictionary<Guid, CredentialInfo?> wiseScaKeyInfos = [];
     private readonly Dictionary<Guid, IReadOnlyList<WiseBalance>> balanceResults = [];
     private Guid? syncingConnectionId;
 
@@ -220,10 +236,13 @@
             .OrderBy(c => c.Provider).ThenBy(c => c.Label).ToList();
 
         wiseTokenInfos.Clear();
+        wiseScaKeyInfos.Clear();
         foreach (var connection in connections.Where(c => c.Provider == ProviderKind.Wise))
         {
             wiseTokenInfos[connection.Id] =
                 await CredentialStore.GetInfoAsync(CredentialKeys.WiseApiToken(connection.Id));
+            wiseScaKeyInfos[connection.Id] =
+                await CredentialStore.GetInfoAsync(CredentialKeys.WiseScaPrivateKey(connection.Id));
         }
     }
 
@@ -237,6 +256,12 @@
 
     private string WiseInput(Guid connectionId) =>
         wiseInputs.TryGetValue(connectionId, out var value) ? value : "";
+
+    private CredentialInfo? WiseScaKeyInfo(Guid connectionId) =>
+        wiseScaKeyInfos.TryGetValue(connectionId, out var info) ? info : null;
+
+    private string WiseScaInput(Guid connectionId) =>
+        wiseScaInputs.TryGetValue(connectionId, out var value) ? value : "";
 
     private async Task SaveGlobalCredAsync(string key, string value, Action clearInput)
     {
@@ -327,6 +352,19 @@
         wiseInputs[connectionId] = "";
         await LoadAsync();
         NotificationService.Notify(NotificationSeverity.Success, "Saved", "Wise token stored encrypted.");
+    }
+
+    private async Task SaveWiseScaKeyAsync(Guid connectionId)
+    {
+        var result = await ConnectionService.SaveWiseScaKeyAsync(connectionId, WiseScaInput(connectionId));
+        if (result.IsFailure)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
+            return;
+        }
+        wiseScaInputs[connectionId] = "";
+        await LoadAsync();
+        NotificationService.Notify(NotificationSeverity.Success, "Saved", "Wise SCA key stored encrypted.");
     }
 
     private async Task ConnectAsync(Guid connectionId)

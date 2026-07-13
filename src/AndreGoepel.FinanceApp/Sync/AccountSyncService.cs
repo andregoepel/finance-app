@@ -40,14 +40,6 @@ internal sealed class AccountSyncService(
         {
             return Failed(account.Id, account.Name, "Account is import-only (no API sync).");
         }
-        if (account.Provider == ProviderKind.Wise)
-        {
-            return Failed(
-                account.Id,
-                account.Name,
-                "Wise syncs balances only, not transactions — use Settings → Connections."
-            );
-        }
         if (account.ConnectionId is not Guid connectionId)
         {
             return Failed(
@@ -126,15 +118,9 @@ internal sealed class AccountSyncService(
         CancellationToken cancellationToken = default
     )
     {
-        // Wise is balance-only (no transaction sync) — excluded from the daily
-        // transaction run; its balances refresh from Settings → Connections.
         var apiAccounts = await querySession
             .Query<Account>()
-            .Where(a =>
-                a.SyncMethod == SyncMethod.Api
-                && a.Status == AccountStatus.Active
-                && a.Provider != ProviderKind.Wise
-            )
+            .Where(a => a.SyncMethod == SyncMethod.Api && a.Status == AccountStatus.Active)
             .ToListAsync(cancellationToken);
 
         var summaries = new List<AccountSyncSummary>(apiAccounts.Count);
@@ -185,7 +171,8 @@ internal sealed class AccountSyncService(
             account.ExternalId,
             account.IdentificationHash,
             providerAccountReference,
-            since
+            since,
+            connection.Environment
         );
     }
 
