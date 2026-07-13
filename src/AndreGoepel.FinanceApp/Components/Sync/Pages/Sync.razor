@@ -75,13 +75,34 @@
         @if (accounts.Count == 0)
         {
             <RadzenCard>
-                <RadzenText>No API-backed accounts yet. Set an account's sync method to API under
-                    <RadzenLink Path="settings/accounts" Text="Accounts" />.</RadzenText>
+                @if (wiseApiAccountCount > 0)
+                {
+                    <RadzenText>
+                        Your @(wiseApiAccountCount == 1 ? "Wise account is" : "Wise accounts are") balance-only:
+                        Wise exposes balances, not transactions, so it does not appear in this
+                        transaction-sync list. Balances refresh under
+                        <RadzenLink Path="settings/connections" Text="Settings → Connections" />;
+                        import Wise transactions via CSV on the
+                        <RadzenLink Path="import" Text="Import" /> page.
+                    </RadzenText>
+                }
+                else
+                {
+                    <RadzenText>No API-backed accounts yet. Set an account's sync method to API under
+                        <RadzenLink Path="settings/accounts" Text="Accounts" />.</RadzenText>
+                }
             </RadzenCard>
         }
         else
         {
             <RadzenCard>
+                @if (wiseApiAccountCount > 0)
+                {
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                        Wise accounts are balance-only and not listed here — their balances refresh under
+                        <RadzenLink Path="settings/connections" Text="Settings → Connections" />.
+                    </RadzenText>
+                }
                 <RadzenDataGrid TItem="AccountRow" Data=@accounts Density="Density.Compact">
                     <Columns>
                         <RadzenDataGridColumn TItem="AccountRow" Title="Account" Property="Name" />
@@ -116,6 +137,7 @@
 
     private List<AccountRow> accounts = [];
     private List<ProviderConnection> expiringConnections = [];
+    private int wiseApiAccountCount;
     private bool isSyncing;
 
     private string cronInput = "0 0 3 * * ?";
@@ -152,14 +174,19 @@
     private async Task LoadAsync()
     {
         // Wise is balance-only; its balances refresh from Settings → Connections,
-        // so it does not appear in this transaction-sync list.
-        var apiAccounts = (await QuerySession
-            .Query<Account>()
-            .Where(a =>
-                a.SyncMethod == SyncMethod.Api
-                && a.Status == AccountStatus.Active
-                && a.Provider != ProviderKind.Wise)
-            .ToListAsync()).OrderBy(a => a.Name).ToList();
+        // so it does not appear in this transaction-sync list. It is counted
+        // separately so the page can explain the exclusion instead of claiming
+        // no API accounts exist.
+        var allApiAccounts = (
+            await QuerySession
+                .Query<Account>()
+                .Where(a => a.SyncMethod == SyncMethod.Api && a.Status == AccountStatus.Active)
+                .ToListAsync()
+        )
+            .OrderBy(a => a.Name)
+            .ToList();
+        wiseApiAccountCount = allApiAccounts.Count(a => a.Provider == ProviderKind.Wise);
+        var apiAccounts = allApiAccounts.Where(a => a.Provider != ProviderKind.Wise).ToList();
 
         var rows = new List<AccountRow>(apiAccounts.Count);
         foreach (var account in apiAccounts)
