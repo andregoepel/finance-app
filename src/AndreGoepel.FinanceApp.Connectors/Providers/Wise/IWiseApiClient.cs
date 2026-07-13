@@ -20,7 +20,10 @@ public interface IWiseApiClient
         CancellationToken cancellationToken = default
     );
 
-    /// <summary>Standard balances held under a profile, with their current amounts.</summary>
+    /// <summary>
+    /// Balances held under a profile — standard currency balances and savings
+    /// jars — with their current amounts.
+    /// </summary>
     Task<Result<IReadOnlyList<WiseBalance>>> GetBalancesAsync(
         string apiToken,
         ProviderEnvironment environment,
@@ -45,8 +48,18 @@ public interface IWiseApiClient
 
 public sealed record WiseProfile(long Id, string Type);
 
-/// <summary><paramref name="Id"/> is the Wise balance id used to link an account (its external id).</summary>
-public sealed record WiseBalance(long Id, string Currency, decimal Amount);
+/// <summary>
+/// <paramref name="Id"/> is the Wise balance id used to link an account (its
+/// external id). <paramref name="Type"/> is STANDARD or SAVINGS (a jar);
+/// <paramref name="Name"/> is the jar's name (standard balances carry none).
+/// </summary>
+public sealed record WiseBalance(
+    long Id,
+    string Currency,
+    decimal Amount,
+    string Type = "STANDARD",
+    string? Name = null
+);
 
 /// <summary>
 /// One entry of the Wise activity feed. <paramref name="Amount"/> is the signed
