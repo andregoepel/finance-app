@@ -1,7 +1,8 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Domain.Providers;
 
@@ -11,9 +12,12 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 /// HTTP implementation of <see cref="IWiseApiClient"/>. The token and environment
 /// are passed per call so no secret or base URL is held in a field.
 /// </summary>
-internal sealed class WiseApiClient(IHttpClientFactory httpClientFactory) : IWiseApiClient
+internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory) : IWiseApiClient
 {
     internal const string HttpClientName = "wise";
+
+    /// <summary>Safety cap on cursor pagination — 100 activities per page.</summary>
+    private const int MaxActivityPages = 20;
 
     private static string BaseUrl(ProviderEnvironment environment) =>
         environment == ProviderEnvironment.Sandbox
@@ -91,111 +95,160 @@ internal sealed class WiseApiClient(IHttpClientFactory httpClientFactory) : IWis
         }
     }
 
-    public async Task<Result<IReadOnlyList<WiseStatementTransaction>>> GetBalanceStatementAsync(
+    public async Task<Result<IReadOnlyList<WiseActivity>>> GetActivitiesAsync(
         string apiToken,
-        string? scaPrivateKeyPem,
         ProviderEnvironment environment,
         long profileId,
-        long balanceId,
-        DateOnly intervalStart,
-        DateOnly intervalEnd,
+        DateOnly since,
+        DateOnly until,
         CancellationToken cancellationToken = default
     )
     {
-        var path =
-            $"/v1/profiles/{profileId}/balance-statements/{balanceId}/statement.json"
-            + $"?intervalStart={intervalStart:yyyy-MM-dd}T00:00:00.000Z"
-            + $"&intervalEnd={intervalEnd:yyyy-MM-dd}T23:59:59.999Z"
-            + "&type=COMPACT";
+        var basePath =
+            $"/v1/profiles/{profileId}/activities"
+            + $"?since={since:yyyy-MM-dd}T00:00:00.000Z"
+            + $"&until={until:yyyy-MM-dd}T23:59:59.999Z"
+            + "&size=100";
 
-        var json = await GetWithScaAsync(
-            apiToken,
-            scaPrivateKeyPem,
-            environment,
-            path,
-            cancellationToken
-        );
-        if (json.IsFailure)
+        var activities = new List<WiseActivity>();
+        string? cursor = null;
+        for (var page = 0; page < MaxActivityPages; page++)
         {
-            return Result.Fail<IReadOnlyList<WiseStatementTransaction>>(json.Error!);
-        }
-
-        try
-        {
-            return Result.Ok(ParseStatement(json.Value!));
-        }
-        catch (Exception exception) when (exception is JsonException or KeyNotFoundException)
-        {
-            return Result.Fail<IReadOnlyList<WiseStatementTransaction>>(
-                $"Unreadable Wise statement response: {exception.Message}"
-            );
-        }
-    }
-
-    /// <summary>Maps the COMPACT statement JSON to statement lines. Internal for fixture tests.</summary>
-    internal static IReadOnlyList<WiseStatementTransaction> ParseStatement(string json)
-    {
-        using var document = JsonDocument.Parse(json);
-        var transactions = new List<WiseStatementTransaction>();
-        foreach (var item in document.RootElement.GetProperty("transactions").EnumerateArray())
-        {
-            var amount = item.GetProperty("amount").GetProperty("value").GetDecimal();
-            // The statement reports signed values; keep a defensive belt in case a
-            // DEBIT ever arrives positive.
-            if (
-                item.TryGetProperty("type", out var type)
-                && string.Equals(type.GetString(), "DEBIT", StringComparison.OrdinalIgnoreCase)
-                && amount > 0
-            )
+            var path = cursor is null
+                ? basePath
+                : $"{basePath}&nextCursor={Uri.EscapeDataString(cursor)}";
+            var json = await GetAsync(apiToken, environment, path, cancellationToken);
+            if (json.IsFailure)
             {
-                amount = -amount;
+                return Result.Fail<IReadOnlyList<WiseActivity>>(json.Error!);
             }
 
-            string? description = null;
-            string? counterparty = null;
-            if (item.TryGetProperty("details", out var details))
+            try
             {
-                description = details.TryGetProperty("description", out var desc)
-                    ? desc.GetString()
-                    : null;
-                counterparty = FirstNonEmpty(
-                    details.TryGetProperty("merchant", out var merchant)
-                    && merchant.ValueKind == JsonValueKind.Object
-                    && merchant.TryGetProperty("name", out var merchantName)
-                        ? merchantName.GetString()
-                        : null,
-                    details.TryGetProperty("senderName", out var sender)
-                        ? sender.GetString()
-                        : null,
-                    details.TryGetProperty("recipient", out var recipient)
-                    && recipient.ValueKind == JsonValueKind.Object
-                    && recipient.TryGetProperty("name", out var recipientName)
-                        ? recipientName.GetString()
-                        : null
+                cursor = ParseActivitiesPage(json.Value!, activities);
+            }
+            catch (Exception exception) when (exception is JsonException or KeyNotFoundException)
+            {
+                return Result.Fail<IReadOnlyList<WiseActivity>>(
+                    $"Unreadable Wise activities response: {exception.Message}"
                 );
             }
 
-            transactions.Add(
-                new WiseStatementTransaction(
+            if (cursor is null)
+            {
+                break;
+            }
+        }
+
+        return Result.Ok<IReadOnlyList<WiseActivity>>(activities);
+    }
+
+    /// <summary>
+    /// Parses one activities page into <paramref name="target"/> and returns the
+    /// next-page cursor (null when exhausted). Non-monetary entries (no display
+    /// amount) are skipped — they are profile events, not transactions.
+    /// Internal for fixture tests.
+    /// </summary>
+    internal static string? ParseActivitiesPage(string json, List<WiseActivity> target)
+    {
+        using var document = JsonDocument.Parse(json);
+        foreach (var item in document.RootElement.GetProperty("activities").EnumerateArray())
+        {
+            var primaryAmount = item.TryGetProperty("primaryAmount", out var amountElement)
+                ? amountElement.GetString()
+                : null;
+            if (string.IsNullOrWhiteSpace(primaryAmount))
+            {
+                continue;
+            }
+            if (!TryParseDisplayAmount(primaryAmount, out var amount, out var currency))
+            {
+                continue;
+            }
+
+            target.Add(
+                new WiseActivity(
+                    Id: item.GetProperty("id").GetString() ?? "",
+                    Type: item.TryGetProperty("type", out var type) ? type.GetString() ?? "" : "",
+                    Status: item.TryGetProperty("status", out var status)
+                        ? status.GetString() ?? ""
+                        : "",
                     Date: DateOnly.FromDateTime(
-                        item.GetProperty("date").GetDateTimeOffset().UtcDateTime
+                        item.GetProperty("createdOn").GetDateTimeOffset().UtcDateTime
                     ),
                     Amount: amount,
-                    Currency: item.GetProperty("amount").GetProperty("currency").GetString() ?? "",
-                    Description: description,
-                    Counterparty: counterparty,
-                    ReferenceNumber: item.TryGetProperty("referenceNumber", out var reference)
-                        ? reference.GetString()
-                        : null,
+                    Currency: currency,
+                    Title: StripMarkup(
+                        item.TryGetProperty("title", out var title) ? title.GetString() : null
+                    ),
+                    Description: StripMarkup(
+                        item.TryGetProperty("description", out var description)
+                            ? description.GetString()
+                            : null
+                    ),
                     RawJson: item.GetRawText()
                 )
             );
         }
-        return transactions;
+
+        return
+            document.RootElement.TryGetProperty("cursor", out var cursor)
+            && cursor.ValueKind == JsonValueKind.String
+            ? cursor.GetString()
+            : null;
     }
 
-    private static string? FirstNonEmpty(params string?[] values) =>
-        values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+    /// <summary>
+    /// Parses Wise's display amount ("666 EUR", "&lt;positive&gt;+ 3.53 GBP&lt;/positive&gt;",
+    /// "- 1,000.66 USD") into a signed decimal + currency. Credits carry Wise's
+    /// positive markup or an explicit plus; everything else is money out.
+    /// </summary>
+    internal static bool TryParseDisplayAmount(
+        string display,
+        out decimal amount,
+        out string currency
+    )
+    {
+        amount = 0;
+        currency = "";
+
+        var isCredit =
+            display.Contains("<positive>", StringComparison.OrdinalIgnoreCase)
+            || StripMarkup(display)!.TrimStart().StartsWith('+');
+        var text = StripMarkup(display)!.Trim();
+        var isNegative = text.StartsWith('-') || text.StartsWith('−');
+        text = text.TrimStart('+', '-', '−', ' ');
+
+        var lastSpace = text.LastIndexOf(' ');
+        if (lastSpace <= 0)
+        {
+            return false;
+        }
+        currency = text[(lastSpace + 1)..].Trim();
+        var number = text[..lastSpace].Replace(",", "").Trim();
+        if (
+            currency.Length != 3
+            || !decimal.TryParse(
+                number,
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out amount
+            )
+        )
+        {
+            return false;
+        }
+
+        if (isNegative || !isCredit)
+        {
+            amount = -Math.Abs(amount);
+        }
+        return true;
+    }
+
+    /// <summary>Removes Wise's presentation markup (&lt;strong&gt;, &lt;positive&gt;, …) and decodes entities.</summary>
+    internal static string? StripMarkup(string? value) =>
+        value is null ? null : WebUtility.HtmlDecode(MarkupRegex().Replace(value, "")).Trim();
 
     private async Task<Result<string>> GetAsync(
         string apiToken,
@@ -204,7 +257,8 @@ internal sealed class WiseApiClient(IHttpClientFactory httpClientFactory) : IWis
         CancellationToken cancellationToken
     )
     {
-        using var request = NewGetRequest(apiToken, environment, path);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl(environment)}{path}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiToken);
 
         // Factory-created clients are pooled by the factory — do not dispose here.
         var httpClient = httpClientFactory.CreateClient(HttpClientName);
@@ -226,97 +280,6 @@ internal sealed class WiseApiClient(IHttpClientFactory httpClientFactory) : IWis
         }
     }
 
-    /// <summary>
-    /// GET with Wise's SCA handshake: statement reads answer 403 with a one-time
-    /// token in <c>x-2fa-approval</c>; the retry carries that token back plus its
-    /// RSA-SHA256 signature in <c>X-Signature</c>. One retry only — a second 403
-    /// means the registered public key does not match the private key.
-    /// </summary>
-    private async Task<Result<string>> GetWithScaAsync(
-        string apiToken,
-        string? scaPrivateKeyPem,
-        ProviderEnvironment environment,
-        string path,
-        CancellationToken cancellationToken
-    )
-    {
-        var httpClient = httpClientFactory.CreateClient(HttpClientName);
-        try
-        {
-            string oneTimeToken;
-            using (var request = NewGetRequest(apiToken, environment, path))
-            using (var response = await httpClient.SendAsync(request, cancellationToken))
-            {
-                if (response.IsSuccessStatusCode)
-                {
-                    return Result.Ok(await response.Content.ReadAsStringAsync(cancellationToken));
-                }
-
-                if (
-                    response.StatusCode != HttpStatusCode.Forbidden
-                    || !response.Headers.TryGetValues("x-2fa-approval", out var approvalValues)
-                    || approvalValues.FirstOrDefault() is not { Length: > 0 } token
-                )
-                {
-                    return Result.Fail<string>(
-                        $"Wise API returned {(int)response.StatusCode} {response.StatusCode} for {path}."
-                    );
-                }
-                oneTimeToken = token;
-            }
-
-            if (string.IsNullOrWhiteSpace(scaPrivateKeyPem))
-            {
-                return Result.Fail<string>(
-                    "Wise statement reads require SCA request signing: register a public key "
-                        + "on the Wise account and store the matching private key under "
-                        + "Settings → Connections."
-                );
-            }
-
-            string signature;
-            try
-            {
-                signature = WiseScaSigner.Sign(scaPrivateKeyPem, oneTimeToken);
-            }
-            catch (Exception exception)
-                when (exception is ArgumentException or CryptographicException)
-            {
-                return Result.Fail<string>(
-                    $"The stored Wise SCA private key is not a usable RSA PEM key: {exception.Message}"
-                );
-            }
-
-            using var signedRequest = NewGetRequest(apiToken, environment, path);
-            signedRequest.Headers.Add("x-2fa-approval", oneTimeToken);
-            signedRequest.Headers.Add("X-Signature", signature);
-            using var signedResponse = await httpClient.SendAsync(signedRequest, cancellationToken);
-            if (!signedResponse.IsSuccessStatusCode)
-            {
-                return Result.Fail<string>(
-                    signedResponse.StatusCode == HttpStatusCode.Forbidden
-                        ? "Wise rejected the SCA signature — the private key stored here does "
-                            + "not match the public key registered on the Wise account."
-                        : $"Wise API returned {(int)signedResponse.StatusCode} {signedResponse.StatusCode} for {path}."
-                );
-            }
-            return Result.Ok(await signedResponse.Content.ReadAsStringAsync(cancellationToken));
-        }
-        catch (Exception exception)
-            when (exception is HttpRequestException or TaskCanceledException)
-        {
-            return Result.Fail<string>($"Wise API unreachable: {exception.Message}");
-        }
-    }
-
-    private static HttpRequestMessage NewGetRequest(
-        string apiToken,
-        ProviderEnvironment environment,
-        string path
-    )
-    {
-        var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl(environment)}{path}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiToken);
-        return request;
-    }
+    [GeneratedRegex("<[^>]+>")]
+    private static partial Regex MarkupRegex();
 }

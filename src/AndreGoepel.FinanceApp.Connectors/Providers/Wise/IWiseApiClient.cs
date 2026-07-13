@@ -4,11 +4,12 @@ using AndreGoepel.FinanceApp.Domain.Providers;
 namespace AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 
 /// <summary>
-/// Thin HTTP client over the Wise personal API: profiles and balances (net
-/// worth) are token-only reads; balance statements (transactions) additionally
-/// answer Wise's SCA challenge by signing the one-time approval token with the
-/// connection's registered RSA key. The token, key and environment are passed
-/// per call so no secret or base URL is held in a field.
+/// Thin HTTP client over the Wise personal API. Everything is a token-only read:
+/// profiles, balances (net worth) and the activity feed (transaction history).
+/// Personal accounts cannot register SCA public keys anymore, so the SCA-protected
+/// statement endpoints are off-limits — activities are the transaction source.
+/// The token and environment are passed per call so no secret or base URL is
+/// held in a field.
 /// </summary>
 public interface IWiseApiClient
 {
@@ -28,19 +29,16 @@ public interface IWiseApiClient
     );
 
     /// <summary>
-    /// Booked transactions of one balance in a date interval, from the
-    /// balance-statement endpoint (SCA-protected). <paramref name="scaPrivateKeyPem"/>
-    /// answers the 403 challenge; without it the call fails with an actionable
-    /// message instead of retrying.
+    /// Monetary activities of a profile in a time window (newest first, all
+    /// currencies — the caller filters). Follows cursor pagination until the
+    /// window is exhausted.
     /// </summary>
-    Task<Result<IReadOnlyList<WiseStatementTransaction>>> GetBalanceStatementAsync(
+    Task<Result<IReadOnlyList<WiseActivity>>> GetActivitiesAsync(
         string apiToken,
-        string? scaPrivateKeyPem,
         ProviderEnvironment environment,
         long profileId,
-        long balanceId,
-        DateOnly intervalStart,
-        DateOnly intervalEnd,
+        DateOnly since,
+        DateOnly until,
         CancellationToken cancellationToken = default
     );
 }
@@ -51,16 +49,20 @@ public sealed record WiseProfile(long Id, string Type);
 public sealed record WiseBalance(long Id, string Currency, decimal Amount);
 
 /// <summary>
-/// One line of a Wise balance statement. <paramref name="Amount"/> is the signed
-/// balance impact (negative for debits); <paramref name="ReferenceNumber"/> is
-/// Wise's stable per-transaction reference used as the external id.
+/// One entry of the Wise activity feed. <paramref name="Amount"/> is the signed
+/// balance impact parsed from the display amount (credits are marked up by Wise,
+/// everything else is money out). <paramref name="Id"/> is the stable activity id
+/// used for dedup; <paramref name="Status"/> lets the caller keep only COMPLETED
+/// entries (in-progress ones still change).
 /// </summary>
-public sealed record WiseStatementTransaction(
+public sealed record WiseActivity(
+    string Id,
+    string Type,
+    string Status,
     DateOnly Date,
     decimal Amount,
     string Currency,
+    string? Title,
     string? Description,
-    string? Counterparty,
-    string? ReferenceNumber,
     string RawJson
 );

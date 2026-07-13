@@ -114,48 +114,6 @@ internal sealed class ProviderConnectionService(
         return Result.Ok();
     }
 
-    public async Task<Result> SaveWiseScaKeyAsync(
-        Guid connectionId,
-        string privateKeyPem,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var connection = await session.LoadAsync<ProviderConnection>(
-            connectionId,
-            cancellationToken
-        );
-        if (connection is null)
-        {
-            return Result.Fail("Connection not found.");
-        }
-        if (connection.Provider != ProviderKind.Wise)
-        {
-            return Result.Fail("Only Wise connections use an SCA key.");
-        }
-        if (string.IsNullOrWhiteSpace(privateKeyPem))
-        {
-            return Result.Fail("The private key must not be empty.");
-        }
-
-        // Fail here, with a person at the screen, rather than at sync time.
-        try
-        {
-            using var rsa = System.Security.Cryptography.RSA.Create();
-            rsa.ImportFromPem(privateKeyPem);
-        }
-        catch (ArgumentException exception)
-        {
-            return Result.Fail($"Not a usable RSA private key (PEM): {exception.Message}");
-        }
-
-        await credentialStore.SaveSecretAsync(
-            CredentialKeys.WiseScaPrivateKey(connectionId),
-            privateKeyPem.Trim(),
-            cancellationToken
-        );
-        return Result.Ok();
-    }
-
     public async Task<Result<string>> StartConsentAsync(
         Guid connectionId,
         string redirectUri,

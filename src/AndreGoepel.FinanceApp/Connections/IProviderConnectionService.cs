@@ -42,16 +42,6 @@ public interface IProviderConnectionService
         CancellationToken cancellationToken = default
     );
 
-    /// <summary>
-    /// Stores/rotates the RSA private key (PEM) answering Wise's SCA challenge on
-    /// statement reads (encrypted). The public half is registered on the Wise account.
-    /// </summary>
-    Task<Result> SaveWiseScaKeyAsync(
-        Guid connectionId,
-        string privateKeyPem,
-        CancellationToken cancellationToken = default
-    );
-
     /// <summary>Starts an Enable Banking consent; returns the bank authorization URL.</summary>
     Task<Result<string>> StartConsentAsync(
         Guid connectionId,

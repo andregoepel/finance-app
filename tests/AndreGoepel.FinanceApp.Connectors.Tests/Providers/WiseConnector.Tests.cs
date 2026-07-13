@@ -10,7 +10,10 @@ public class WiseConnectorTests
 {
     private static readonly Guid ConnectionId = Guid.NewGuid();
 
-    private static ProviderSyncRequest Request(string? externalId = "306149") =>
+    private static ProviderSyncRequest Request(
+        string? externalId = "306149",
+        string? currency = "EUR"
+    ) =>
         new(
             AccountId: Guid.NewGuid(),
             Provider: ProviderKind.Wise,
@@ -19,7 +22,26 @@ public class WiseConnectorTests
             IdentificationHash: null,
             ProviderAccountReference: null,
             Since: new DateOnly(2026, 6, 1),
-            Environment: ProviderEnvironment.Sandbox
+            Environment: ProviderEnvironment.Sandbox,
+            Currency: currency
+        );
+
+    private static WiseActivity Activity(
+        string id,
+        decimal amount,
+        string currency = "EUR",
+        string status = "COMPLETED"
+    ) =>
+        new(
+            Id: id,
+            Type: "TRANSFER",
+            Status: status,
+            Date: new DateOnly(2026, 7, 4),
+            Amount: amount,
+            Currency: currency,
+            Title: "André Example",
+            Description: "Sending",
+            RawJson: "{}"
         );
 
     [Fact]
@@ -38,7 +60,7 @@ public class WiseConnectorTests
     }
 
     [Fact]
-    public async Task FetchAsync_HappyPath_ResolvesProfileAndNormalizesRows()
+    public async Task FetchAsync_HappyPath_KeepsOnlyCompletedRowsInAccountCurrency()
     {
         // Arrange
         var client = Substitute.For<IWiseApiClient>();
@@ -46,12 +68,6 @@ public class WiseConnectorTests
         store
             .GetSecretAsync(CredentialKeys.WiseApiToken(ConnectionId), Arg.Any<CancellationToken>())
             .Returns("token");
-        store
-            .GetSecretAsync(
-                CredentialKeys.WiseScaPrivateKey(ConnectionId),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns("PEM");
         client
             .GetProfilesAsync("token", ProviderEnvironment.Sandbox, Arg.Any<CancellationToken>())
             .Returns(Result.Ok<IReadOnlyList<WiseProfile>>([new WiseProfile(42, "personal")]));
@@ -64,27 +80,19 @@ public class WiseConnectorTests
             )
             .Returns(Result.Ok<IReadOnlyList<WiseBalance>>([new WiseBalance(306149, "EUR", 100m)]));
         client
-            .GetBalanceStatementAsync(
+            .GetActivitiesAsync(
                 "token",
-                "PEM",
                 ProviderEnvironment.Sandbox,
                 42,
-                306149,
                 new DateOnly(2026, 6, 1),
                 Arg.Any<DateOnly>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(
-                Result.Ok<IReadOnlyList<WiseStatementTransaction>>([
-                    new WiseStatementTransaction(
-                        new DateOnly(2026, 7, 3),
-                        -25.50m,
-                        "EUR",
-                        "Card transaction",
-                        "REWE Markt",
-                        "CARD-1234",
-                        "{}"
-                    ),
+                Result.Ok<IReadOnlyList<WiseActivity>>([
+                    Activity("keep", -666m),
+                    Activity("wrong-currency", -10m, currency: "USD"),
+                    Activity("in-progress", -20m, status: "IN_PROGRESS"),
                 ])
             );
         var connector = new WiseConnector(client, store);
@@ -92,14 +100,14 @@ public class WiseConnectorTests
         // Act
         var result = await connector.FetchAsync(Request());
 
-        // Assert
+        // Assert — USD and IN_PROGRESS rows stay out; the EUR completed one imports.
         Assert.True(result.IsSuccess);
         Assert.Equal("wise-api-v1", result.Value!.SyncSource);
         var row = Assert.Single(result.Value.Rows);
-        Assert.Equal(-25.50m, row.Amount);
+        Assert.Equal(-666m, row.Amount);
         Assert.Equal("EUR", row.Currency);
-        Assert.Equal("REWE Markt", row.Counterparty);
-        Assert.Equal("CARD-1234", row.ExternalId);
+        Assert.Equal("André Example", row.Counterparty);
+        Assert.Equal("keep", row.ExternalId);
         Assert.Empty(result.Value.Errors);
     }
 

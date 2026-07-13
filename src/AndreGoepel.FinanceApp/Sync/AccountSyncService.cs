@@ -172,7 +172,8 @@ internal sealed class AccountSyncService(
             account.IdentificationHash,
             providerAccountReference,
             since,
-            connection.Environment
+            connection.Environment,
+            account.Currency
         );
     }
 

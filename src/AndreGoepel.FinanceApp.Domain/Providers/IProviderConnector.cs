@@ -42,6 +42,10 @@ public interface IProviderConnector
 /// Provider environment of the connection (Wise sandbox and production are separate
 /// systems with separate tokens and base URLs).
 /// </param>
+/// <param name="Currency">
+/// The account's currency. Wise activities span every currency of the profile, so
+/// the connector keeps only rows matching the account being synced.
+/// </param>
 public sealed record ProviderSyncRequest(
     Guid AccountId,
     ProviderKind Provider,
@@ -50,7 +54,8 @@ public sealed record ProviderSyncRequest(
     string? IdentificationHash,
     string? ProviderAccountReference,
     DateOnly Since,
-    ProviderEnvironment Environment = ProviderEnvironment.Production
+    ProviderEnvironment Environment = ProviderEnvironment.Production,
+    string? Currency = null
 );
 
 /// <summary>

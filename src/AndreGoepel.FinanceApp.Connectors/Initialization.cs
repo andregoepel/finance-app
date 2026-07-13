@@ -16,8 +16,8 @@ public static class Initialization
 {
     /// <summary>
     /// Registers the statement parsers (one per provider format version), the
-    /// registry that selects them, and the API clients: Wise (balance reads +
-    /// SCA-signed statement sync) and Enable Banking (PSD2 transaction sync for
+    /// registry that selects them, and the API clients: Wise (token-only reads:
+    /// balances + activity feed) and Enable Banking (PSD2 transaction sync for
     /// DKB + Revolut). Wise and DKB export CSV; Revolut and Easy Bank only offer XLSX.
     /// </summary>
     public static IServiceCollection AddConnectors(this IServiceCollection services)
@@ -78,7 +78,8 @@ public static class Initialization
         services.AddScoped<ICryptoPriceProvider, CoinGeckoPriceProvider>();
 
         // Transaction connectors: Enable Banking serves DKB + Revolut; Wise syncs
-        // its own balance statements (SCA-signed requests). Wise balances refresh
+        // its token-only activity feed (personal accounts cannot register SCA
+        // keys, so statement endpoints are unusable). Wise balances refresh
         // separately via WiseBalanceService in the host.
         services.AddScoped<IProviderConnector, EnableBankingConnector>();
         services.AddScoped<IProviderConnector, WiseConnector>();

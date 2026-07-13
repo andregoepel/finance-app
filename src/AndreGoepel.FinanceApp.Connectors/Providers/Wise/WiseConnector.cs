@@ -6,10 +6,13 @@ using AndreGoepel.FinanceApp.Domain.Providers;
 namespace AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 
 /// <summary>
-/// Syncs Wise transactions through the SCA-protected balance-statement endpoint.
-/// The account's <c>ExternalId</c> is the Wise balance id (the same link the
-/// balance refresh uses); the owning profile is resolved per sync because the
-/// statement endpoint is addressed per profile + balance.
+/// Syncs Wise transactions through the token-only activity feed (personal
+/// accounts cannot register SCA public keys anymore, so the SCA-protected
+/// statement endpoints are unusable). The account's <c>ExternalId</c> is the
+/// Wise balance id — used to verify the token actually sees the linked balance
+/// and to resolve the owning profile. Activities span every currency of the
+/// profile, so only rows in the account's currency are kept; only COMPLETED
+/// entries import (in-progress ones still change).
 /// </summary>
 public sealed class WiseConnector(IWiseApiClient client, ICredentialStore credentialStore)
     : IProviderConnector
@@ -30,6 +33,12 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
                     + "(the balance id shows on Settings → Connections after a balance refresh)."
             );
         }
+        if (string.IsNullOrWhiteSpace(request.Currency))
+        {
+            return Result.Fail<ProviderSyncResult>(
+                "The account has no currency — Wise activities are filtered per currency."
+            );
+        }
 
         var token = await credentialStore.GetSecretAsync(
             CredentialKeys.WiseApiToken(request.ConnectionId),
@@ -42,11 +51,6 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
             );
         }
 
-        var scaPrivateKey = await credentialStore.GetSecretAsync(
-            CredentialKeys.WiseScaPrivateKey(request.ConnectionId),
-            cancellationToken
-        );
-
         var profileId = await ResolveProfileIdAsync(
             token,
             request.Environment,
@@ -58,22 +62,27 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
             return Result.Fail<ProviderSyncResult>(profileId.Error!);
         }
 
-        var statement = await client.GetBalanceStatementAsync(
+        var activities = await client.GetActivitiesAsync(
             token,
-            scaPrivateKey,
             request.Environment,
             profileId.Value,
-            balanceId,
             request.Since,
             DateOnly.FromDateTime(DateTime.UtcNow),
             cancellationToken
         );
-        if (statement.IsFailure)
+        if (activities.IsFailure)
         {
-            return Result.Fail<ProviderSyncResult>(statement.Error!);
+            return Result.Fail<ProviderSyncResult>(activities.Error!);
         }
 
-        var rows = statement.Value!.Select(Normalize).ToList();
+        var rows = activities
+            .Value!.Where(a =>
+                string.Equals(a.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(a.Currency, request.Currency, StringComparison.OrdinalIgnoreCase)
+            )
+            .Select(Normalize)
+            .ToList();
+
         return Result.Ok(new ProviderSyncResult(SyncSource, rows, []));
     }
 
@@ -115,17 +124,19 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
         );
     }
 
-    /// <summary>Maps one statement line to the shared import shape.</summary>
-    internal static NormalizedTransaction Normalize(WiseStatementTransaction t) =>
+    /// <summary>Maps one activity to the shared import shape.</summary>
+    internal static NormalizedTransaction Normalize(WiseActivity a) =>
         new(
             SourceRow: 0,
-            BookingDate: t.Date,
+            BookingDate: a.Date,
             ValueDate: null,
-            Amount: t.Amount,
-            Currency: t.Currency,
-            Counterparty: t.Counterparty,
-            Description: t.Description ?? t.Counterparty ?? t.ReferenceNumber ?? "Wise transaction",
-            ExternalId: t.ReferenceNumber,
-            RawData: t.RawJson
+            Amount: a.Amount,
+            Currency: a.Currency,
+            Counterparty: a.Title,
+            Description: string.IsNullOrWhiteSpace(a.Description)
+                ? a.Title ?? "Wise transaction"
+                : a.Description,
+            ExternalId: a.Id,
+            RawData: a.RawJson
         );
 }
