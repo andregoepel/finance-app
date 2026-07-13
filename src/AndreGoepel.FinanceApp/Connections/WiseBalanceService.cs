@@ -23,7 +23,13 @@ internal sealed class WiseBalanceService(
         CancellationToken cancellationToken = default
     )
     {
-        var fetched = await FetchBalancesAsync(connectionId, cancellationToken);
+        // All profiles here: the refresh only touches accounts that are already
+        // linked, so a manually linked business balance keeps refreshing.
+        var fetched = await FetchBalancesAsync(
+            connectionId,
+            personalProfilesOnly: false,
+            cancellationToken
+        );
         if (fetched.IsFailure)
         {
             return Result.Fail<WiseBalanceSyncResult>(fetched.Error!);
@@ -42,7 +48,15 @@ internal sealed class WiseBalanceService(
         CancellationToken cancellationToken = default
     )
     {
-        var fetched = await FetchBalancesAsync(connectionId, cancellationToken);
+        // Business profiles are excluded by default: this is a household app, and
+        // a token that also sees a business profile would otherwise flood the
+        // household with company balances. Link business balances manually if
+        // ever needed.
+        var fetched = await FetchBalancesAsync(
+            connectionId,
+            personalProfilesOnly: true,
+            cancellationToken
+        );
         if (fetched.IsFailure)
         {
             return Result.Fail<WiseAccountImportResult>(fetched.Error!);
@@ -115,10 +129,18 @@ internal sealed class WiseBalanceService(
     internal static string AccountNameFor(WiseBalance balance) =>
         string.IsNullOrWhiteSpace(balance.Name) ? $"Wise {balance.Currency}" : balance.Name.Trim();
 
-    /// <summary>Shared plumbing: connection + token checks, then all balances of every profile.</summary>
+    /// <summary>
+    /// Shared plumbing: connection + token checks, then the balances of every
+    /// profile — optionally only personal profiles (account import skips
+    /// business profiles by default).
+    /// </summary>
     private async Task<
         Result<(ProviderConnection Connection, IReadOnlyList<WiseBalance> Balances)>
-    > FetchBalancesAsync(Guid connectionId, CancellationToken cancellationToken)
+    > FetchBalancesAsync(
+        Guid connectionId,
+        bool personalProfilesOnly,
+        CancellationToken cancellationToken
+    )
     {
         var connection = await session.LoadAsync<ProviderConnection>(
             connectionId,
@@ -158,8 +180,14 @@ internal sealed class WiseBalanceService(
             return Result.Fail<(ProviderConnection, IReadOnlyList<WiseBalance>)>(profiles.Error!);
         }
 
+        var relevantProfiles = personalProfilesOnly
+            ? profiles.Value!.Where(p =>
+                string.Equals(p.Type, "personal", StringComparison.OrdinalIgnoreCase)
+            )
+            : profiles.Value!;
+
         var balances = new List<WiseBalance>();
-        foreach (var profile in profiles.Value!)
+        foreach (var profile in relevantProfiles)
         {
             var profileBalances = await wiseApiClient.GetBalancesAsync(
                 token,
