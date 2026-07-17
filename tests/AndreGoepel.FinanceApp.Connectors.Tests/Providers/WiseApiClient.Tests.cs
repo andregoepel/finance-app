@@ -33,12 +33,12 @@ public class WiseApiClientTests
     }
 
     [Fact]
-    public async Task GetBalancesAsync_ParsesDecimalAmountsAndCurrency()
+    public async Task GetBalancesAsync_ParsesAmountsTypesAndJarNames()
     {
-        // Arrange
+        // Arrange — a standard balance (name null) and a savings jar with a name.
         const string json = """
-            [{"id":306149,"currency":"EUR","amount":{"value":999334.00,"currency":"EUR"}},
-             {"id":306112,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"}}]
+            [{"id":306149,"currency":"EUR","amount":{"value":999334.00,"currency":"EUR"},"type":"STANDARD","name":null},
+             {"id":306999,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"},"type":"SAVINGS","name":"Vacation"}]
             """;
         var client = ClientReturning(json, out var handler);
 
@@ -49,20 +49,24 @@ public class WiseApiClientTests
         Assert.True(result.IsSuccess);
         Assert.Collection(
             result.Value!,
-            eur =>
+            standard =>
             {
-                Assert.Equal(306149, eur.Id);
-                Assert.Equal("EUR", eur.Currency);
-                Assert.Equal(999334.00m, eur.Amount);
+                Assert.Equal(306149, standard.Id);
+                Assert.Equal("EUR", standard.Currency);
+                Assert.Equal(999334.00m, standard.Amount);
+                Assert.Equal("STANDARD", standard.Type);
+                Assert.Null(standard.Name);
             },
-            usd =>
+            jar =>
             {
-                Assert.Equal("USD", usd.Currency);
-                Assert.Equal(1000000.00m, usd.Amount);
+                Assert.Equal("USD", jar.Currency);
+                Assert.Equal(1000000.00m, jar.Amount);
+                Assert.Equal("SAVINGS", jar.Type);
+                Assert.Equal("Vacation", jar.Name);
             }
         );
         Assert.Equal(
-            "https://api.wise.com/v4/profiles/42/balances?types=STANDARD",
+            "https://api.wise.com/v4/profiles/42/balances?types=STANDARD,SAVINGS",
             handler.LastRequestUri!.ToString()
         );
     }

@@ -112,6 +112,73 @@ public class WiseConnectorTests
     }
 
     [Fact]
+    public async Task FetchAsync_JarAccount_ReturnsNoRows()
+    {
+        // Arrange — the linked balance is a SAVINGS jar; the profile feed cannot
+        // be attributed per jar, so the account must stay transaction-free.
+        var client = Substitute.For<IWiseApiClient>();
+        var store = Substitute.For<ICredentialStore>();
+        store
+            .GetSecretAsync(CredentialKeys.WiseApiToken(ConnectionId), Arg.Any<CancellationToken>())
+            .Returns("token");
+        client
+            .GetProfilesAsync("token", ProviderEnvironment.Sandbox, Arg.Any<CancellationToken>())
+            .Returns(Result.Ok<IReadOnlyList<WiseProfile>>([new WiseProfile(42, "personal")]));
+        client
+            .GetBalancesAsync(
+                "token",
+                ProviderEnvironment.Sandbox,
+                42,
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok<IReadOnlyList<WiseBalance>>([
+                    new WiseBalance(306149, "EUR", 100m, Type: "SAVINGS", Name: "Family"),
+                ])
+            );
+        var connector = new WiseConnector(client, store);
+
+        // Act
+        var result = await connector.FetchAsync(Request());
+
+        // Assert — success (scheduled runs stay quiet), zero rows, feed never fetched.
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value!.Rows);
+        await client
+            .DidNotReceive()
+            .GetActivitiesAsync(
+                Arg.Any<string>(),
+                Arg.Any<ProviderEnvironment>(),
+                Arg.Any<long>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public void MapForCurrency_SameCurrencyConversion_IsSkipped()
+    {
+        // Arrange — a jar shuffle: 25 EUR moved between the standard balance and a jar.
+        var shuffle = new WiseActivity(
+            Id: "jar-move",
+            Type: "INTERBALANCE",
+            Status: "COMPLETED",
+            Date: new DateOnly(2026, 7, 2),
+            Amount: -25m,
+            Currency: "EUR",
+            Title: "To Savings",
+            Description: "Moved",
+            RawJson: "{}",
+            SecondaryAmount: 25m,
+            SecondaryCurrency: "EUR"
+        );
+
+        // Act / Assert — direction is unattributable; nothing books.
+        Assert.Null(WiseConnector.MapForCurrency(shuffle, "EUR"));
+    }
+
+    [Fact]
     public void MapForCurrency_Conversion_BooksBothSidesWithCorrectSigns()
     {
         // Arrange — the live sandbox conversion: 11,002 EUR spent → 9,329.84 GBP received.

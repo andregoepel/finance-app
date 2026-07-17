@@ -66,7 +66,7 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
         var json = await GetAsync(
             apiToken,
             environment,
-            $"/v4/profiles/{profileId}/balances?types=STANDARD",
+            $"/v4/profiles/{profileId}/balances?types=STANDARD,SAVINGS",
             cancellationToken
         );
         if (json.IsFailure)
@@ -82,7 +82,11 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
                 .Select(b => new WiseBalance(
                     b.GetProperty("id").GetInt64(),
                     b.GetProperty("currency").GetString() ?? "",
-                    b.GetProperty("amount").GetProperty("value").GetDecimal()
+                    b.GetProperty("amount").GetProperty("value").GetDecimal(),
+                    b.TryGetProperty("type", out var type)
+                        ? type.GetString() ?? "STANDARD"
+                        : "STANDARD",
+                    b.TryGetProperty("name", out var name) ? name.GetString() : null
                 ))
                 .ToList();
             return Result.Ok<IReadOnlyList<WiseBalance>>(balances);
