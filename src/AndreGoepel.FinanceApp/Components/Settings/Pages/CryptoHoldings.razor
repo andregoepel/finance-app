@@ -79,7 +79,7 @@
                                 <Template Context="row">
                                     @if (row.EurPrice is decimal price)
                                     {
-                                        @Eur(price)
+                                        @Money.Eur(price)
                                     }
                                     else
                                     {
@@ -88,7 +88,7 @@
                                 </Template>
                             </RadzenDataGridColumn>
                             <RadzenDataGridColumn TItem="CryptoPosition" Title="Value" Width="130px" TextAlign="TextAlign.Right">
-                                <Template Context="row">@(row.EurValue is decimal value ? Eur(value) : "—")</Template>
+                                <Template Context="row">@(row.EurValue is decimal value ? Money.Eur(value) : "—")</Template>
                             </RadzenDataGridColumn>
                             <RadzenDataGridColumn TItem="CryptoPosition" Title="" Width="110px" TextAlign="TextAlign.End" Sortable="false">
                                 <Template Context="row">
@@ -109,7 +109,7 @@
                         }
                     </RadzenText>
                     <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">
-                        Total: @Eur(overview.TotalEur)
+                        Total: @Money.Eur(overview.TotalEur)
                     </RadzenText>
                 </RadzenStack>
             }
@@ -227,6 +227,4 @@
             refreshing = false;
         }
     }
-
-    private static string Eur(decimal amount) => $"{amount:N2} €";
 }

@@ -13,11 +13,8 @@
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Recurring</RadzenText>
-        <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
-            Detected subscriptions and other regular payments or income, based on repeating
-            counterparties with a consistent interval and amount.
-        </RadzenText>
+        <PageHeader Title="Recurring"
+                    Subtitle="Detected subscriptions and other regular payments or income, based on repeating counterparties with a consistent interval and amount." />
 
         @if (series is null)
         {
@@ -25,15 +22,12 @@
         }
         else if (series.Count == 0)
         {
-            <RadzenCard>
-                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                    No recurring payments detected yet — this needs a few months of transactions.
-                </RadzenText>
-            </RadzenCard>
+            <EmptyState Icon="@("🔁")" Title="No recurring payments detected yet"
+                        Text="This needs a few months of transactions before patterns emerge." />
         }
         else
         {
-            <RadzenCard>
+            <DataCard>
                 <RadzenDataGrid TItem="RecurringSeries" Data=@series Density="Density.Compact"
                                 AllowSorting="true" AllowPaging="true" PageSize="20">
                     <Columns>
@@ -41,9 +35,7 @@
                         <RadzenDataGridColumn TItem="RecurringSeries" Property="Interval" Title="Interval" Width="110px" />
                         <RadzenDataGridColumn TItem="RecurringSeries" Property="TypicalAmount" Title="Typical amount" Width="140px" TextAlign="TextAlign.Right">
                             <Template Context="row">
-                                <span style="@(row.TypicalAmount < 0 ? "color: var(--rz-danger);" : "color: var(--rz-success);")">
-                                    @($"{row.TypicalAmount:N2} €")
-                                </span>
+                                <AmountText Amount="row.TypicalAmount" />
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="RecurringSeries" Property="Occurrences" Title="Seen" Width="70px" TextAlign="TextAlign.Right" />
@@ -53,15 +45,17 @@
                         <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="Next expected" Width="130px">
                             <Template Context="row">@row.NextExpected.ToString("dd.MM.yyyy")</Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End">
+                        <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
                             <Template Context="row">
-                                <RadzenButton Text="Add as planned" Icon="event_note" Size="ButtonSize.ExtraSmall"
-                                              ButtonStyle="ButtonStyle.Secondary" Click=@(() => AddAsPlannedAsync(row)) />
+                                <RowActions>
+                                    <RadzenButton Text="Add as planned" Icon="event_note" Size="ButtonSize.ExtraSmall"
+                                                  ButtonStyle="ButtonStyle.Secondary" Click=@(() => AddAsPlannedAsync(row)) />
+                                </RowActions>
                             </Template>
                         </RadzenDataGridColumn>
                     </Columns>
                 </RadzenDataGrid>
-            </RadzenCard>
+            </DataCard>
         }
 
     </RadzenStack>

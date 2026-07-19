@@ -14,18 +14,11 @@
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Dashboard</RadzenText>
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                              Click=@(() => ShiftMonthAsync(-1)) />
-                <RadzenText TextStyle="TextStyle.Subtitle1" Style="min-width: 9rem; text-align: center;">
-                    @MonthStart.ToString("MMMM yyyy")
-                </RadzenText>
-                <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                              Disabled=@IsCurrentMonth Click=@(() => ShiftMonthAsync(1)) />
-            </RadzenStack>
-        </RadzenStack>
+        <PageHeader Title="Dashboard">
+            <Actions>
+                <MonthNavigator Month="MonthStart" DisableNext="IsCurrentMonth" MonthChanged="OnMonthChangedAsync" />
+            </Actions>
+        </PageHeader>
 
         @if (overview is null)
         {
@@ -44,22 +37,14 @@
             @* ---------- Month totals ---------- *@
             <RadzenRow Gap="1rem">
                 <RadzenColumn Size="12" SizeMd="4">
-                    <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Income</RadzenText>
-                        <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-success);">@Eur(overview.Income)</RadzenText>
-                    </RadzenCard>
+                    <StatTile Label="Income" Value="@Money.Eur(overview.Income)" Variant="BadgeVariant.Success" />
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMd="4">
-                    <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Expenses</RadzenText>
-                        <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-danger);">@Eur(overview.Expenses)</RadzenText>
-                    </RadzenCard>
+                    <StatTile Label="Expenses" Value="@Money.Eur(overview.Expenses)" Variant="BadgeVariant.Danger" />
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMd="4">
-                    <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Net</RadzenText>
-                        <RadzenText TextStyle="TextStyle.H5" Style="@($"color: {(overview.Net >= 0 ? "var(--rz-success)" : "var(--rz-danger)")};")">@Eur(overview.Net)</RadzenText>
-                    </RadzenCard>
+                    <StatTile Label="Net" Value="@Money.Eur(overview.Net)"
+                              Variant="@(overview.Net >= 0 ? BadgeVariant.Success : BadgeVariant.Danger)" />
                 </RadzenColumn>
             </RadzenRow>
 
@@ -93,7 +78,7 @@
                                     <Columns>
                                         <RadzenDataGridColumn TItem="CategorySpend" Property="Category" Title="Category" />
                                         <RadzenDataGridColumn TItem="CategorySpend" Property="Amount" Title="Amount" TextAlign="TextAlign.Right" Width="120px">
-                                            <Template Context="row">@Eur(row.Amount)</Template>
+                                            <Template Context="row">@Money.Eur(row.Amount)</Template>
                                         </RadzenDataGridColumn>
                                     </Columns>
                                 </RadzenDataGrid>
@@ -122,7 +107,7 @@
                             }
                             else
                             {
-                                <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Eur(netWorth.Current)</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Money.Eur(netWorth.Current)</RadzenText>
                                 @if (netWorthChart.Count > 1)
                                 {
                                     <RadzenChart Style="height: 130px;">
@@ -159,7 +144,7 @@
                                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
                                             <RadzenText TextStyle="TextStyle.Caption">@budget.Category</RadzenText>
                                             <RadzenText TextStyle="TextStyle.Caption" Style="@(budget.IsOver ? "color: var(--rz-danger);" : "")">
-                                                @Eur(budget.Spent) / @Eur(budget.Limit)
+                                                @Money.Eur(budget.Spent) / @Money.Eur(budget.Limit)
                                             </RadzenText>
                                         </RadzenStack>
                                         <RadzenProgressBar Value="@((double)Math.Min(budget.Percent, 100))" ShowValue="false"
@@ -184,7 +169,7 @@
                                     <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Crypto</RadzenText>
                                     <RadzenLink Path="settings/crypto" Text="Holdings" />
                                 </RadzenStack>
-                                <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Eur(crypto.TotalEur)</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Money.Eur(crypto.TotalEur)</RadzenText>
                                 @foreach (var position in crypto.Positions)
                                 {
                                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
@@ -192,7 +177,7 @@
                                             @position.Symbol · @position.Quantity.ToString("0.########")
                                         </RadzenText>
                                         <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">
-                                            @(position.EurValue is decimal value ? Eur(value) : "no price yet")
+                                            @(position.EurValue is decimal value ? Money.Eur(value) : "no price yet")
                                         </RadzenText>
                                     </RadzenStack>
                                 }
@@ -228,10 +213,10 @@
                         @foreach (var o in upcoming)
                         {
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-                                <RadzenBadge BadgeStyle="@(o.Status == PlannedOccurrenceStatus.Overdue ? BadgeStyle.Danger : BadgeStyle.Info)"
+                                <StatusBadge Variant="@(o.Status == PlannedOccurrenceStatus.Overdue ? BadgeVariant.Danger : BadgeVariant.Info)"
                                              Text="@o.DueDate.ToString("dd.MM")" />
                                 <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; flex: 1;">@o.Description</RadzenText>
-                                <RadzenText TextStyle="TextStyle.Body2" Style="@($"margin: 0; {(o.Amount < 0 ? "color: var(--rz-danger);" : "color: var(--rz-success);")}")">@Eur(o.Amount)</RadzenText>
+                                <AmountText Amount="o.Amount" />
                             </RadzenStack>
                         }
                     }
@@ -269,12 +254,10 @@
     private async Task LoadAsync() =>
         overview = await DashboardService.GetMonthlyOverviewAsync(MonthStart.Year, MonthStart.Month);
 
-    private async Task ShiftMonthAsync(int months)
+    private async Task OnMonthChangedAsync(DateOnly month)
     {
-        MonthStart = MonthStart.AddMonths(months);
+        MonthStart = month;
         overview = null;
         await LoadAsync();
     }
-
-    private static string Eur(decimal amount) => $"{amount:N2} €";
 }

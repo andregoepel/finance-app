@@ -1,0 +1,29 @@
+@* MonthNavigator — prev/next chevrons around a "MMMM yyyy" label. Raises
+   MonthChanged with the shifted month start. Shared by the Dashboard and
+   Planning month views. *@
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+    <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                  Click="@(() => ShiftAsync(-1))" />
+    <RadzenText TextStyle="TextStyle.Subtitle1" Style="min-width: 9rem; text-align: center;">
+        @Month.ToString("MMMM yyyy")
+    </RadzenText>
+    <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                  Disabled="@DisableNext" Click="@(() => ShiftAsync(1))" />
+</RadzenStack>
+
+@code {
+    /// <summary>The month being shown (any day; only year/month are used).</summary>
+    [Parameter, EditorRequired]
+    public DateOnly Month { get; set; }
+
+    /// <summary>Raised with the shifted month when the user steps back/forward.</summary>
+    [Parameter]
+    public EventCallback<DateOnly> MonthChanged { get; set; }
+
+    /// <summary>Disables the "next" chevron (e.g. to cap at the current month).</summary>
+    [Parameter]
+    public bool DisableNext { get; set; }
+
+    private Task ShiftAsync(int months) => MonthChanged.InvokeAsync(Month.AddMonths(months));
+}
