@@ -6,67 +6,62 @@
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
+@inject ConfirmService ConfirmService
 
 <AppFoundationPageTitle Title="Budgets" Breadcrumb="Settings / Budgets" />
 
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Budgets</RadzenText>
-        <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
-            Set a monthly EUR limit per category. A limit on a parent category counts spending in
-            that category and all of its subcategories. Progress shows on the dashboard.
-        </RadzenText>
+        <PageHeader Title="Budgets"
+                    Subtitle="Set a monthly EUR limit per category. A limit on a parent category counts spending in that category and all of its subcategories. Progress shows on the dashboard." />
 
         <RadzenCard>
             <RadzenStack Gap="1rem">
                 <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Set a budget</RadzenText>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                    <RadzenFormField Text="Category">
-                        <RadzenDropDown TValue="Guid?" @bind-Value=@selectedCategoryId
+                    <FormField Label="Category" For="Category">
+                        <RadzenDropDown TValue="Guid?" @bind-Value=@selectedCategoryId Name="Category"
                                         Data=@categoryOptions ValueProperty="Id" TextProperty="Path"
                                         AllowClear="true" AllowFiltering="true" Placeholder="Select category"
                                         Style="min-width: 18rem;" />
-                    </RadzenFormField>
-                    <RadzenFormField Text="Monthly limit (€)">
-                        <RadzenNumeric TValue="decimal" @bind-Value=@limitInput Min="0" Style="width: 9rem;" />
-                    </RadzenFormField>
+                    </FormField>
+                    <FormField Label="Monthly limit (€)" For="Limit">
+                        <RadzenNumeric TValue="decimal" @bind-Value=@limitInput Name="Limit" Min="0" Style="width: 9rem;" />
+                    </FormField>
                     <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary"
                                   Disabled=@(selectedCategoryId is null || limitInput <= 0) Click=@SaveAsync />
                 </RadzenStack>
             </RadzenStack>
         </RadzenCard>
 
-        <RadzenCard>
-            <RadzenStack Gap="1rem">
-                <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Current budgets</RadzenText>
-                @if (budgetRows.Count == 0)
-                {
-                    <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                        No budgets set yet.
-                    </RadzenText>
-                }
-                else
-                {
-                    <RadzenDataGrid TItem="BudgetRow" Data=@budgetRows Density="Density.Compact" AllowPaging="false">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="BudgetRow" Property="Path" Title="Category" />
-                            <RadzenDataGridColumn TItem="BudgetRow" Property="Limit" Title="Monthly limit" Width="150px" TextAlign="TextAlign.Right">
-                                <Template Context="row">@($"{row.Limit:N2} €")</Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="BudgetRow" Title="" Width="90px" TextAlign="TextAlign.End">
-                                <Template Context="row">
-                                    <RadzenButton Icon="edit" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light"
-                                                  title="Edit" Click=@(() => StartEdit(row)) />
-                                    <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Danger"
-                                                  title="Delete" Click=@(() => DeleteAsync(row)) />
-                                </Template>
-                            </RadzenDataGridColumn>
-                        </Columns>
-                    </RadzenDataGrid>
-                }
-            </RadzenStack>
-        </RadzenCard>
+        <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Current budgets</RadzenText>
+        @if (budgetRows.Count == 0)
+        {
+            <EmptyState Icon="@("💶")" Title="No budgets set yet"
+                        Text="Set a monthly limit for a category above to start tracking it." />
+        }
+        else
+        {
+            <DataCard>
+                <RadzenDataGrid TItem="BudgetRow" Data=@budgetRows Density="Density.Compact" AllowPaging="false">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="BudgetRow" Property="Path" Title="Category" />
+                        <RadzenDataGridColumn TItem="BudgetRow" Property="Limit" Title="Monthly limit" Width="150px" TextAlign="TextAlign.Right">
+                            <Template Context="row">@($"{row.Limit:N2} €")</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="BudgetRow" Title="" Width="110px" TextAlign="TextAlign.End" Sortable="false">
+                            <Template Context="row">
+                                <RowActions>
+                                    <IconButton Icon="edit" Title="Edit" Click=@(_ => StartEdit(row)) />
+                                    <IconButton Icon="delete" Title="Delete" Danger="true" Click=@(_ => DeleteAsync(row)) />
+                                </RowActions>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </DataCard>
+        }
 
     </RadzenStack>
 </div>
@@ -142,6 +137,10 @@
 
     private async Task DeleteAsync(BudgetRow row)
     {
+        if (!await ConfirmService.ConfirmDeleteAsync($"the budget for “{row.Path}”"))
+        {
+            return;
+        }
         var result = await MessageBus.InvokeAsync<Result>(new DeleteBudgetCommand(row.CategoryId));
         if (result.IsFailure)
         {

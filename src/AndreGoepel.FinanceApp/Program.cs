@@ -1,5 +1,6 @@
 using AndreGoepel.AppFoundation;
 using AndreGoepel.AppFoundation.Hosting;
+using AndreGoepel.Design.Blazor;
 using AndreGoepel.FinanceApp;
 using AndreGoepel.FinanceApp.Categorization;
 using AndreGoepel.FinanceApp.Components;
@@ -27,6 +28,10 @@ builder.AddAppFoundation(options =>
 });
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+// Design-system services (ConfirmService, etc.). Must run after AddRadzenComponents
+// (called inside AddAppFoundation) since it builds on Radzen's DialogService.
+builder.Services.AddDesignBlazor(options => options.BrandName = "Finance");
 
 builder.Services.AddFinanceApp();
 

@@ -38,21 +38,26 @@ public static class PageExtensions
         page.GetByRole(AriaRole.Link, new() { Name = text, Exact = false }).First.ClickAsync();
 
     /// <summary>
-    /// Fills the text input of the <c>RadzenFormField</c> whose floating label matches
-    /// <paramref name="label"/>. Radzen inputs carry no <c>name</c>, so the field is located by its
-    /// label text and the single input it wraps.
+    /// Fills the text input of the design-system <c>FormField</c> whose label matches
+    /// <paramref name="label"/>. <c>FormField</c> renders the label above the control (no
+    /// <c>.rz-form-field</c> wrapper), so the field is located from its <c>&lt;label&gt;</c> — the
+    /// input sits inside the same label-above stack (the label's parent).
     /// </summary>
     public static Task FillFormFieldAsync(this IPage page, string label, string value) =>
-        page.Locator($".rz-form-field:has-text('{label}') input").First.FillAsync(value);
+        page.Locator($"xpath=//label[normalize-space(.)='{label}']/..//input")
+            .First.FillAsync(value);
 
     /// <summary>
-    /// Selects an option from the <c>RadzenDropDown</c> whose form field matches
-    /// <paramref name="label"/>: opens the panel, then clicks the item whose text is
-    /// <paramref name="optionText"/>.
+    /// Selects an option from the <c>RadzenDropDown</c> of the <c>FormField</c> whose label matches
+    /// <paramref name="label"/>: opens the panel from the field's trigger, then clicks the item
+    /// whose text is <paramref name="optionText"/>.
     /// </summary>
     public static async Task SelectDropDownAsync(this IPage page, string label, string optionText)
     {
-        await page.Locator($".rz-form-field:has-text('{label}') .rz-dropdown").First.ClickAsync();
+        await page.Locator(
+                $"xpath=//label[normalize-space(.)='{label}']/..//div[contains(@class,'rz-dropdown')]"
+            )
+            .First.ClickAsync();
         await page.Locator($".rz-dropdown-panel .rz-dropdown-item:has-text('{optionText}')")
             .First.ClickAsync();
     }

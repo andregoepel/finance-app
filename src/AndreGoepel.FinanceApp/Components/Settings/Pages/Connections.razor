@@ -12,18 +12,15 @@
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
 @inject UserManager<User> UserManager
+@inject ConfirmService ConfirmService
 
 <AppFoundationPageTitle Title="Connections" Breadcrumb="Settings / Connections" />
 
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Connections</RadzenText>
-        <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
-            A connection is one login at a provider — a Wise profile or a bank consent — owned
-            by a household user. One connection feeds several accounts, and each of you can have
-            your own. Secrets are stored encrypted and never shown again after saving.
-        </RadzenText>
+        <PageHeader Title="Connections"
+                    Subtitle="A connection is one login at a provider — a Wise profile or a bank consent — owned by a household user. One connection feeds several accounts, and each of you can have your own. Secrets are stored encrypted and never shown again after saving." />
 
         @* ---------- Enable Banking application (global) ---------- *@
         <RadzenCard>
@@ -66,31 +63,31 @@
             <RadzenStack Gap="1rem">
                 <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Add connection</RadzenText>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
-                    <RadzenFormField Text="Provider">
-                        <RadzenDropDown @bind-Value=@newProvider Data=@ConnectionProviders Style="min-width: 9rem;" />
-                    </RadzenFormField>
-                    <RadzenFormField Text="Label">
-                        <RadzenTextBox @bind-Value=@newLabel Placeholder="e.g. André – Wise" Style="min-width: 14rem;" />
-                    </RadzenFormField>
-                    <RadzenFormField Text="Owner">
-                        <RadzenDropDown TValue="Guid?" @bind-Value=@newOwnerUserId Data=@users
+                    <FormField Label="Provider" For="Provider">
+                        <RadzenDropDown @bind-Value=@newProvider Name="Provider" Data=@ConnectionProviders Style="min-width: 9rem;" />
+                    </FormField>
+                    <FormField Label="Label" For="Label">
+                        <RadzenTextBox @bind-Value=@newLabel Name="Label" Placeholder="e.g. André – Wise" Style="min-width: 14rem;" />
+                    </FormField>
+                    <FormField Label="Owner" For="Owner">
+                        <RadzenDropDown TValue="Guid?" @bind-Value=@newOwnerUserId Name="Owner" Data=@users
                                         ValueProperty="StreamId" TextProperty="UserName"
                                         AllowClear="true" Placeholder="Select user" Style="min-width: 13rem;" />
-                    </RadzenFormField>
+                    </FormField>
                     @if (newProvider == ProviderKind.Wise)
                     {
-                        <RadzenFormField Text="Environment">
-                            <RadzenDropDown @bind-Value=@newEnvironment Data=@Environments Style="min-width: 9rem;" />
-                        </RadzenFormField>
+                        <FormField Label="Environment" For="Environment">
+                            <RadzenDropDown @bind-Value=@newEnvironment Name="Environment" Data=@Environments Style="min-width: 9rem;" />
+                        </FormField>
                     }
                     else
                     {
-                        <RadzenFormField Text="ASPSP (bank)">
-                            <RadzenTextBox @bind-Value=@newAspspName Placeholder="Mock ASPSP / DKB" Style="min-width: 11rem;" />
-                        </RadzenFormField>
-                        <RadzenFormField Text="Country">
-                            <RadzenTextBox @bind-Value=@newAspspCountry Placeholder="DE" Style="width: 5.5rem;" MaxLength="2" />
-                        </RadzenFormField>
+                        <FormField Label="ASPSP (bank)" For="Aspsp">
+                            <RadzenTextBox @bind-Value=@newAspspName Name="Aspsp" Placeholder="Mock ASPSP / DKB" Style="min-width: 11rem;" />
+                        </FormField>
+                        <FormField Label="Country" For="Country">
+                            <RadzenTextBox @bind-Value=@newAspspCountry Name="Country" Placeholder="DE" Style="width: 5.5rem;" MaxLength="2" />
+                        </FormField>
                     }
                     <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
                                   Disabled=@string.IsNullOrWhiteSpace(newLabel) Click=@AddConnectionAsync />
@@ -105,9 +102,8 @@
         @* ---------- Existing connections ---------- *@
         @if (connections.Count == 0)
         {
-            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                No connections yet. Add one above, then link accounts to it under Accounts.
-            </RadzenText>
+            <EmptyState Icon="@("🔗")" Title="No connections yet"
+                        Text="Add one above, then link accounts to it under Accounts." />
         }
         else
         {
@@ -117,13 +113,13 @@
                     <RadzenStack Gap="1rem">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
                             <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@connection.Label</RadzenText>
-                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@connection.Provider.ToString()" />
+                            <StatusBadge Variant="BadgeVariant.Neutral" Text="@connection.Provider.ToString()" />
                             <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
                                 @OwnerName(connection.OwnerUserId)
                             </RadzenText>
                             <div style="flex: 1;"></div>
-                            <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Danger"
-                                          title="Delete connection" Click=@(() => DeleteConnectionAsync(connection)) />
+                            <IconButton Icon="delete" Title="Delete connection" Danger="true"
+                                        Click=@(_ => DeleteConnectionAsync(connection)) />
                         </RadzenStack>
 
                         @if (connection.Provider == ProviderKind.Wise)
@@ -306,6 +302,10 @@
 
     private async Task DeleteConnectionAsync(ProviderConnection connection)
     {
+        if (!await ConfirmService.ConfirmDeleteAsync($"the connection “{connection.Label}”"))
+        {
+            return;
+        }
         var result = await ConnectionService.DeleteAsync(connection.Id);
         if (result.IsFailure)
         {
@@ -364,25 +364,25 @@
 
     private static RenderFragment StateBadge(CredentialInfo? info) => builder =>
     {
-        builder.OpenComponent<RadzenBadge>(0);
-        builder.AddAttribute(1, nameof(RadzenBadge.BadgeStyle), info is null ? BadgeStyle.Warning : BadgeStyle.Success);
-        builder.AddAttribute(2, nameof(RadzenBadge.Text),
+        builder.OpenComponent<StatusBadge>(0);
+        builder.AddAttribute(1, nameof(StatusBadge.Variant), info is null ? BadgeVariant.Warning : BadgeVariant.Success);
+        builder.AddAttribute(2, nameof(StatusBadge.Text),
             info is null ? "not configured" : $"configured {(info.RotatedAt ?? info.CreatedAt).ToLocalTime():dd.MM.yyyy}");
         builder.CloseComponent();
     };
 
     private static RenderFragment ConsentBadge(ProviderConnection connection) => builder =>
     {
-        var (style, text) = connection switch
+        var (variant, text) = connection switch
         {
-            { ConsentStatus: ConsentStatus.Pending } => (BadgeStyle.Info, "pending"),
-            { ConsentExpired: true } => (BadgeStyle.Danger, "expired"),
-            { ConsentStatus: ConsentStatus.Authorized } c => (BadgeStyle.Success, $"active until {c.ConsentExpiresAt?.ToLocalTime():dd.MM.yyyy}"),
-            _ => (BadgeStyle.Light, "not connected"),
+            { ConsentStatus: ConsentStatus.Pending } => (BadgeVariant.Info, "pending"),
+            { ConsentExpired: true } => (BadgeVariant.Danger, "expired"),
+            { ConsentStatus: ConsentStatus.Authorized } c => (BadgeVariant.Success, $"active until {c.ConsentExpiresAt?.ToLocalTime():dd.MM.yyyy}"),
+            _ => (BadgeVariant.Neutral, "not connected"),
         };
-        builder.OpenComponent<RadzenBadge>(0);
-        builder.AddAttribute(1, nameof(RadzenBadge.BadgeStyle), style);
-        builder.AddAttribute(2, nameof(RadzenBadge.Text), text);
+        builder.OpenComponent<StatusBadge>(0);
+        builder.AddAttribute(1, nameof(StatusBadge.Variant), variant);
+        builder.AddAttribute(2, nameof(StatusBadge.Text), text);
         builder.CloseComponent();
     };
 }

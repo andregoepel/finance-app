@@ -79,14 +79,6 @@
           "OpenTelemetry.Instrumentation.Runtime": "1.16.0"
         }
       },
-      "AndreGoepel.Design.Blazor": {
-        "type": "Transitive",
-        "resolved": "1.0.2",
-        "contentHash": "vDop3DdR/KMUwwO2R+yKtSNunTxEDZhWIxjuL+jw2KHsc4yOrYy3SmKzt9Es7xUkhQDcofupJ1pWctphj4ayzg==",
-        "dependencies": {
-          "Radzen.Blazor": "11.1.3"
-        }
-      },
       "AndreGoepel.Marten.Identity": {
         "type": "Transitive",
         "resolved": "1.3.1",
@@ -834,6 +826,7 @@
         "dependencies": {
           "AndreGoepel.AppFoundation": "[1.2.3, )",
           "AndreGoepel.AppFoundation.Hosting": "[1.2.3, )",
+          "AndreGoepel.Design.Blazor": "[1.1.0, )",
           "AndreGoepel.FinanceApp.Categorization": "[1.0.0, )",
           "AndreGoepel.FinanceApp.Connectors": "[1.0.0, )",
           "AndreGoepel.FinanceApp.Domain": "[1.0.0, )",
@@ -896,6 +889,15 @@
           "Radzen.Blazor": "11.1.3",
           "WolverineFx.Marten": "6.17.1",
           "WolverineFx.RuntimeCompilation": "6.17.1"
+        }
+      },
+      "AndreGoepel.Design.Blazor": {
+        "type": "CentralTransitive",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "hv/9YPUyf5pjxx2ASmN9Gdnc0l1EoBs0rmEFnHdnbqajGBLtGcoJlz0MjMvS8JCyllU52uv3heHcbdHeaipYDQ==",
+        "dependencies": {
+          "Radzen.Blazor": "11.1.5"
         }
       },
       "AndreGoepel.Marten.Identity.Blazor": {

@@ -6,6 +6,7 @@
   <ItemGroup Label="AndreGoepel">
     <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.2.3" />
     <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.2.3" />
+    <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.1.0" />
     <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.3.1" />
   </ItemGroup>
 

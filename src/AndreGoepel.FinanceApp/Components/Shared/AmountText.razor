@@ -1,0 +1,15 @@
+@* AmountText — a monetary amount coloured by sign (negative = danger, positive =
+   success). Centralises the inline sign-colour + N2 formatting that was repeated
+   across the transactions, review, dashboard, planning and recurring pages. *@
+
+<span style="color: @(Amount < 0 ? "var(--rz-danger)" : "var(--rz-success)");">@Money.Format(Amount, Currency)</span>
+
+@code {
+    /// <summary>The amount to display.</summary>
+    [Parameter, EditorRequired]
+    public decimal Amount { get; set; }
+
+    /// <summary>ISO currency code; <c>"EUR"</c> (default) renders the € symbol.</summary>
+    [Parameter]
+    public string? Currency { get; set; } = "EUR";
+}

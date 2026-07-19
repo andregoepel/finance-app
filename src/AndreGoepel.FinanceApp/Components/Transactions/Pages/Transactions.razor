@@ -13,7 +13,7 @@
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Transactions</RadzenText>
+        <PageHeader Title="Transactions" />
 
         @if (ruleOffer is not null)
         {
@@ -29,11 +29,11 @@
             </RadzenAlert>
         }
 
-        <RadzenCard>
-            <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
-                <RadzenFormField Text="Account">
+        <FilterBar OnApply="ReloadAsync" ApplyText="Apply" ApplyStyle="ButtonStyle.Secondary">
+            <ChildContent>
+                <FormField Label="Account" For="Account">
                     <RadzenDropDown TValue="Guid?"
-                                    @bind-Value=@accountFilter
+                                    @bind-Value=@accountFilter Name="Account"
                                     Data=@accounts
                                     TextProperty="Name"
                                     ValueProperty="Id"
@@ -41,10 +41,10 @@
                                     Placeholder="All"
                                     Style="min-width: 12rem;"
                                     Change=@(_ => ReloadAsync()) />
-                </RadzenFormField>
-                <RadzenFormField Text="Owner">
+                </FormField>
+                <FormField Label="Owner" For="Owner">
                     <RadzenDropDown TValue="Guid?"
-                                    @bind-Value=@ownerFilter
+                                    @bind-Value=@ownerFilter Name="Owner"
                                     Data=@users
                                     ValueProperty="StreamId"
                                     TextProperty="UserName"
@@ -52,35 +52,31 @@
                                     Placeholder="All"
                                     Style="min-width: 12rem;"
                                     Change=@(_ => ReloadAsync()) />
-                </RadzenFormField>
-                <RadzenFormField Text="Category">
-                    <RadzenDropDown TValue="Guid?"
-                                    @bind-Value=@categoryFilter
-                                    Data=@categoryChoices
-                                    TextProperty="Label"
-                                    ValueProperty="Id"
-                                    AllowClear="true"
-                                    Placeholder="All"
-                                    Style="min-width: 13rem;"
-                                    Change=@(_ => ReloadAsync()) />
-                </RadzenFormField>
-                <RadzenFormField Text="From">
-                    <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
-                </RadzenFormField>
-                <RadzenFormField Text="To">
-                    <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
-                </RadzenFormField>
-                <RadzenFormField Text="Search">
-                    <RadzenTextBox @bind-Value=@textFilter Placeholder="Description or counterparty" Style="min-width: 14rem;" />
-                </RadzenFormField>
-                <RadzenButton Text="Apply" Icon="search" Click=@ReloadAsync ButtonStyle="ButtonStyle.Secondary" />
+                </FormField>
+                <FormField Label="Category" For="Category">
+                    <CategoryPicker Options="@categoryOptions" Name="Category"
+                                    Value="@categoryFilter"
+                                    ValueChanged="@(v => { categoryFilter = v; return ReloadAsync(); })"
+                                    Placeholder="All" Style="min-width: 13rem;" />
+                </FormField>
+                <FormField Label="From" For="From">
+                    <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
+                </FormField>
+                <FormField Label="To" For="To">
+                    <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
+                </FormField>
+                <FormField Label="Search" For="Search">
+                    <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="Description or counterparty" Style="min-width: 14rem;" />
+                </FormField>
+            </ChildContent>
+            <Actions>
                 <RadzenButton Text="Link as transfer"
                               Icon="sync_alt"
                               ButtonStyle="ButtonStyle.Light"
                               Disabled=@(selected.Count != 2)
                               Click=@LinkSelectedAsTransferAsync />
-            </RadzenStack>
-        </RadzenCard>
+            </Actions>
+        </FilterBar>
 
         <RadzenDataGrid TItem="TransactionView"
                         Data=@transactions
@@ -101,9 +97,7 @@
                 <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
                 <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="Amount" Width="130px" TextAlign="TextAlign.Right">
                     <Template Context="transaction">
-                        <span style="color: @(transaction.Amount < 0 ? "var(--rz-danger)" : "var(--rz-success)");">
-                            @transaction.Amount.ToString("N2") @transaction.Currency
-                        </span>
+                        <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
                         @if (transaction.OriginalAmount is not null)
                         {
                             <div style="font-size: 0.75rem; color: var(--rz-text-disabled-color);">
@@ -114,30 +108,26 @@
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="TransactionView" Title="Category" Width="220px" Sortable="false">
                     <Template Context="transaction">
-                        <RadzenDropDown TValue="Guid?"
-                                        Value=@transaction.CategoryId
-                                        Data=@categoryChoices
-                                        TextProperty="Label"
-                                        ValueProperty="Id"
-                                        Placeholder="Uncategorized"
-                                        Style="width: 100%;"
-                                        Change=@(value => CategorizeAsync(transaction, (Guid?)value)) />
+                        <CategoryPicker Options="@categoryOptions"
+                                        Value="@transaction.CategoryId"
+                                        ValueChanged="@(v => CategorizeAsync(transaction, v))"
+                                        AllowClear="false"
+                                        Placeholder="Uncategorized" />
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="TransactionView" Title="" Width="110px" Sortable="false">
                     <Template Context="transaction">
                         @if (transaction.IsTransfer)
                         {
-                            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Transfer" />
-                            <RadzenButton Icon="link_off"
-                                          Size="ButtonSize.ExtraSmall"
-                                          ButtonStyle="ButtonStyle.Light"
-                                          Click=@(() => UnlinkTransferAsync(transaction))
-                                          title="Unlink transfer" />
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" AlignItems="AlignItems.Center">
+                                <StatusBadge Variant="BadgeVariant.Info" Text="Transfer" />
+                                <IconButton Icon="link_off" Title="Unlink transfer"
+                                            Click=@(_ => UnlinkTransferAsync(transaction)) />
+                            </RadzenStack>
                         }
                         else if (transaction.CategorySource is not null)
                         {
-                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@transaction.CategorySource.ToString()" />
+                            <StatusBadge Variant="BadgeVariant.Neutral" Text="@transaction.CategorySource.ToString()" />
                         }
                     </Template>
                 </RadzenDataGridColumn>
@@ -152,7 +142,7 @@
 
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
-    private List<CategoryChoice> categoryChoices = [];
+    private List<CategoryOption> categoryOptions = [];
     private List<TransactionView> transactions = [];
     private IList<TransactionView> selected = [];
 
@@ -172,7 +162,7 @@
             .OrderBy(u => u.UserName)
             .ToListAsync();
         var categories = await QuerySession.Query<Category>().ToListAsync();
-        categoryChoices = CategoryChoice.Build(categories);
+        categoryOptions = CategoryPaths.Build(categories);
         await ReloadAsync();
     }
 
@@ -246,7 +236,7 @@
         // import categorizes this merchant without the AI.
         if (!string.IsNullOrWhiteSpace(transaction.Counterparty))
         {
-            var label = categoryChoices.FirstOrDefault(c => c.Id == newCategoryId)?.Label ?? "?";
+            var label = categoryOptions.FirstOrDefault(c => c.Id == newCategoryId)?.Path ?? "?";
             ruleOffer = new RuleOffer(transaction.Counterparty, newCategoryId, label);
         }
 
@@ -316,21 +306,4 @@
     }
 
     private sealed record RuleOffer(string Counterparty, Guid CategoryId, string CategoryLabel);
-
-    private sealed record CategoryChoice(Guid Id, string Label)
-    {
-        public static List<CategoryChoice> Build(IReadOnlyList<Category> categories)
-        {
-            var byId = categories.ToDictionary(c => c.Id);
-            return categories
-                .OrderBy(c => byId.TryGetValue(c.ParentId ?? c.Id, out var p) ? p.SortOrder : 0)
-                .ThenBy(c => c.ParentId is null ? -1 : c.SortOrder)
-                .Select(c => new CategoryChoice(
-                    c.Id,
-                    c.ParentId is Guid parentId && byId.TryGetValue(parentId, out var parent)
-                        ? $"{parent.Name} › {c.Name}"
-                        : c.Name))
-                .ToList();
-        }
-    }
 }
