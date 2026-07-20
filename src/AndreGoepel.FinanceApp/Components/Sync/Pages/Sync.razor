@@ -12,12 +12,13 @@
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Sync</RadzenText>
-            <RadzenButton Text="Sync all now" Icon="sync" ButtonStyle="ButtonStyle.Primary"
-                          Disabled=@(isSyncing || accounts.Count == 0) IsBusy=@isSyncing BusyText="Syncing..."
-                          Click=@SyncAllAsync />
-        </RadzenStack>
+        <PageHeader Title="Sync">
+            <Actions>
+                <RadzenButton Text="Sync all now" Icon="sync" ButtonStyle="ButtonStyle.Primary"
+                              Disabled=@(isSyncing || accounts.Count == 0) IsBusy=@isSyncing BusyText="Syncing..."
+                              Click=@SyncAllAsync />
+            </Actions>
+        </PageHeader>
 
         <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
             API-backed accounts sync automatically on the schedule below; trigger a manual sync
@@ -42,9 +43,9 @@
                     <RadzenLabel Text="@(scheduleEnabled ? "Enabled" : "Disabled")" />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                    <RadzenFormField Text="Cron expression (Quartz)">
-                        <RadzenTextBox @bind-Value=@cronInput Disabled=@(!scheduleEnabled) Style="min-width: 16rem; font-family: monospace;" />
-                    </RadzenFormField>
+                    <FormField Label="Cron expression (Quartz)" For="Cron">
+                        <RadzenTextBox @bind-Value=@cronInput Name="Cron" Disabled=@(!scheduleEnabled) Style="min-width: 16rem; font-family: monospace;" />
+                    </FormField>
                     <RadzenButton Text="Save schedule" Icon="save" ButtonStyle="ButtonStyle.Primary" Click=@SaveScheduleAsync />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
@@ -74,14 +75,12 @@
 
         @if (accounts.Count == 0)
         {
-            <RadzenCard>
-                <RadzenText>No API-backed accounts yet. Set an account's sync method to API under
-                    <RadzenLink Path="settings/accounts" Text="Accounts" />.</RadzenText>
-            </RadzenCard>
+            <EmptyState Icon="@("🔄")" Title="No API-backed accounts yet"
+                        Text="Set an account's sync method to API under Accounts to sync it here." />
         }
         else
         {
-            <RadzenCard>
+            <DataCard>
                 <RadzenDataGrid TItem="AccountRow" Data=@accounts Density="Density.Compact">
                     <Columns>
                         <RadzenDataGridColumn TItem="AccountRow" Title="Account" Property="Name" />
@@ -93,16 +92,18 @@
                                 @(row.LastSync is null ? "never" : row.LastSync.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="AccountRow" Title="" Width="140px" TextAlign="TextAlign.End">
+                        <RadzenDataGridColumn TItem="AccountRow" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
                             <Template Context="row">
-                                <RadzenButton Text="Sync now" Icon="sync" Size="ButtonSize.Small"
-                                              ButtonStyle="ButtonStyle.Secondary" Disabled=@isSyncing
-                                              Click=@(() => SyncOneAsync(row.Id)) />
+                                <RowActions>
+                                    <RadzenButton Text="Sync now" Icon="sync" Size="ButtonSize.Small"
+                                                  ButtonStyle="ButtonStyle.Secondary" Disabled=@isSyncing
+                                                  Click=@(() => SyncOneAsync(row.Id)) />
+                                </RowActions>
                             </Template>
                         </RadzenDataGridColumn>
                     </Columns>
                 </RadzenDataGrid>
-            </RadzenCard>
+            </DataCard>
         }
 
     </RadzenStack>

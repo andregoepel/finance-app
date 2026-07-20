@@ -1,0 +1,50 @@
+@* CategoryPicker — the shared category-select dropdown. Renders the category tree
+   as "Parent › Child" paths (built once by the page via CategoryPaths.Build) and
+   two-way binds the selected id. Replaces the per-page CategoryChoice records +
+   duplicated dropdown markup across Transactions, Review and Rules. *@
+
+<RadzenDropDown TValue="Guid?"
+                Value="@Value"
+                ValueChanged="@ValueChanged"
+                Data="@Options"
+                ValueProperty="Id"
+                TextProperty="Path"
+                AllowClear="@AllowClear"
+                AllowFiltering="@AllowFiltering"
+                Name="@Name"
+                Placeholder="@Placeholder"
+                Style="@Style" />
+
+@code {
+    /// <summary>Category options, typically <c>CategoryPaths.Build(categories)</c>.</summary>
+    [Parameter, EditorRequired]
+    public IEnumerable<CategoryOption> Options { get; set; } = [];
+
+    /// <summary>The selected category id (two-way bindable via <c>@@bind-Value</c>).</summary>
+    [Parameter]
+    public Guid? Value { get; set; }
+
+    /// <summary>Raised when the selection changes.</summary>
+    [Parameter]
+    public EventCallback<Guid?> ValueChanged { get; set; }
+
+    /// <summary>Placeholder shown when nothing is selected.</summary>
+    [Parameter]
+    public string? Placeholder { get; set; }
+
+    /// <summary>Whether the selection can be cleared. Defaults to <c>true</c>.</summary>
+    [Parameter]
+    public bool AllowClear { get; set; } = true;
+
+    /// <summary>Whether the options can be filtered by typing.</summary>
+    [Parameter]
+    public bool AllowFiltering { get; set; }
+
+    /// <summary>The control name (links a <c>FormField</c> label to it).</summary>
+    [Parameter]
+    public string? Name { get; set; }
+
+    /// <summary>CSS for the dropdown. Defaults to full width.</summary>
+    [Parameter]
+    public string Style { get; set; } = "width: 100%;";
+}

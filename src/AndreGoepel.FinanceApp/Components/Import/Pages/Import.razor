@@ -14,21 +14,21 @@
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Import</RadzenText>
+        <PageHeader Title="Import" />
 
         <RadzenCard>
             <RadzenStack Gap="1rem">
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                    <RadzenFormField Text="Account">
+                    <FormField Label="Account" For="Account">
                         <RadzenDropDown TValue="Guid?"
-                                        @bind-Value=@selectedAccountId
+                                        @bind-Value=@selectedAccountId Name="Account"
                                         Data=@accounts
                                         TextProperty="Name"
                                         ValueProperty="Id"
                                         Placeholder="Select account"
                                         Style="min-width: 14rem;"
                                         Change=@(_ => OnAccountChangedAsync()) />
-                    </RadzenFormField>
+                    </FormField>
                     <div>
                         <InputFile OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(selectedAccountId is null) />
                     </div>
@@ -55,9 +55,9 @@
                         Preview — @fileName (@preview.ParserId)
                     </RadzenText>
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="1.5rem">
-                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@($"{NewRowCount} new")" />
-                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"{duplicateHashes.Count(kv => kv.Value)} duplicates")" />
-                        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@($"{preview.Errors.Count} problem rows")" />
+                        <StatusBadge Variant="BadgeVariant.Success" Text="@($"{NewRowCount} new")" />
+                        <StatusBadge Variant="BadgeVariant.Warning" Text="@($"{duplicateHashes.Count(kv => kv.Value)} duplicates")" />
+                        <StatusBadge Variant="BadgeVariant.Danger" Text="@($"{preview.Errors.Count} problem rows")" />
                     </RadzenStack>
 
                     <RadzenDataGrid TItem="NormalizedTransaction" Data=@preview.Rows AllowPaging="true" PageSize="15" Density="Density.Compact">
@@ -75,11 +75,11 @@
                                 <Template Context="row">
                                     @if (IsDuplicate(row))
                                     {
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Duplicate" />
+                                        <StatusBadge Variant="BadgeVariant.Warning" Text="Duplicate" />
                                     }
                                     else
                                     {
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="New" />
+                                        <StatusBadge Variant="BadgeVariant.Success" Text="New" />
                                     }
                                 </Template>
                             </RadzenDataGridColumn>

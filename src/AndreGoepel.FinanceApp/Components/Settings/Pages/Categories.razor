@@ -4,13 +4,14 @@
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
+@inject ConfirmService ConfirmService
 
 <AppFoundationPageTitle Title="Categories" Breadcrumb="Settings / Categories" />
 
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Categories</RadzenText>
+        <PageHeader Title="Categories" />
 
         @foreach (var group in Groups)
         {
@@ -145,6 +146,10 @@
 
     private async Task DeleteAsync(Category category)
     {
+        if (!await ConfirmService.ConfirmDeleteAsync($"“{category.Name}”"))
+        {
+            return;
+        }
         var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryCommand(category.Id));
         if (result.IsFailure)
         {

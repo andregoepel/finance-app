@@ -10,11 +10,8 @@
 <div class="rz-p-4 rz-p-md-6">
     <RadzenStack Gap="1.5rem">
 
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1">Review queue</RadzenText>
-        <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
-            Uncategorized transactions and low-confidence AI suggestions. High-confidence
-            suggestions are applied automatically and flagged "Ai" in the transactions grid.
-        </RadzenText>
+        <PageHeader Title="Review queue"
+                    Subtitle="Uncategorized transactions and low-confidence AI suggestions. High-confidence suggestions are applied automatically and flagged &quot;Ai&quot; in the transactions grid." />
 
         <RadzenCard>
             <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
@@ -28,16 +25,11 @@
                               ButtonStyle="ButtonStyle.Light"
                               Disabled=@(!SelectedWithSuggestion.Any())
                               Click=@DismissSelectedAsync />
-                <RadzenFormField Text="Set category for selection">
-                    <RadzenDropDown TValue="Guid?"
+                <FormField Label="Set category for selection" For="BulkCategory">
+                    <CategoryPicker Options="@categoryOptions" Name="BulkCategory"
                                     @bind-Value=@bulkCategoryId
-                                    Data=@categoryChoices
-                                    TextProperty="Label"
-                                    ValueProperty="Id"
-                                    AllowClear="true"
-                                    Placeholder="Choose category"
-                                    Style="min-width: 14rem;" />
-                </RadzenFormField>
+                                    Placeholder="Choose category" Style="min-width: 14rem;" />
+                </FormField>
                 <RadzenButton Text="Apply to selection"
                               Icon="done_all"
                               ButtonStyle="ButtonStyle.Secondary"
@@ -64,9 +56,7 @@
                 <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
                 <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="Amount" Width="130px" TextAlign="TextAlign.Right">
                     <Template Context="transaction">
-                        <span style="color: @(transaction.Amount < 0 ? "var(--rz-danger)" : "var(--rz-success)");">
-                            @transaction.Amount.ToString("N2") @transaction.Currency
-                        </span>
+                        <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="TransactionView" Title="AI suggestion" Width="240px" Sortable="false">
@@ -74,13 +64,10 @@
                         @if (suggestions.TryGetValue(transaction.Id, out var suggestion))
                         {
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                                <RadzenBadge BadgeStyle="BadgeStyle.Info"
+                                <StatusBadge Variant="BadgeVariant.Info"
                                              Text="@($"{CategoryLabel(suggestion.CategoryId)} ({suggestion.Confidence:P0})")" />
-                                <RadzenButton Icon="check"
-                                              Size="ButtonSize.ExtraSmall"
-                                              ButtonStyle="ButtonStyle.Success"
-                                              Click=@(() => AcceptOneAsync(transaction.Id))
-                                              title="Accept suggestion" />
+                                <IconButton Icon="check" Title="Accept suggestion"
+                                            Click=@(_ => AcceptOneAsync(transaction.Id)) />
                             </RadzenStack>
                         }
                         else
@@ -101,7 +88,7 @@
     private List<TransactionView> items = [];
     private Dictionary<Guid, CategorySuggestion> suggestions = [];
     private List<Account> accounts = [];
-    private List<CategoryChoice> categoryChoices = [];
+    private List<CategoryOption> categoryOptions = [];
     private IList<TransactionView> selected = [];
     private Guid? bulkCategoryId;
 
@@ -112,7 +99,7 @@
     {
         accounts = (await QuerySession.Query<Account>().ToListAsync()).ToList();
         var categories = await QuerySession.Query<Category>().ToListAsync();
-        categoryChoices = CategoryChoice.Build(categories.ToList());
+        categoryOptions = CategoryPaths.Build(categories.ToList());
         await ReloadAsync();
     }
 
@@ -138,7 +125,7 @@
         accounts.FirstOrDefault(a => a.Id == accountId)?.Name ?? "?";
 
     private string CategoryLabel(Guid categoryId) =>
-        categoryChoices.FirstOrDefault(c => c.Id == categoryId)?.Label ?? "?";
+        categoryOptions.FirstOrDefault(c => c.Id == categoryId)?.Path ?? "?";
 
     private async Task AcceptOneAsync(Guid transactionId) =>
         await RunAsync(new ApplyCategorySuggestionsCommand([transactionId]), "Suggestion accepted.");
@@ -188,18 +175,5 @@
             NotificationService.Notify(NotificationSeverity.Success, "Done", successMessage);
         }
         await ReloadAsync();
-    }
-
-    private sealed record CategoryChoice(Guid Id, string Label)
-    {
-        public static List<CategoryChoice> Build(IReadOnlyList<Category> categories)
-        {
-            var byId = categories.ToDictionary(c => c.Id);
-            return categories
-                .OrderBy(c => byId.TryGetValue(c.ParentId ?? c.Id, out var p) ? p.SortOrder : 0)
-                .ThenBy(c => c.ParentId is null ? -1 : c.SortOrder)
-                .Select(c => new CategoryChoice(c.Id, CategoryPaths.PathOf(c, byId)))
-                .ToList();
-        }
     }
 }
