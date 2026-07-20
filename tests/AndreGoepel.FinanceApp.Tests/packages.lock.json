@@ -95,11 +95,6 @@
         "resolved": "1.3.1",
         "contentHash": "aHaTONAIw9m1aaDaq+maJD93A4fni+XbrucJ2YoZwou//sZL6Zo0xSpsuKr8tztpKd7xrRWfYPu/azfEylXwrA=="
       },
-      "AngleSharp": {
-        "type": "Transitive",
-        "resolved": "1.4.0",
-        "contentHash": "6ph8mpaQx0KL0COYRt0kI8MB9gSp1PtKijKMhJU//+aVFgKAJLKDesG/+26JSaVCOrHNgPf12wpfoyRcMYOeXg=="
-      },
       "AngleSharp.Css": {
         "type": "Transitive",
         "resolved": "1.0.0-beta.157",
@@ -911,6 +906,12 @@
           "Marten": "9.14.1",
           "Radzen.Blazor": "11.1.3"
         }
+      },
+      "AngleSharp": {
+        "type": "CentralTransitive",
+        "requested": "[1.5.2, )",
+        "resolved": "1.5.2",
+        "contentHash": "LVZ7rrr6GHbhERhTgVDarVygl1e6KwE96pronA90LBOMacDhxR4lB+xYLjn/vlnUu+xbOB2RM9fuCPEx5bdyWA=="
       },
       "Marten": {
         "type": "CentralTransitive",
