@@ -31,8 +31,6 @@ public sealed class ProviderConnection
     /// <summary>True for providers whose connection is an Enable Banking PSD2 consent.</summary>
     public bool UsesEnableBanking => Provider is ProviderKind.Dkb or ProviderKind.Revolut;
 
-    // ---- Enable Banking consent (unused for Wise, which authenticates with a token) ----
-
     /// <summary>Enable Banking ASPSP (bank) name to authorize against, e.g. "DKB" or "Mock ASPSP".</summary>
     public string? AspspName { get; set; }
 

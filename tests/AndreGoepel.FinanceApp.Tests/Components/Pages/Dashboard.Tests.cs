@@ -9,7 +9,7 @@ using Radzen;
 
 namespace AndreGoepel.FinanceApp.Tests.Components.Pages;
 
-public class DashboardTests : BunitContext
+public sealed class DashboardTests : BunitContext
 {
     private void RegisterDashboardService(
         MonthlyOverview overview,
@@ -49,7 +49,7 @@ public class DashboardTests : BunitContext
     }
 
     [Fact]
-    public void Render_ShowsHeadingTotalsAndSectionCards()
+    public void Render_DefaultOverview_ShowsHeadingTotalsAndSectionCards()
     {
         // Arrange
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -139,7 +139,7 @@ public class DashboardTests : BunitContext
     }
 
     [Fact]
-    public void Route_IsRootAndRequiresAuthorization()
+    public void Route_DashboardPage_IsRootAndRequiresAuthorization()
     {
         // Act
         var route = Attribute.GetCustomAttribute(typeof(Dashboard), typeof(RouteAttribute));

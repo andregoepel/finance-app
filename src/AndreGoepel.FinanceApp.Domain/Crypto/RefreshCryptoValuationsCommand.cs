@@ -45,7 +45,7 @@ public static class RefreshCryptoValuationsCommandHandler
             logger,
             cancellationToken
         );
-        await session.SaveChangesAsync(cancellationToken); // persist refreshed price cache
+        await session.SaveChangesAsync(cancellationToken);
 
         var result = CryptoValuationCalculator.Compute(holdings, quotes.Prices);
         var updated = 0;
@@ -80,10 +80,7 @@ public static class RefreshCryptoValuationsCommandHandler
         return Result.Ok(new CryptoValuationSummary(updated, skipped, quotes.UsedCache));
     }
 
-    /// <summary>
-    /// Fresh prices when the API is reachable (upserting the cache), otherwise the
-    /// cached snapshots. Ids the API did not price also fall back to the cache.
-    /// </summary>
+    // Fresh prices when the API is reachable (upserting the cache), otherwise the cached snapshots; unpriced ids also fall back to the cache.
     private static async Task<(
         IReadOnlyDictionary<string, CryptoPriceQuote> Prices,
         bool UsedCache

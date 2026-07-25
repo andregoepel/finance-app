@@ -2,10 +2,10 @@ using AndreGoepel.FinanceApp.Domain.NetWorth;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.NetWorth;
 
-public class NetWorthCalculatorTests
+public sealed class NetWorthCalculatorTests
 {
     [Fact]
-    public void Compute_ReconstructsBalanceBackwardFromTheAnchor()
+    public void Compute_TransactionBeforeAnchor_ReconstructsBalanceBackward()
     {
         // Arrange — anchor 1000 EUR as of Mar 31; a -200 expense on Mar 10.
         // On Mar 31 the balance is 1000; before Mar 10 it was 1000 - (-200) = 1200.
@@ -29,7 +29,7 @@ public class NetWorthCalculatorTests
     }
 
     [Fact]
-    public void Compute_ProjectsForwardPastTheAnchor()
+    public void Compute_TransactionAfterAnchor_ProjectsBalanceForward()
     {
         // Arrange — anchor 500 as of Mar 1; +300 income on Mar 15.
         var account = new AccountAnchor(
@@ -46,7 +46,7 @@ public class NetWorthCalculatorTests
     }
 
     [Fact]
-    public void Compute_SumsAcrossAccounts()
+    public void Compute_MultipleAccounts_SumsAcrossAccounts()
     {
         // Arrange
         var a = new AccountAnchor(1000m, new DateOnly(2026, 3, 31), []);

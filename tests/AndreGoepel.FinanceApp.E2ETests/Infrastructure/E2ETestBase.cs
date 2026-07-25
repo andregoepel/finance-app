@@ -24,7 +24,7 @@ public abstract class E2ETestBase(E2EAppFixture fixture) : IAsyncLifetime
 
     #region Account flows
 
-    /// <summary>Logs the current page's session in via the real cookie-login flow.</summary>
+    // Logs the current page's session in via the real cookie-login flow.
     protected async Task LoginAsync(string email, string password, IPage? page = null)
     {
         page ??= Page;
@@ -35,12 +35,7 @@ public abstract class E2ETestBase(E2EAppFixture fixture) : IAsyncLifetime
         await ClickAndLeaveLoginAsync(page);
     }
 
-    /// <summary>
-    /// Clicks "Log in" and waits to leave the login page. A click can land in the gap between the
-    /// circuit connecting and the form's submit handler attaching — it is then silently lost — so the
-    /// click is retried until the cookie middleware redirects away. Exact-path equality keeps a
-    /// redirect to /Account/LoginWith2fa (which *contains* /Account/Login) counting as "left".
-    /// </summary>
+    // Clicks "Log in" and retries until the cookie middleware redirects away — a click can land in the gap between the circuit connecting and the submit handler attaching and be silently lost.
     private static async Task ClickAndLeaveLoginAsync(IPage page)
     {
         for (var attempt = 0; ; attempt++)
@@ -65,14 +60,14 @@ public abstract class E2ETestBase(E2EAppFixture fixture) : IAsyncLifetime
         }
     }
 
-    /// <summary>Ensures the root admin exists, then logs this page in as that admin.</summary>
+    // Ensures the root admin exists, then logs this page in as that admin.
     protected async Task LoginAsAdminAsync(IPage? page = null)
     {
         await Fixture.ProvisionAdminAsync();
         await LoginAsync(TestData.AdminEmail, TestData.DefaultPassword, page);
     }
 
-    /// <summary>Registers a new user and returns the generated email; the account still needs confirmation.</summary>
+    // Registers a new user and returns the generated email; the account still needs confirmation.
     protected async Task<string> RegisterAsync(string? email = null, string? password = null)
     {
         email ??= TestData.NewEmail();
@@ -87,7 +82,7 @@ public abstract class E2ETestBase(E2EAppFixture fixture) : IAsyncLifetime
         return email;
     }
 
-    /// <summary>Reads the confirmation link MailHog captured and follows it to activate the account.</summary>
+    // Reads the confirmation link MailHog captured and follows it to activate the account.
     protected async Task ConfirmEmailAsync(string email)
     {
         var link = await Fixture.MailHog.WaitForLinkAsync(email, "Account/ConfirmEmail");
@@ -95,7 +90,7 @@ public abstract class E2ETestBase(E2EAppFixture fixture) : IAsyncLifetime
         await Page.WaitForBlazorAsync();
     }
 
-    /// <summary>Signs the current session out through the app's sign-out endpoint.</summary>
+    // Signs the current session out through the app's sign-out endpoint.
     protected async Task LogoutAsync(IPage? page = null)
     {
         page ??= Page;

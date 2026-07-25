@@ -5,12 +5,12 @@ using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class EnableBankingJwtFactoryTests
+public sealed class EnableBankingJwtFactoryTests
 {
     private const string ApplicationId = "11111111-2222-3333-4444-555555555555";
 
     [Fact]
-    public void Create_ProducesThreePartToken()
+    public void Create_WithValidInputs_ProducesThreePartToken()
     {
         // Arrange
         using var rsa = RSA.Create(2048);
@@ -28,7 +28,7 @@ public class EnableBankingJwtFactoryTests
     }
 
     [Fact]
-    public void Create_SignatureVerifiesWithThePublicKey()
+    public void Create_ValidToken_SignatureVerifiesWithPublicKey()
     {
         // Arrange
         using var rsa = RSA.Create(2048);
@@ -54,7 +54,7 @@ public class EnableBankingJwtFactoryTests
     }
 
     [Fact]
-    public void Create_HeaderCarriesApplicationIdAsKid()
+    public void Create_ValidToken_HeaderCarriesApplicationIdAsKid()
     {
         // Arrange
         using var rsa = RSA.Create(2048);
@@ -75,7 +75,7 @@ public class EnableBankingJwtFactoryTests
     }
 
     [Fact]
-    public void Create_PayloadHasExpectedClaimsAndExpiry()
+    public void Create_ValidToken_PayloadHasExpectedClaimsAndExpiry()
     {
         // Arrange
         using var rsa = RSA.Create(2048);

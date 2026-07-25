@@ -3,7 +3,7 @@ using AndreGoepel.FinanceApp.Connectors.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class RevolutXlsxParserTests
+public sealed class RevolutXlsxParserTests
 {
     private readonly RevolutXlsxParser parser = new();
     private readonly StatementFile file = Fixtures.Load("revolut", "statement-v1.xlsx");

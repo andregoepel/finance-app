@@ -54,8 +54,6 @@ internal sealed class SyncScheduleService(IDocumentStore store, ISchedulerFactor
         var schedule = await GetAsync(cancellationToken);
         var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
 
-        // Ensure the durable job exists (survives having no trigger), then reset
-        // the trigger to match the stored schedule.
         if (!await scheduler.CheckExists(JobKey, cancellationToken))
         {
             await scheduler.AddJob(

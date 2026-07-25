@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Categorization.Tests.Claude;
 
-public class ClaudeCategorizerTests
+public sealed class ClaudeCategorizerTests
 {
     private static readonly Guid CategoryA = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static readonly Guid TransactionA = Guid.Parse("11111111-1111-1111-1111-111111111111");

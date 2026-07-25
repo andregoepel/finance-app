@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Connectors.Csv;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Csv;
 
-public class CsvReaderTests
+public sealed class CsvReaderTests
 {
     [Fact]
     public void Read_PlainFields_SplitsOnDelimiter()
@@ -50,7 +50,7 @@ public class CsvReaderTests
     }
 
     [Fact]
-    public void Read_TracksLineNumbers()
+    public void Read_MultipleLines_TracksLineNumbers()
     {
         // Act
         var records = CsvReader.Read("h1,h2\nr1,r2\nr3,r4", ',');

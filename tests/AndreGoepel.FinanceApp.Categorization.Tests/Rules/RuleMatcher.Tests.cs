@@ -3,7 +3,7 @@ using AndreGoepel.FinanceApp.Domain.Categories;
 
 namespace AndreGoepel.FinanceApp.Categorization.Tests.Rules;
 
-public class RuleMatcherTests
+public sealed class RuleMatcherTests
 {
     private static CategoryRule Rule(
         string? counterparty = null,

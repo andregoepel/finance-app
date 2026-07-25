@@ -118,11 +118,7 @@ public sealed partial class MailHogClient(string baseUrl)
         return builder.ToString();
     }
 
-    /// <summary>
-    /// Appends one MIME part's decoded body. Quoted-printable decoding is applied only when
-    /// the part actually declares that transfer encoding — decoding unconditionally corrupts
-    /// URLs whose <c>=</c> is followed by two hex digits (e.g. <c>userId=a1…</c> → <c>userId¡…</c>).
-    /// </summary>
+    // Appends one MIME part's decoded body; quoted-printable decoding only applies when the part declares that transfer encoding, since decoding unconditionally corrupts URLs like "userId=a1…".
     private static void AppendPart(StringBuilder builder, JsonElement part)
     {
         if (!part.TryGetProperty("Body", out var body))
@@ -134,7 +130,7 @@ public sealed partial class MailHogClient(string baseUrl)
         builder.AppendLine(IsQuotedPrintable(part) ? DecodeQuotedPrintable(text) : text);
     }
 
-    /// <summary>True when the part's <c>Content-Transfer-Encoding</c> header is quoted-printable.</summary>
+    // True when the part's Content-Transfer-Encoding header is quoted-printable.
     private static bool IsQuotedPrintable(JsonElement part)
     {
         if (
@@ -153,10 +149,9 @@ public sealed partial class MailHogClient(string baseUrl)
             );
     }
 
-    /// <summary>Undoes the quoted-printable encoding MailHog stores so URLs are reassembled.</summary>
+    // Undoes the quoted-printable encoding MailHog stores so URLs are reassembled.
     private static string DecodeQuotedPrintable(string input)
     {
-        // Remove soft line breaks, then decode =XX escapes.
         var unfolded = input.Replace("=\r\n", string.Empty).Replace("=\n", string.Empty);
         return QuotedPrintableRegex()
             .Replace(unfolded, match => ((char)Convert.ToInt32(match.Value[1..], 16)).ToString());

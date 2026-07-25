@@ -3,7 +3,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Credentials;
 
-public class SaveProviderCredentialCommandHandlerTests
+public sealed class SaveProviderCredentialCommandHandlerTests
 {
     private readonly ICredentialStore store = Substitute.For<ICredentialStore>();
 

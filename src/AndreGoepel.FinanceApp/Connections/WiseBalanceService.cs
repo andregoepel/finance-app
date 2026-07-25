@@ -75,7 +75,7 @@ internal sealed class WiseBalanceService(
         return Result.Ok(new WiseBalanceSyncResult(balances, accountsUpdated));
     }
 
-    /// <summary>Writes each fetched balance onto the account linked by external id (Wise balance id).</summary>
+    // Writes each fetched balance onto the account linked by external id (Wise balance id).
     private async Task<int> ApplyBalancesAsync(
         Guid connectionId,
         IReadOnlyList<WiseBalance> balances,
@@ -116,7 +116,7 @@ internal sealed class WiseBalanceService(
         return updated;
     }
 
-    /// <summary>Balance in EUR for the net-worth anchor; <c>null</c> if the rate is unavailable.</summary>
+    // Balance in EUR for the net-worth anchor; null if the rate is unavailable.
     private async Task<decimal?> ToEurAsync(
         decimal amount,
         string currency,

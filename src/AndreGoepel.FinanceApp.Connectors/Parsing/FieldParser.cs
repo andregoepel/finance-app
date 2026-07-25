@@ -78,15 +78,11 @@ internal static partial class FieldParser
         return true;
     }
 
-    /// <summary>
-    /// Splits an amount from a trailing three-letter currency code: the number
-    /// (validated afterwards via <see cref="TryParseGermanDecimal"/>) then
-    /// whitespace then exactly three ASCII letters. A € suffix does not match.
-    /// </summary>
+    // Splits an amount from a trailing three-letter currency code: the number then whitespace then exactly three ASCII letters. A € suffix does not match.
     [GeneratedRegex(@"^(?<amount>\S.*?)\s+(?<currency>[A-Za-z]{3})$")]
     private static partial Regex AmountWithCurrencyPattern();
 
-    /// <summary>Some exports use the typographic minus (U+2212) instead of a hyphen.</summary>
+    // Some exports use the typographic minus (U+2212) instead of a hyphen.
     private static string NormalizeMinus(string value) => value.Trim().Replace('−', '-');
 
     public static string? NullIfEmpty(string value) =>

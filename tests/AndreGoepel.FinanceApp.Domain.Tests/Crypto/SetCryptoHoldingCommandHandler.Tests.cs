@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Crypto;
 
-public class SetCryptoHoldingCommandHandlerTests
+public sealed class SetCryptoHoldingCommandHandlerTests
 {
     private readonly IDocumentSession session = Substitute.For<IDocumentSession>();
 

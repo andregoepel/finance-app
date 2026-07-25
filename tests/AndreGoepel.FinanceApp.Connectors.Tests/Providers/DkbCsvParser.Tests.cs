@@ -3,7 +3,7 @@ using AndreGoepel.FinanceApp.Connectors.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class DkbCsvParserTests
+public sealed class DkbCsvParserTests
 {
     private readonly DkbCsvParser parser = new();
     private readonly StatementFile file = Fixtures.Load("dkb", "statement-v1.csv");

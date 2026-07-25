@@ -4,7 +4,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Categories;
 
-public class CreateCategoryRuleCommandHandlerTests
+public sealed class CreateCategoryRuleCommandHandlerTests
 {
     private readonly IDocumentSession session = Substitute.For<IDocumentSession>();
 

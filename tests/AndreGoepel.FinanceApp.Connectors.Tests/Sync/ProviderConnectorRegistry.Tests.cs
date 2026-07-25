@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Sync;
 
-public class ProviderConnectorRegistryTests
+public sealed class ProviderConnectorRegistryTests
 {
     private readonly EnableBankingConnector enableBanking = new(
         Substitute.For<IEnableBankingClient>()

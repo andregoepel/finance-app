@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Domain.Budgets;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Budgets;
 
-public class BudgetCalculatorTests
+public sealed class BudgetCalculatorTests
 {
     private static readonly Guid Living = Guid.NewGuid();
     private static readonly Guid Groceries = Guid.NewGuid();

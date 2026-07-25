@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO.Compression;
 using System.Xml.Linq;
+using AndreGoepel.FinanceApp.Domain;
 
 namespace AndreGoepel.FinanceApp.Connectors.Xlsx;
 
@@ -34,22 +35,25 @@ internal static class XlsxReader
         }
     }
 
-    public static List<XlsxRow> ReadFirstSheet(byte[] content)
+    public static Result<List<XlsxRow>> ReadFirstSheet(byte[] content)
     {
         using var archive = new ZipArchive(new MemoryStream(content), ZipArchiveMode.Read);
 
         var sharedStrings = ReadSharedStrings(archive);
 
-        var sheetEntry =
-            archive
-                .Entries.Where(entry =>
-                    entry.FullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase)
-                    && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
-                    && !entry.FullName.Contains("_rels", StringComparison.OrdinalIgnoreCase)
-                )
-                .OrderBy(entry => entry.FullName, StringComparer.OrdinalIgnoreCase)
-                .FirstOrDefault()
-            ?? throw new InvalidDataException("The workbook contains no worksheet.");
+        var sheetEntry = archive
+            .Entries.Where(entry =>
+                entry.FullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase)
+                && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
+                && !entry.FullName.Contains("_rels", StringComparison.OrdinalIgnoreCase)
+            )
+            .OrderBy(entry => entry.FullName, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+
+        if (sheetEntry is null)
+        {
+            return Result.Fail<List<XlsxRow>>("The workbook contains no worksheet.");
+        }
 
         var sheet = LoadXml(sheetEntry);
         var rows = new List<XlsxRow>();
@@ -69,7 +73,7 @@ internal static class XlsxReader
             }
             rows.Add(new XlsxRow(rowNumber, cells));
         }
-        return rows;
+        return Result.Ok(rows);
     }
 
     /// <summary>Excel serial date (days since 1899-12-30) → date part.</summary>
@@ -111,7 +115,6 @@ internal static class XlsxReader
             return [];
         }
 
-        // Concatenate all text runs per item so formatted strings stay whole.
         return LoadXml(entry)
             .Root!.Elements()
             .Select(item =>

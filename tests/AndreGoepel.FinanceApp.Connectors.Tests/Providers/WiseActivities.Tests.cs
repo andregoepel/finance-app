@@ -7,7 +7,7 @@ using NSubstitute;
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
 /// <summary>Activity-feed parsing (the token-only Wise transaction source).</summary>
-public class WiseActivitiesTests
+public sealed class WiseActivitiesTests
 {
     // Real sandbox shape (an outgoing transfer) plus a credit with Wise's
     // <positive> markup and a non-monetary entry that must be skipped.

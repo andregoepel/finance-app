@@ -2,10 +2,10 @@ using AndreGoepel.FinanceApp.Domain.Categories;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Categories;
 
-public class DefaultCategoriesTests
+public sealed class DefaultCategoriesTests
 {
     [Fact]
-    public void Build_ProducesGroupsWithChildrenWiredToParents()
+    public void Build_DefaultTree_ProducesGroupsWithChildrenWiredToParents()
     {
         // Act
         var categories = DefaultCategories.Build();
@@ -20,7 +20,7 @@ public class DefaultCategoriesTests
     }
 
     [Fact]
-    public void Build_ContainsTheTransfersGroup()
+    public void Build_DefaultTree_ContainsTheTransfersGroup()
     {
         // Act
         var categories = DefaultCategories.Build();
@@ -31,7 +31,7 @@ public class DefaultCategoriesTests
     }
 
     [Fact]
-    public void Build_AllIdsAreUnique()
+    public void Build_DefaultTree_ProducesUniqueIds()
     {
         // Act
         var categories = DefaultCategories.Build();

@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AndreGoepel.FinanceApp.Tests;
 
-public class InitializationTests
+public sealed class InitializationTests
 {
     [Fact]
     public void AddFinanceApp_ReturnsSameServiceCollection()

@@ -3,7 +3,7 @@ using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class EnableBankingTransactionParsingTests
+public sealed class EnableBankingTransactionParsingTests
 {
     // Real shape captured from the Enable Banking sandbox.
     private const string CreditJson = """
@@ -47,7 +47,7 @@ public class EnableBankingTransactionParsingTests
     }
 }
 
-public class EnableBankingConnectorNormalizeTests
+public sealed class EnableBankingConnectorNormalizeTests
 {
     private static readonly DateOnly Date = new(2026, 7, 2);
 

@@ -106,11 +106,7 @@ internal sealed class WiseCsvParser : IStatementParser
 
             var currency = record.Fields[CurrencyColumn].Trim().ToUpperInvariant();
 
-            // Converted transactions carry the foreign leg in Exchange To /
-            // Exchange To Amount (unsigned — mirror the booked sign). When
-            // Exchange To equals the booked currency the foreign leg would be
-            // Exchange From, but the export has no Exchange From Amount and
-            // deriving it from Exchange Rate invites rounding drift — skip.
+            // Converted transactions carry the foreign leg in Exchange To/Exchange To Amount (unsigned, mirrors the booked sign); skipped when Exchange To equals the booked currency since there's no Exchange From Amount to derive it from without rounding drift.
             decimal? originalAmount = null;
             string? originalCurrency = null;
             var exchangeTo = record.Fields[ExchangeToColumn].Trim().ToUpperInvariant();

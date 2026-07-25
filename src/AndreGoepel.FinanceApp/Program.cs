@@ -2,7 +2,7 @@ using AndreGoepel.AppFoundation;
 using AndreGoepel.AppFoundation.Hosting;
 using AndreGoepel.Design.Blazor;
 using AndreGoepel.FinanceApp;
-using AndreGoepel.FinanceApp.Categorization;
+using AndreGoepel.FinanceApp.Categorization.Claude;
 using AndreGoepel.FinanceApp.Components;
 using AndreGoepel.FinanceApp.Connections;
 using AndreGoepel.FinanceApp.Domain.Imports;
@@ -15,15 +15,11 @@ builder.AddAppFoundation(options =>
     options.DatabaseConnectionName = "financeapp-database";
     options.WolverineServiceName = "FinanceApp";
 
-    // The host owns the single UseWolverine call; opt the finance handler
-    // assemblies into Wolverine's discovery here so command handlers (import,
-    // categorization, …) are found and routed to.
+    // The host owns the single UseWolverine call; opt the finance handler assemblies into discovery here.
     options.ConfigureWolverine = wolverine =>
     {
         wolverine.Discovery.IncludeAssembly(typeof(ImportStatementCommand).Assembly);
-        wolverine.Discovery.IncludeAssembly(
-            typeof(CategorizeImportedTransactionsCommandHandler).Assembly
-        );
+        wolverine.Discovery.IncludeAssembly(typeof(IClaudeCategorizer).Assembly);
     };
 });
 

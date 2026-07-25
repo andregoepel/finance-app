@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Domain.Accounts;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Accounts;
 
-public class AccountOwnersTests
+public sealed class AccountOwnersTests
 {
     private static readonly Guid UserA = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static readonly Guid UserB = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");

@@ -42,9 +42,6 @@ internal sealed class DailySyncJob(
                 summaries.Sum(s => s.Imported)
             );
 
-            // Retry any transactions still missing an EUR amount (e.g. a rate
-            // lookup that failed earlier), then auto-match planned items and
-            // revalue crypto accounts at today's prices.
             await messageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
             await messageBus.PublishAsync(new MatchPlannedTransactionsCommand());
             await messageBus.PublishAsync(new RefreshCryptoValuationsCommand());

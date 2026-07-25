@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Credentials;
 
-public class MartenCredentialStoreTests
+public sealed class MartenCredentialStoreTests
 {
     private readonly IDocumentStore store = Substitute.For<IDocumentStore>();
     private readonly IDocumentSession session = Substitute.For<IDocumentSession>();

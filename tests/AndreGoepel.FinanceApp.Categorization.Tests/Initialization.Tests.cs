@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AndreGoepel.FinanceApp.Categorization.Tests;
 
-public class InitializationTests
+public sealed class InitializationTests
 {
     [Fact]
     public void AddCategorization_ReturnsSameServiceCollection()
