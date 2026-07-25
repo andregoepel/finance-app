@@ -4,7 +4,7 @@ using AndreGoepel.FinanceApp.Domain.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Parsing;
 
-public class StatementParserRegistryTests
+public sealed class StatementParserRegistryTests
 {
     private static StatementParserRegistry BuildRegistry() =>
         new([new WiseCsvParser(), new RevolutXlsxParser()]);

@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Domain.Recurring;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Recurring;
 
-public class RecurringDetectorTests
+public sealed class RecurringDetectorTests
 {
     private static RecurringCandidate Sub(string name, int year, int month, decimal amount) =>
         new(name, new DateOnly(year, month, 15), amount);

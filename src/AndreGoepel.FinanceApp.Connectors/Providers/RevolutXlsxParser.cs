@@ -53,7 +53,8 @@ internal sealed class RevolutXlsxParser : IStatementParser
             return false;
         }
 
-        var header = XlsxReader.ReadFirstSheet(file.Content).FirstOrDefault();
+        var sheet = XlsxReader.ReadFirstSheet(file.Content);
+        var header = sheet.IsSuccess ? sheet.Value!.FirstOrDefault() : null;
         return header is not null && IsHeader(header);
     }
 
@@ -62,7 +63,14 @@ internal sealed class RevolutXlsxParser : IStatementParser
         var rows = new List<NormalizedTransaction>();
         var errors = new List<ImportRowError>();
 
-        foreach (var row in XlsxReader.ReadFirstSheet(file.Content))
+        var sheet = XlsxReader.ReadFirstSheet(file.Content);
+        if (sheet.IsFailure)
+        {
+            errors.Add(new ImportRowError(0, sheet.Error!, null));
+            return new StatementParseResult(ParserId, rows, errors);
+        }
+
+        foreach (var row in sheet.Value!)
         {
             if (IsHeader(row) || row.Cells.Count == 0)
             {

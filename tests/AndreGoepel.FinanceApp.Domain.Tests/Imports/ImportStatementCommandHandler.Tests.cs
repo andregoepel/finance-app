@@ -3,7 +3,7 @@ using static AndreGoepel.FinanceApp.Domain.Imports.ImportStatementCommandHandler
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Imports;
 
-public class ImportStatementCommandHandlerTests
+public sealed class ImportStatementCommandHandlerTests
 {
     private static HashedRow Row(string hash) =>
         new(

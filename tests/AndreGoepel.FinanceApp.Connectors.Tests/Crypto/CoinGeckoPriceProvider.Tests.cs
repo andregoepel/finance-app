@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Crypto;
 
-public class CoinGeckoPriceProviderTests
+public sealed class CoinGeckoPriceProviderTests
 {
     [Fact]
     public async Task GetEurPricesAsync_MultipleIds_BatchesOneRequestAndParsesDecimals()

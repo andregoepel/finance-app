@@ -3,7 +3,7 @@ using AndreGoepel.FinanceApp.Connectors.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class EasyBankXlsxParserTests
+public sealed class EasyBankXlsxParserTests
 {
     private readonly EasyBankXlsxParser parser = new();
     private readonly StatementFile file = Fixtures.Load("easybank", "statement-v1.xlsx");

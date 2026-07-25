@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Connectors.Parsing;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Parsing;
 
-public class FieldParserTests
+public sealed class FieldParserTests
 {
     [Fact]
     public void TryParseAmountWithCurrency_GermanSignedWithCode_ReturnsAmountAndCurrency()

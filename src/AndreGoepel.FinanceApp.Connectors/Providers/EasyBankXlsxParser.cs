@@ -33,18 +33,25 @@ internal sealed class EasyBankXlsxParser : IStatementParser
             return false;
         }
 
-        return XlsxReader
-            .ReadFirstSheet(file.Content)
-            .Any(row => row.Cell("A").Trim() == "Referenznummer");
+        var sheet = XlsxReader.ReadFirstSheet(file.Content);
+        return sheet.IsSuccess && sheet.Value!.Any(row => row.Cell("A").Trim() == "Referenznummer");
     }
 
     public StatementParseResult Parse(StatementFile file)
     {
         var rows = new List<NormalizedTransaction>();
         var errors = new List<ImportRowError>();
+
+        var sheet = XlsxReader.ReadFirstSheet(file.Content);
+        if (sheet.IsFailure)
+        {
+            errors.Add(new ImportRowError(0, sheet.Error!, null));
+            return new StatementParseResult(ParserId, rows, errors);
+        }
+
         var headerSeen = false;
 
-        foreach (var row in XlsxReader.ReadFirstSheet(file.Content))
+        foreach (var row in sheet.Value!)
         {
             if (!headerSeen)
             {

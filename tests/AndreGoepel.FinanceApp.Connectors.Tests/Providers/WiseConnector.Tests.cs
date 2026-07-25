@@ -6,7 +6,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class WiseConnectorTests
+public sealed class WiseConnectorTests
 {
     private static readonly Guid ConnectionId = Guid.NewGuid();
 
@@ -45,7 +45,7 @@ public class WiseConnectorTests
         );
 
     [Fact]
-    public void Supports_OnlyWise()
+    public void Supports_ProviderKind_ReturnsTrueOnlyForWise()
     {
         // Arrange
         var connector = new WiseConnector(

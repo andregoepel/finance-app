@@ -6,7 +6,7 @@ using TransactionsPage = AndreGoepel.FinanceApp.Components.Transactions.Pages.Tr
 
 namespace AndreGoepel.FinanceApp.Tests.Components;
 
-public class PageRoutingTests
+public sealed class PageRoutingTests
 {
     [Theory]
     [InlineData(typeof(TransactionsPage), "/transactions")]

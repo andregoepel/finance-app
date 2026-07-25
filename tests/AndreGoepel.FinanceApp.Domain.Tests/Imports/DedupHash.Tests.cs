@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Domain.Imports;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Imports;
 
-public class DedupHashTests
+public sealed class DedupHashTests
 {
     private static readonly Guid AccountId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 

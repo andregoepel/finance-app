@@ -19,10 +19,10 @@ internal sealed class AccountSyncService(
     IMessageBus messageBus
 ) : IAccountSyncService
 {
-    /// <summary>Restricted-mode PSD2 history is ~90 days; default the first window to that.</summary>
+    // Restricted-mode PSD2 history is ~90 days; default the first window to that.
     private static readonly int DefaultWindowDays = 90;
 
-    /// <summary>Re-fetch a few days before the last sync so late-posted bookings are not missed.</summary>
+    // Re-fetch a few days before the last sync so late-posted bookings are not missed.
     private static readonly int OverlapDays = 3;
 
     public async Task<AccountSyncSummary> SyncAccountAsync(
@@ -131,11 +131,7 @@ internal sealed class AccountSyncService(
         return summaries;
     }
 
-    /// <summary>
-    /// Builds the connector request: window start from the last sync (with
-    /// overlap) or the default backfill, plus the Enable Banking session from the
-    /// connection's consent where the provider needs it.
-    /// </summary>
+    // Builds the connector request: window start from the last sync (with overlap) or the default backfill, plus the Enable Banking session where the provider needs it.
     private async Task<ProviderSyncRequest> BuildRequestAsync(
         Account account,
         ProviderConnection connection,

@@ -5,7 +5,7 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Exchange;
 
-public class FrankfurterExchangeRateProviderTests
+public sealed class FrankfurterExchangeRateProviderTests
 {
     [Fact]
     public async Task GetEurRateAsync_Eur_ReturnsOneWithoutCallingTheApi()

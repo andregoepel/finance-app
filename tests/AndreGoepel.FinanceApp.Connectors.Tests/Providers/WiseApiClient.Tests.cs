@@ -6,10 +6,10 @@ using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class WiseApiClientTests
+public sealed class WiseApiClientTests
 {
     [Fact]
-    public async Task GetProfilesAsync_ParsesIdAndType()
+    public async Task GetProfilesAsync_SuccessResponse_ParsesIdAndType()
     {
         // Arrange — real sandbox shape (trimmed).
         const string json = """
@@ -33,7 +33,7 @@ public class WiseApiClientTests
     }
 
     [Fact]
-    public async Task GetBalancesAsync_ParsesDecimalAmountsAndCurrency()
+    public async Task GetBalancesAsync_SuccessResponse_ParsesDecimalAmountsAndCurrency()
     {
         // Arrange
         const string json = """

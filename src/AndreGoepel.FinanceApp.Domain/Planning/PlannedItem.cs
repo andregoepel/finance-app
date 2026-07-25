@@ -21,8 +21,6 @@ public sealed class PlannedItem
     /// <summary>Account the item is expected on, when known — narrows auto-matching.</summary>
     public Guid? ExpectedAccountId { get; set; }
 
-    // ---- matching hints (used by auto-matching) ----
-
     /// <summary>Case-insensitive substring the counterparty/description should contain.</summary>
     public string? CounterpartyPattern { get; set; }
 

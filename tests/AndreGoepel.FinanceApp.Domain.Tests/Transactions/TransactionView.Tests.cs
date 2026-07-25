@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Domain.Transactions;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Transactions;
 
-public class TransactionViewTests
+public sealed class TransactionViewTests
 {
     private static TransactionView Imported() =>
         TransactionView.Create(

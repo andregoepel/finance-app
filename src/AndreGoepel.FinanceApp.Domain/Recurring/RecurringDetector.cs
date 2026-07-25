@@ -10,10 +10,10 @@ public static class RecurringDetector
 {
     private const int MinOccurrences = 3;
 
-    /// <summary>Share of gaps that must match the interval for it to count as regular.</summary>
+    // Share of gaps that must match the interval for it to count as regular.
     private const double RegularityThreshold = 0.6;
 
-    /// <summary>How far each amount may stray from the median magnitude (±35%).</summary>
+    // How far each amount may stray from the median magnitude (±35%).
     private const decimal AmountTolerance = 0.35m;
 
     public static IReadOnlyList<RecurringSeries> Detect(

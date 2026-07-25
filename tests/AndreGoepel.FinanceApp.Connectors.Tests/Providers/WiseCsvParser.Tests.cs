@@ -3,7 +3,7 @@ using AndreGoepel.FinanceApp.Connectors.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
-public class WiseCsvParserTests
+public sealed class WiseCsvParserTests
 {
     private readonly WiseCsvParser parser = new();
     private readonly StatementFile file = Fixtures.Load("wise", "statement-v1.csv");

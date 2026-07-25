@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Domain.Crypto;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Crypto;
 
-public class CryptoValuationCalculatorTests
+public sealed class CryptoValuationCalculatorTests
 {
     private static readonly DateTimeOffset Newer = new(2026, 7, 12, 6, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset Older = new(2026, 7, 10, 6, 0, 0, TimeSpan.Zero);

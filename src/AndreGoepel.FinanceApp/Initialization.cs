@@ -28,11 +28,7 @@ public static class Initialization
         services.AddScoped<IProviderConnectionService, ProviderConnectionService>();
         services.AddScoped<IWiseBalanceService, WiseBalanceService>();
 
-        // Daily scheduled sync via Quartz.NET. The scheduler + hosted service are
-        // already registered by app-foundation (identity uses Quartz); this
-        // additive AddQuartz only contributes our durable job. The trigger is not
-        // static — it is applied from the stored, UI-editable SyncSchedule at
-        // startup (SyncScheduleStartup) and whenever the schedule changes.
+        // Daily scheduled sync via Quartz.NET, added to app-foundation's existing scheduler; the trigger comes from the stored, UI-editable SyncSchedule (SyncScheduleStartup).
         services.AddQuartz(quartz =>
             quartz.AddJob<DailySyncJob>(job =>
                 job.WithIdentity(DailySyncJob.JobName).StoreDurably()

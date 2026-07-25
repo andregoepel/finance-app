@@ -17,13 +17,7 @@ public static class Initialization
         // Wolverine can inline-construct the handler's IClaudeCategorizer dependency
         // (typed HttpClient registrations require forbidden service location).
         //
-        // Aspire's ServiceDefaults applies a standard resilience handler to every
-        // HttpClient by default; its 10s per-attempt timeout aborts Claude's slower
-        // batch calls (and throws a Polly TimeoutRejectedException our catch doesn't
-        // handle). This external, deliberately-slow API relies on the 90s client
-        // timeout and the graceful Result-based degradation instead.
-        // RemoveAllResilienceHandlers is [Experimental] (EXTEXP0001) but is the
-        // intended way to opt a single client out of the global default.
+        // RemoveAllResilienceHandlers: Claude's 90s timeout needs to bypass Aspire's 10s default (EXTEXP0001).
 #pragma warning disable EXTEXP0001
         services
             .AddHttpClient(

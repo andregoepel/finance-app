@@ -2,7 +2,7 @@ using AndreGoepel.FinanceApp.Domain.Providers;
 
 namespace AndreGoepel.FinanceApp.Domain.Tests.Providers;
 
-public class ProviderConnectionTests
+public sealed class ProviderConnectionTests
 {
     [Theory]
     [InlineData(ProviderKind.Dkb, true)]

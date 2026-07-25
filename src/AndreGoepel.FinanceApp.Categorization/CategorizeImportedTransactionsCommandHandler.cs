@@ -19,7 +19,7 @@ namespace AndreGoepel.FinanceApp.Categorization;
 /// the next import retries; the import itself has long since succeeded.
 /// </summary>
 [WolverineHandler]
-public class CategorizeImportedTransactionsCommandHandler
+internal sealed class CategorizeImportedTransactionsCommandHandler
 {
     internal const decimal HighConfidenceThreshold = 0.8m;
     private const int BatchSize = 50;
