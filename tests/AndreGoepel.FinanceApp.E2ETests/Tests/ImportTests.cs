@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using AndreGoepel.FinanceApp.E2ETests.Infrastructure;
 
 namespace AndreGoepel.FinanceApp.E2ETests.Tests;
 
@@ -8,7 +7,7 @@ namespace AndreGoepel.FinanceApp.E2ETests.Tests;
 /// fixture through the Import UI, confirm the rows land on the Transactions grid, and re-importing the
 /// same file is idempotent (every row is flagged as a duplicate, nothing new).
 /// </summary>
-public sealed class ImportTests(E2EAppFixture fixture) : E2ETestBase(fixture)
+public sealed class ImportTests(E2EAppFixture fixture) : E2ETestBase<E2EAppFixture>(fixture)
 {
     private static readonly string DkbStatement = Path.Combine(
         AppContext.BaseDirectory,

@@ -72,11 +72,17 @@ dedicated `E2E` GitHub Actions workflow, which has Docker available.
 
 ## Tuning notes
 
-The UI is built with **Radzen**, whose markup can shift between versions. Selectors are
-centralized in `Infrastructure/PageExtensions.cs` and the flows in `E2ETestBase`, so if a
-selector drifts you fix it in one place. The account-flow selectors target the current
-`AndreGoepel.Marten.Identity.Blazor` package markup; the Accounts-create and Import selectors
-target the Radzen form fields in `src/AndreGoepel.FinanceApp` — verify them on the first live
-run after a package or UI change (`E2E_HEADED=true`). If a click seems to do nothing, check
-`WaitForBlazorAsync` and the click-retry loops first — Blazor Server can drop a click landing in
-the circuit-attach gap.
+The UI is built with **Radzen**, whose markup can shift between versions. The shared
+page-interaction core (`WaitForBlazorAsync`, `GotoAsync`, `FillFieldAsync`, `ClickButtonAsync`,
+`ClickLinkAsync`, `AssertOnPathAsync`) and the account flows in `E2ETestBase<TFixture>` come
+from the `AndreGoepel.Testing.E2E` package; this repo's own Radzen/design-system selectors
+(`FillFormFieldAsync`, `SelectDropDownAsync`, `UploadFileAsync`) live in
+`Infrastructure/PageExtensions.cs` as extensions layered on top. The account-flow selectors
+target the current `AndreGoepel.Marten.Identity.Blazor` package markup; the Accounts-create and
+Import selectors target the Radzen form fields in `src/AndreGoepel.FinanceApp` — verify them on
+the first live run after a package or UI change (`E2E_HEADED=true`). If a click seems to do
+nothing, check `WaitForBlazorAsync` and the click-retry loops first — Blazor Server can drop a
+click landing in the circuit-attach gap.
+
+A failed test now writes a Playwright trace to `PLAYWRIGHT_TRACE_DIR` (defaults to
+`playwright-traces`), uploaded as a CI artifact by `e2e.yml`.
