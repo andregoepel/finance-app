@@ -13,160 +13,158 @@
 
 <AppPageTitle Title="Accounts" Breadcrumb="Settings / Accounts" />
 
-<div class="rz-p-4 rz-p-md-6">
-    <RadzenStack Gap="1.5rem">
+<PageBody>
 
-        <PageHeader Title="Accounts">
-            <Actions>
-                <RadzenSwitch @bind-Value=@showDeactivated />
-                <RadzenLabel Text="Show deactivated" />
-            </Actions>
-        </PageHeader>
+    <PageHeader Title="Accounts">
+        <Actions>
+            <RadzenSwitch @bind-Value=@showDeactivated />
+            <RadzenLabel Text="Show deactivated" />
+        </Actions>
+    </PageHeader>
 
-        <DataCard>
-            <RadzenDataGrid TItem="Account" Data=@DisplayedAccounts Density="Density.Compact">
-                <Columns>
-                    <RadzenDataGridColumn TItem="Account" Property="Name" Title="Name" />
-                    <RadzenDataGridColumn TItem="Account" Property="Provider" Title="Provider" Width="100px" />
-                    <RadzenDataGridColumn TItem="Account" Property="Type" Title="Type" Width="110px" />
-                    <RadzenDataGridColumn TItem="Account" Property="Currency" Title="Currency" Width="80px" />
-                    <RadzenDataGridColumn TItem="Account" Title="Owner" Width="180px" Sortable="false">
-                        <Template Context="account">@OwnerLabel(account)</Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="Sync" Width="100px" />
-                    <RadzenDataGridColumn TItem="Account" Title="Status" Width="110px" Sortable="false">
-                        <Template Context="account">
-                            <StatusBadge Text="@(account.IsActive ? "Active" : "Deactivated")"
-                                         Variant="@(account.IsActive ? BadgeVariant.Success : BadgeVariant.Neutral)" />
-                        </Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="Account" Title="" Width="140px" Sortable="false" TextAlign="TextAlign.End">
-                        <Template Context="account">
-                            <RowActions>
-                                <IconButton Icon="edit" Title="Edit" Click=@(_ => StartEdit(account)) />
-                                @if (account.IsActive)
-                                {
-                                    <RadzenButton Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"
-                                                  class="ag-icon-btn" title="Deactivate" aria-label="Deactivate"
-                                                  Click=@(() => DeactivateAsync(account)) />
-                                }
-                                else
-                                {
-                                    <RadzenButton Icon="restart_alt" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
-                                                  class="ag-icon-btn" title="Reactivate" aria-label="Reactivate"
-                                                  Click=@(() => ReactivateAsync(account)) />
-                                }
-                                <IconButton Icon="delete" Title="Delete permanently" Danger="true"
-                                            Click=@(_ => DeleteAsync(account)) />
-                            </RowActions>
-                        </Template>
-                    </RadzenDataGridColumn>
-                </Columns>
-            </RadzenDataGrid>
-        </DataCard>
+    <DataCard>
+        <RadzenDataGrid TItem="Account" Data=@DisplayedAccounts Density="Density.Compact">
+            <Columns>
+                <RadzenDataGridColumn TItem="Account" Property="Name" Title="Name" />
+                <RadzenDataGridColumn TItem="Account" Property="Provider" Title="Provider" Width="100px" />
+                <RadzenDataGridColumn TItem="Account" Property="Type" Title="Type" Width="110px" />
+                <RadzenDataGridColumn TItem="Account" Property="Currency" Title="Currency" Width="80px" />
+                <RadzenDataGridColumn TItem="Account" Title="Owner" Width="180px" Sortable="false">
+                    <Template Context="account">@OwnerLabel(account)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="Sync" Width="100px" />
+                <RadzenDataGridColumn TItem="Account" Title="Status" Width="110px" Sortable="false">
+                    <Template Context="account">
+                        <StatusBadge Text="@(account.IsActive ? "Active" : "Deactivated")"
+                                     Variant="@(account.IsActive ? BadgeVariant.Success : BadgeVariant.Neutral)" />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Account" Title="" Width="140px" Sortable="false" TextAlign="TextAlign.End">
+                    <Template Context="account">
+                        <RowActions>
+                            <IconButton Icon="edit" Title="Edit" Click=@(_ => StartEdit(account)) />
+                            @if (account.IsActive)
+                            {
+                                <RadzenButton Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"
+                                              class="ag-icon-btn" title="Deactivate" aria-label="Deactivate"
+                                              Click=@(() => DeactivateAsync(account)) />
+                            }
+                            else
+                            {
+                                <RadzenButton Icon="restart_alt" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
+                                              class="ag-icon-btn" title="Reactivate" aria-label="Reactivate"
+                                              Click=@(() => ReactivateAsync(account)) />
+                            }
+                            <IconButton Icon="delete" Title="Delete permanently" Danger="true"
+                                        Click=@(_ => DeleteAsync(account)) />
+                        </RowActions>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </DataCard>
 
-        <CardForm TItem="InputModel"
-                  Data="form"
-                  Submit="SaveAsync"
-                  Cancel="ResetForm"
-                  Title="@(editingAccountId is null ? "Add account" : "Edit account")"
-                  SubmitText="@(editingAccountId is null ? "Add" : "Save")"
-                  CancelText="Cancel"
-                  IsBusy="isSaving"
-                  BusyText="Saving…">
-            <div class="ag-form-grid">
-                <FormField Label="Name" For="Name">
-                    <RadzenTextBox @bind-Value=@form.Name Name="Name" Disabled=@isSaving Style="width: 100%;" />
-                </FormField>
-                <FormField Label="Provider" For="Provider">
-                    <RadzenDropDown @bind-Value=@form.Provider Name="Provider" Data=@ProviderChoices
-                                    Disabled=@(editingAccountId is not null || isSaving) Style="width: 100%;" />
-                </FormField>
-                <FormField Label="Type" For="Type">
-                    <RadzenDropDown @bind-Value=@form.Type Name="Type" Data=@TypeChoices Disabled=@isSaving Style="width: 100%;" />
-                </FormField>
-                <FormField Label="Currency" For="Currency">
-                    <RadzenTextBox @bind-Value=@form.Currency Name="Currency" Disabled=@isSaving MaxLength="3" Style="width: 100%;" />
-                </FormField>
-            </div>
+    <CardForm TItem="InputModel"
+              Data="form"
+              Submit="SaveAsync"
+              Cancel="ResetForm"
+              Title="@(editingAccountId is null ? "Add account" : "Edit account")"
+              SubmitText="@(editingAccountId is null ? "Add" : "Save")"
+              CancelText="Cancel"
+              IsBusy="isSaving"
+              BusyText="Saving…">
+        <div class="ag-form-grid">
+            <FormField Label="Name" For="Name">
+                <RadzenTextBox @bind-Value=@form.Name Name="Name" Disabled=@isSaving Style="width: 100%;" />
+            </FormField>
+            <FormField Label="Provider" For="Provider">
+                <RadzenDropDown @bind-Value=@form.Provider Name="Provider" Data=@ProviderChoices
+                                Disabled=@(editingAccountId is not null || isSaving) Style="width: 100%;" />
+            </FormField>
+            <FormField Label="Type" For="Type">
+                <RadzenDropDown @bind-Value=@form.Type Name="Type" Data=@TypeChoices Disabled=@isSaving Style="width: 100%;" />
+            </FormField>
+            <FormField Label="Currency" For="Currency">
+                <RadzenTextBox @bind-Value=@form.Currency Name="Currency" Disabled=@isSaving MaxLength="3" Style="width: 100%;" />
+            </FormField>
+        </div>
 
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <RadzenSwitch @bind-Value=@form.IsShared Name="IsShared" Disabled=@isSaving Change=@OnSharedChanged />
-                <RadzenLabel Text="Shared" Component="IsShared" />
-            </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <RadzenSwitch @bind-Value=@form.IsShared Name="IsShared" Disabled=@isSaving Change=@OnSharedChanged />
+            <RadzenLabel Text="Shared" Component="IsShared" />
+        </RadzenStack>
 
-            @if (form.IsShared)
+        @if (form.IsShared)
+        {
+            <FormField Label="Owners" For="Owners">
+                <RadzenDropDown TValue="IEnumerable<Guid>"
+                                @bind-Value=@form.OwnerUserIds Name="Owners"
+                                Data=@users ValueProperty="StreamId" TextProperty="UserName"
+                                Multiple="true" AllowClear="true" Chips="true"
+                                Disabled=@isSaving Placeholder="Select users" Style="width: 100%;" />
+            </FormField>
+        }
+        else
+        {
+            <FormField Label="Owner" For="Owner">
+                <RadzenDropDown TValue="Guid?"
+                                @bind-Value=@SingleOwner Name="Owner"
+                                Data=@users ValueProperty="StreamId" TextProperty="UserName"
+                                AllowClear="true" Disabled=@isSaving Placeholder="Select user" Style="width: 100%;" />
+            </FormField>
+        }
+
+        <div class="ag-form-grid">
+            <FormField Label="Sync" For="Sync">
+                <RadzenDropDown @bind-Value=@form.SyncMethod Name="Sync" Data=@SyncChoices Disabled=@isSaving Style="width: 100%;" />
+            </FormField>
+            @if (form.SyncMethod == SyncMethod.Api)
             {
-                <FormField Label="Owners" For="Owners">
-                    <RadzenDropDown TValue="IEnumerable<Guid>"
-                                    @bind-Value=@form.OwnerUserIds Name="Owners"
-                                    Data=@users ValueProperty="StreamId" TextProperty="UserName"
-                                    Multiple="true" AllowClear="true" Chips="true"
-                                    Disabled=@isSaving Placeholder="Select users" Style="width: 100%;" />
-                </FormField>
-            }
-            else
-            {
-                <FormField Label="Owner" For="Owner">
+                <FormField Label="Connection" For="Connection">
                     <RadzenDropDown TValue="Guid?"
-                                    @bind-Value=@SingleOwner Name="Owner"
-                                    Data=@users ValueProperty="StreamId" TextProperty="UserName"
-                                    AllowClear="true" Disabled=@isSaving Placeholder="Select user" Style="width: 100%;" />
+                                    @bind-Value=@form.ConnectionId Name="Connection"
+                                    Data=@ProviderConnections ValueProperty="Id" TextProperty="Label"
+                                    AllowClear="true" Disabled=@isSaving
+                                    Placeholder="@(ProviderConnections.Any() ? "Select connection" : "No " + form.Provider + " connection")"
+                                    Style="width: 100%;" />
                 </FormField>
-            }
-
-            <div class="ag-form-grid">
-                <FormField Label="Sync" For="Sync">
-                    <RadzenDropDown @bind-Value=@form.SyncMethod Name="Sync" Data=@SyncChoices Disabled=@isSaving Style="width: 100%;" />
-                </FormField>
-                @if (form.SyncMethod == SyncMethod.Api)
+                @if (form.Provider == ProviderKind.Wise)
                 {
-                    <FormField Label="Connection" For="Connection">
-                        <RadzenDropDown TValue="Guid?"
-                                        @bind-Value=@form.ConnectionId Name="Connection"
-                                        Data=@ProviderConnections ValueProperty="Id" TextProperty="Label"
-                                        AllowClear="true" Disabled=@isSaving
-                                        Placeholder="@(ProviderConnections.Any() ? "Select connection" : "No " + form.Provider + " connection")"
-                                        Style="width: 100%;" />
+                    <FormField Label="Wise balance id" For="ExternalId">
+                        <RadzenTextBox @bind-Value=@form.ExternalId Name="ExternalId" Disabled=@isSaving
+                                       Placeholder="e.g. 306149" Style="width: 100%;" />
                     </FormField>
-                    @if (form.Provider == ProviderKind.Wise)
-                    {
-                        <FormField Label="Wise balance id" For="ExternalId">
-                            <RadzenTextBox @bind-Value=@form.ExternalId Name="ExternalId" Disabled=@isSaving
-                                           Placeholder="e.g. 306149" Style="width: 100%;" />
-                        </FormField>
-                    }
-                    else
-                    {
-                        <FormField Label="Bank account" For="IdentificationHash">
-                            <RadzenDropDown TValue="string"
-                                            @bind-Value=@form.IdentificationHash Name="IdentificationHash"
-                                            Data=@LinkedAccounts ValueProperty="IdentificationHash"
-                                            AllowClear="true" Disabled=@isSaving
-                                            Placeholder="@(LinkedAccounts.Any() ? "Select account" : "Connect the consent first")"
-                                            Style="width: 100%;">
-                                <Template Context="linked">
-                                    @(((EnableBankingLinkedAccount)linked).Name ?? "account") — @(((EnableBankingLinkedAccount)linked).Currency)
-                                </Template>
-                            </RadzenDropDown>
-                        </FormField>
-                    }
                 }
-            </div>
+                else
+                {
+                    <FormField Label="Bank account" For="IdentificationHash">
+                        <RadzenDropDown TValue="string"
+                                        @bind-Value=@form.IdentificationHash Name="IdentificationHash"
+                                        Data=@LinkedAccounts ValueProperty="IdentificationHash"
+                                        AllowClear="true" Disabled=@isSaving
+                                        Placeholder="@(LinkedAccounts.Any() ? "Select account" : "Connect the consent first")"
+                                        Style="width: 100%;">
+                            <Template Context="linked">
+                                @(((EnableBankingLinkedAccount)linked).Name ?? "account") — @(((EnableBankingLinkedAccount)linked).Currency)
+                            </Template>
+                        </RadzenDropDown>
+                    </FormField>
+                }
+            }
+        </div>
 
-            <div class="ag-form-grid">
-                <FormField Label="IBAN (optional)" For="Iban">
-                    <RadzenTextBox @bind-Value=@form.Iban Name="Iban" Disabled=@isSaving Style="width: 100%;" />
-                </FormField>
-                <FormField Label="@($"Current balance ({(string.IsNullOrWhiteSpace(form.Currency) ? "EUR" : form.Currency)})")" For="CurrentBalance">
-                    <RadzenNumeric TValue="decimal?" @bind-Value=@form.CurrentBalance Name="CurrentBalance"
-                                   Disabled=@isSaving Placeholder="for net worth" Style="width: 100%;" />
-                </FormField>
-            </div>
-        </CardForm>
+        <div class="ag-form-grid">
+            <FormField Label="IBAN (optional)" For="Iban">
+                <RadzenTextBox @bind-Value=@form.Iban Name="Iban" Disabled=@isSaving Style="width: 100%;" />
+            </FormField>
+            <FormField Label="@($"Current balance ({(string.IsNullOrWhiteSpace(form.Currency) ? "EUR" : form.Currency)})")" For="CurrentBalance">
+                <RadzenNumeric TValue="decimal?" @bind-Value=@form.CurrentBalance Name="CurrentBalance"
+                               Disabled=@isSaving Placeholder="for net worth" Style="width: 100%;" />
+            </FormField>
+        </div>
+    </CardForm>
 
-    </RadzenStack>
-</div>
+</PageBody>
 
 @code {
     private static readonly ProviderKind[] ProviderChoices = Enum.GetValues<ProviderKind>();
@@ -320,7 +318,7 @@
 
             if (result.IsFailure)
             {
-                NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
+                NotificationService.Error("Saving failed", result.Error);
                 return;
             }
 
@@ -356,8 +354,7 @@
             }
             else
             {
-                NotificationService.Notify(
-                    NotificationSeverity.Warning,
+                NotificationService.Warning(
                     "Balance saved without EUR value",
                     "The exchange rate was unavailable, so this account is left out of net worth for now."
                 );
@@ -399,11 +396,11 @@
     {
         if (error is not null)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Action failed", error);
+            NotificationService.Error("Action failed", error);
             return;
         }
 
-        NotificationService.Notify(NotificationSeverity.Success, successMessage);
+        NotificationService.Success(successMessage);
         if (editingAccountId is not null)
         {
             ResetForm();

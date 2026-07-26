@@ -10,56 +10,54 @@
 
 <AppPageTitle Title="Recurring" />
 
-<div class="rz-p-4 rz-p-md-6">
-    <RadzenStack Gap="1.5rem">
+<PageBody>
 
-        <PageHeader Title="Recurring"
-                    Subtitle="Detected subscriptions and other regular payments or income, based on repeating counterparties with a consistent interval and amount." />
+    <PageHeader Title="Recurring"
+                Subtitle="Detected subscriptions and other regular payments or income, based on repeating counterparties with a consistent interval and amount." />
 
-        @if (series is null)
-        {
-            <RadzenText>Loading…</RadzenText>
-        }
-        else if (series.Count == 0)
-        {
-            <EmptyState Icon="@("🔁")" Title="No recurring payments detected yet"
-                        Text="This needs a few months of transactions before patterns emerge." />
-        }
-        else
-        {
-            <DataCard>
-                <RadzenDataGrid TItem="RecurringSeries" Data=@series Density="Density.Compact"
-                                AllowSorting="true" AllowPaging="true" PageSize="20">
-                    <Columns>
-                        <RadzenDataGridColumn TItem="RecurringSeries" Property="Counterparty" Title="Counterparty" />
-                        <RadzenDataGridColumn TItem="RecurringSeries" Property="Interval" Title="Interval" Width="110px" />
-                        <RadzenDataGridColumn TItem="RecurringSeries" Property="TypicalAmount" Title="Typical amount" Width="140px" TextAlign="TextAlign.Right">
-                            <Template Context="row">
-                                <AmountText Amount="row.TypicalAmount" />
-                            </Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="RecurringSeries" Property="Occurrences" Title="Seen" Width="70px" TextAlign="TextAlign.Right" />
-                        <RadzenDataGridColumn TItem="RecurringSeries" Property="LastSeen" Title="Last" Width="120px">
-                            <Template Context="row">@row.LastSeen.ToString("dd.MM.yyyy")</Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="Next expected" Width="130px">
-                            <Template Context="row">@row.NextExpected.ToString("dd.MM.yyyy")</Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
-                            <Template Context="row">
-                                <RowActions>
-                                    <RadzenButton Text="Add as planned" Icon="event_note" Size="ButtonSize.ExtraSmall"
-                                                  ButtonStyle="ButtonStyle.Secondary" Click=@(() => AddAsPlannedAsync(row)) />
-                                </RowActions>
-                            </Template>
-                        </RadzenDataGridColumn>
-                    </Columns>
-                </RadzenDataGrid>
-            </DataCard>
-        }
+    @if (series is null)
+    {
+        <RadzenText>Loading…</RadzenText>
+    }
+    else if (series.Count == 0)
+    {
+        <EmptyState Icon="@("🔁")" Title="No recurring payments detected yet"
+                    Text="This needs a few months of transactions before patterns emerge." />
+    }
+    else
+    {
+        <DataCard>
+            <RadzenDataGrid TItem="RecurringSeries" Data=@series Density="Density.Compact"
+                            AllowSorting="true" AllowPaging="true" PageSize="20">
+                <Columns>
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Counterparty" Title="Counterparty" />
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Interval" Title="Interval" Width="110px" />
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="TypicalAmount" Title="Typical amount" Width="140px" TextAlign="TextAlign.Right">
+                        <Template Context="row">
+                            <AmountText Amount="row.TypicalAmount" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Occurrences" Title="Seen" Width="70px" TextAlign="TextAlign.Right" />
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="LastSeen" Title="Last" Width="120px">
+                        <Template Context="row">@row.LastSeen.ToString("dd.MM.yyyy")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="Next expected" Width="130px">
+                        <Template Context="row">@row.NextExpected.ToString("dd.MM.yyyy")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
+                        <Template Context="row">
+                            <RowActions>
+                                <RadzenButton Text="Add as planned" Icon="event_note" Size="ButtonSize.ExtraSmall"
+                                              ButtonStyle="ButtonStyle.Secondary" Click=@(() => AddAsPlannedAsync(row)) />
+                            </RowActions>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </DataCard>
+    }
 
-    </RadzenStack>
-</div>
+</PageBody>
 
 @code {
     private IReadOnlyList<RecurringSeries>? series;
@@ -94,11 +92,10 @@
 
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Could not add", result.Error);
+            NotificationService.Error("Could not add", result.Error);
             return;
         }
-        NotificationService.Notify(
-            NotificationSeverity.Success,
+        NotificationService.Success(
             "Added to planning",
             $"“{s.Counterparty}” — adjust it on the Planning page."
         );
