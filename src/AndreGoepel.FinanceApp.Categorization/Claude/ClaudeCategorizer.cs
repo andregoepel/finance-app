@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using AndreGoepel.FinanceApp.Domain;
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Credentials;
 
 namespace AndreGoepel.FinanceApp.Categorization.Claude;

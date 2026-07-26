@@ -821,6 +821,7 @@
         "dependencies": {
           "AndreGoepel.AppFoundation": "[1.2.3, )",
           "AndreGoepel.AppFoundation.Hosting": "[1.2.3, )",
+          "AndreGoepel.Core": "[1.0.1, )",
           "AndreGoepel.Design.Blazor": "[1.4.1, )",
           "AndreGoepel.FinanceApp.Categorization": "[1.0.0, )",
           "AndreGoepel.FinanceApp.Connectors": "[1.0.0, )",
@@ -835,6 +836,7 @@
       "andregoepel.financeapp.categorization": {
         "type": "Project",
         "dependencies": {
+          "AndreGoepel.Core": "[1.0.1, )",
           "AndreGoepel.FinanceApp.Domain": "[1.0.0, )",
           "Marten": "[9.18.0, )",
           "Microsoft.Extensions.Http.Resilience": "[10.8.0, )",
@@ -844,6 +846,7 @@
       "andregoepel.financeapp.connectors": {
         "type": "Project",
         "dependencies": {
+          "AndreGoepel.Core": "[1.0.1, )",
           "AndreGoepel.FinanceApp.Domain": "[1.0.0, )",
           "Microsoft.Extensions.Http.Resilience": "[10.8.0, )"
         }
@@ -851,6 +854,7 @@
       "andregoepel.financeapp.domain": {
         "type": "Project",
         "dependencies": {
+          "AndreGoepel.Core": "[1.0.1, )",
           "Marten": "[9.18.0, )",
           "WolverineFx.Marten": "[6.22.0, )"
         }
@@ -885,6 +889,12 @@
           "WolverineFx.Marten": "6.17.1",
           "WolverineFx.RuntimeCompilation": "6.17.1"
         }
+      },
+      "AndreGoepel.Core": {
+        "type": "CentralTransitive",
+        "requested": "[1.0.1, )",
+        "resolved": "1.0.1",
+        "contentHash": "jA27iMianyxUdrCtz5b6KxZOYxXlhZqkxDVKD6sed1sDCHF1upfV28CnczJ6kYPcrqJNj9+cDaxMWPlNvDkjcA=="
       },
       "AndreGoepel.Design.Blazor": {
         "type": "CentralTransitive",

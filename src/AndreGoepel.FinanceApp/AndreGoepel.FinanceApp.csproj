@@ -17,6 +17,7 @@
     <PackageReference Include="AndreGoepel.Marten.Identity.Blazor" />
     <PackageReference Include="AndreGoepel.AppFoundation" />
     <PackageReference Include="AndreGoepel.AppFoundation.Hosting" />
+    <PackageReference Include="AndreGoepel.Core" />
   </ItemGroup>
 
   <ItemGroup>

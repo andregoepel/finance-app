@@ -1,3 +1,5 @@
+using AndreGoepel.Core;
+
 namespace AndreGoepel.FinanceApp.Domain.Crypto;
 
 /// <summary>

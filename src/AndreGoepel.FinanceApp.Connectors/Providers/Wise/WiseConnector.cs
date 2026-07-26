@@ -1,4 +1,4 @@
-using AndreGoepel.FinanceApp.Domain;
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Credentials;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Providers;

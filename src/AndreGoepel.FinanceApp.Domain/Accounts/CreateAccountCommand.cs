@@ -1,3 +1,4 @@
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using Marten;
 

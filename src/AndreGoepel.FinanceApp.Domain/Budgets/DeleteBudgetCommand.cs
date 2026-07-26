@@ -1,3 +1,4 @@
+using AndreGoepel.Core;
 using Marten;
 
 namespace AndreGoepel.FinanceApp.Domain.Budgets;

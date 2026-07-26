@@ -1,5 +1,5 @@
 using System.Text.Json;
-using AndreGoepel.FinanceApp.Domain;
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Exchange;
 
 namespace AndreGoepel.FinanceApp.Connectors.Exchange;
