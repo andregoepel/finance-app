@@ -149,7 +149,8 @@ public sealed class WiseActivitiesTests
             ProviderEnvironment.Sandbox,
             29305553,
             new DateOnly(2026, 6, 1),
-            new DateOnly(2026, 7, 13)
+            new DateOnly(2026, 7, 13),
+            TestContext.Current.CancellationToken
         );
 
         // Assert

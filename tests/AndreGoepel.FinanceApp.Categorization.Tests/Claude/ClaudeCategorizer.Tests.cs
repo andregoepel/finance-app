@@ -149,7 +149,8 @@ public sealed class ClaudeCategorizerTests
         var result = await categorizer.SuggestAsync(
             [new TransactionToCategorize(TransactionA, null, "x", -1m, "EUR")],
             [new CategoryOption(CategoryA, "A")],
-            []
+            [],
+            TestContext.Current.CancellationToken
         );
 
         // Assert
@@ -170,7 +171,8 @@ public sealed class ClaudeCategorizerTests
         var result = await categorizer.SuggestAsync(
             [new TransactionToCategorize(TransactionA, "REWE", "Einkauf", -12.34m, "EUR")],
             [new CategoryOption(CategoryA, "Living › Groceries")],
-            []
+            [],
+            TestContext.Current.CancellationToken
         );
 
         // Assert
@@ -188,7 +190,8 @@ public sealed class ClaudeCategorizerTests
         var result = await categorizer.SuggestAsync(
             [new TransactionToCategorize(TransactionA, null, "x", -1m, "EUR")],
             [new CategoryOption(CategoryA, "A")],
-            []
+            [],
+            TestContext.Current.CancellationToken
         );
 
         // Assert
@@ -203,7 +206,12 @@ public sealed class ClaudeCategorizerTests
         var categorizer = BuildCategorizer(apiKey: null, HttpStatusCode.OK, "{}");
 
         // Act
-        var result = await categorizer.SuggestAsync([], [], []);
+        var result = await categorizer.SuggestAsync(
+            [],
+            [],
+            [],
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsSuccess);

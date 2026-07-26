@@ -18,7 +18,11 @@ public sealed class WiseApiClientTests
         var client = ClientReturning(json, out var handler);
 
         // Act
-        var result = await client.GetProfilesAsync("token", ProviderEnvironment.Sandbox);
+        var result = await client.GetProfilesAsync(
+            "token",
+            ProviderEnvironment.Sandbox,
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -43,7 +47,12 @@ public sealed class WiseApiClientTests
         var client = ClientReturning(json, out var handler);
 
         // Act
-        var result = await client.GetBalancesAsync("token", ProviderEnvironment.Production, 42);
+        var result = await client.GetBalancesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -78,7 +87,12 @@ public sealed class WiseApiClientTests
         );
 
         // Act
-        var result = await client.GetBalancesAsync("bad", ProviderEnvironment.Sandbox, 1);
+        var result = await client.GetBalancesAsync(
+            "bad",
+            ProviderEnvironment.Sandbox,
+            1,
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsFailure);

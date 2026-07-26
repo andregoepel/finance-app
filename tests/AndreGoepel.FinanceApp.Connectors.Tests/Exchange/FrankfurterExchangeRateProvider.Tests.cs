@@ -14,7 +14,11 @@ public sealed class FrankfurterExchangeRateProviderTests
         var provider = ProviderReturning("", out var handler);
 
         // Act
-        var result = await provider.GetEurRateAsync("EUR", new DateOnly(2026, 7, 2));
+        var result = await provider.GetEurRateAsync(
+            "EUR",
+            new DateOnly(2026, 7, 2),
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -31,7 +35,11 @@ public sealed class FrankfurterExchangeRateProviderTests
         var provider = ProviderReturning(json, out var handler);
 
         // Act
-        var result = await provider.GetEurRateAsync("USD", new DateOnly(2026, 7, 4));
+        var result = await provider.GetEurRateAsync(
+            "USD",
+            new DateOnly(2026, 7, 4),
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -53,7 +61,11 @@ public sealed class FrankfurterExchangeRateProviderTests
         );
 
         // Act
-        var result = await provider.GetEurRateAsync("BTC", new DateOnly(2026, 7, 2));
+        var result = await provider.GetEurRateAsync(
+            "BTC",
+            new DateOnly(2026, 7, 2),
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsFailure);
@@ -66,7 +78,11 @@ public sealed class FrankfurterExchangeRateProviderTests
         var provider = ProviderReturning("not found", out _, HttpStatusCode.NotFound);
 
         // Act
-        var result = await provider.GetEurRateAsync("USD", new DateOnly(2026, 7, 2));
+        var result = await provider.GetEurRateAsync(
+            "USD",
+            new DateOnly(2026, 7, 2),
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsFailure);

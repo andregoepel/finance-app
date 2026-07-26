@@ -28,7 +28,11 @@ public sealed class MartenCredentialStoreTests
         session.Store(Arg.Do<ProviderCredential[]>(credentials => stored = credentials.Single()));
 
         // Act
-        await credentialStore.SaveSecretAsync(CredentialKeys.ClaudeApiKey, "sk-ant-secret");
+        await credentialStore.SaveSecretAsync(
+            CredentialKeys.ClaudeApiKey,
+            "sk-ant-secret",
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.NotNull(stored);
@@ -61,7 +65,11 @@ public sealed class MartenCredentialStoreTests
             .Returns(existing);
 
         // Act
-        await credentialStore.SaveSecretAsync(CredentialKeys.ClaudeApiKey, "new-secret");
+        await credentialStore.SaveSecretAsync(
+            CredentialKeys.ClaudeApiKey,
+            "new-secret",
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.NotNull(existing.RotatedAt);
@@ -72,7 +80,9 @@ public sealed class MartenCredentialStoreTests
     public async Task GetSecretAsync_MissingCredential_ReturnsNull()
     {
         // Act + Assert
-        Assert.Null(await credentialStore.GetSecretAsync("unknown"));
+        Assert.Null(
+            await credentialStore.GetSecretAsync("unknown", TestContext.Current.CancellationToken)
+        );
     }
 
     [Fact]
@@ -96,7 +106,10 @@ public sealed class MartenCredentialStoreTests
             );
 
         // Act
-        var secret = await credentialStore.GetSecretAsync(CredentialKeys.ClaudeApiKey);
+        var secret = await credentialStore.GetSecretAsync(
+            CredentialKeys.ClaudeApiKey,
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.Equal("sk-ant-secret", secret);
@@ -120,7 +133,10 @@ public sealed class MartenCredentialStoreTests
             );
 
         // Act
-        var info = await credentialStore.GetInfoAsync(CredentialKeys.ClaudeApiKey);
+        var info = await credentialStore.GetInfoAsync(
+            CredentialKeys.ClaudeApiKey,
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.NotNull(info);
