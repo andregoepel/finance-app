@@ -23,9 +23,9 @@ public sealed class E2EAppFixture()
             // matched on a stable prefix.
             ProvisionAdminButtonText = "Create admin",
             MailHogResourceName = "mailhog",
-            // This AppHost still names MailHog's HTTP endpoint "web" (see AppHost.cs) rather than the
-            // package's canonical "http" default — tracked separately in #69.
-            MailHogEndpointName = "web",
+            // AppHost.cs now wires MailHog via AddStandardMailHog, which names the HTTP
+            // endpoint "http" (the ecosystem-wide convention) — the package's own default,
+            // so no override is needed here anymore (previously pinned to "web", tracked in #69).
             AppHostArguments = ["E2E=true", "Parameters:database-password=E2e-Db-Passw0rd!"],
         }
     );
