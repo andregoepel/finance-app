@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" />
     <PackageReference Include="AndreGoepel.Core" />
+    <PackageReference Include="AndreGoepel.Marten.Configuration" />
     <PackageReference Include="Marten" />
     <PackageReference Include="WolverineFx.Marten" />
   </ItemGroup>

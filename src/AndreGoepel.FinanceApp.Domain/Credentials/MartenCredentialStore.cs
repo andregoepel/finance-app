@@ -1,3 +1,4 @@
+using AndreGoepel.Marten.Configuration;
 using Marten;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -38,19 +39,27 @@ internal sealed class MartenCredentialStore(
     {
         await using var session = store.LightweightSession();
         var existing = await session.LoadAsync<ProviderCredential>(key, cancellationToken);
+        var protector = Protector(key);
+
         if (existing is null)
         {
-            session.Store(
-                new ProviderCredential
-                {
-                    Id = key,
-                    ProtectedPayload = Protector(key).Protect(secret),
-                }
-            );
+            // Unlike a settings form's "leave blank to keep the current secret" field,
+            // ProviderCredential has no "empty credential" state — a document only ever
+            // exists once there is a real secret to protect (an absent credential is
+            // represented by no document at all, see GetInfoAsync). So the "neither new
+            // nor existing" null ProtectOrKeepExisting can return is a caller error here,
+            // not a legitimate state to persist.
+            var protectedPayload =
+                protector.ProtectOrKeepExisting(secret, existingCiphertext: null)
+                ?? throw new ArgumentException("A secret is required.", nameof(secret));
+            session.Store(new ProviderCredential { Id = key, ProtectedPayload = protectedPayload });
         }
         else
         {
-            existing.ProtectedPayload = Protector(key).Protect(secret);
+            existing.ProtectedPayload = protector.ProtectOrKeepExisting(
+                secret,
+                existing.ProtectedPayload
+            )!;
             existing.RotatedAt = DateTimeOffset.UtcNow;
             session.Store(existing);
         }
