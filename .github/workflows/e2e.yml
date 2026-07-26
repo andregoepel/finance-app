@@ -7,44 +7,9 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-# Actions are pinned to commit SHAs (matching ci.yml) so a retagged or compromised
-# action version cannot silently enter the pipeline.
 jobs:
-  end-to-end:
-    runs-on: ubuntu-latest
-    # GitHub-hosted Linux runners ship with Docker, which Aspire.Hosting.Testing uses to
-    # start the Postgres and MailHog containers for the real end-to-end run.
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      # Install the exact SDK pinned in global.json so the implicit Blazor asset package
-      # (Microsoft.AspNetCore.App.Internal.Assets) matches the lockfiles.
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          global-json-file: global.json
-
-      - name: Build E2E project
-        run: dotnet build tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj -c Release
-
-      - name: Install Playwright browsers
-        run: pwsh tests/AndreGoepel.FinanceApp.E2ETests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
-
-      # Standard, non-optional feature restored by adopting AndreGoepel.Testing.E2E's
-      # E2ETestBase: on failure, the test host drops a Playwright trace under
-      # PLAYWRIGHT_TRACE_DIR so a headless-runner failure can be replayed action by
-      # action instead of re-run blind.
-      - name: Run E2E tests
-        env:
-          PLAYWRIGHT_TRACE_DIR: ${{ github.workspace }}/playwright-traces
-        run: dotnet test tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj --no-build -c Release
-
-      - name: Upload Playwright traces
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: playwright-traces
-          path: ${{ github.workspace }}/playwright-traces
-          if-no-files-found: ignore
-          retention-days: 14
+  e2e:
+    uses: andregoepel/workflows/.github/workflows/e2e.yml@main
+    with:
+      e2e-project: tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj
+      global-json-file: global.json

@@ -6,79 +6,20 @@ on:
   pull_request:
     branches: ["main"]
 
-# Actions are pinned to commit SHAs (not mutable tags) so a retagged or
-# compromised action version cannot silently enter the pipeline. The trailing
-# comment records the human-readable version each SHA corresponds to.
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      # Install the exact SDK pinned in global.json so the implicit Blazor asset
-      # package (Microsoft.AspNetCore.App.Internal.Assets) matches the lockfiles.
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          global-json-file: global.json
-
-      # --locked-mode fails the build if the committed packages.lock.json files
-      # would change, making restores reproducible and tamper-evident. The Aspire
-      # AppHost is excluded (RID-specific packages, dev-only) and restored plainly.
-      - name: Restore (locked) — deployed app + tests
-        run: |
-          for proj in \
-            src/AndreGoepel.FinanceApp/AndreGoepel.FinanceApp.csproj \
-            src/AndreGoepel.FinanceApp.Domain/AndreGoepel.FinanceApp.Domain.csproj \
-            src/AndreGoepel.FinanceApp.Connectors/AndreGoepel.FinanceApp.Connectors.csproj \
-            src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj \
-            tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj \
-            tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj \
-            tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj \
-            tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj; do
-            dotnet restore "$proj" --locked-mode
-          done
-
-      # The AppHost and the E2E project both pull RID-specific Aspire packages, so they carry no
-      # lock file and are restored plainly (outside the locked-mode loop above).
-      - name: Restore AppHost (dev-only Aspire orchestration)
-        run: dotnet restore src/AndreGoepel.FinanceApp.AppHost/AndreGoepel.FinanceApp.AppHost.csproj
-
-      - name: Restore E2E tests (Aspire test host)
-        run: dotnet restore tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj
-
-      - name: Restore tools
-        run: dotnet tool restore
-
-      - name: Format check
-        run: dotnet csharpier check .
-
-      - name: Build
-        run: dotnet build --no-restore -c Release
-
-      # The E2E suite boots real containers via Playwright and is slow, so it is excluded here
-      # and runs in the dedicated e2e.yml workflow instead.
-      - name: Test
-        run: dotnet test --no-build -c Release --filter "FullyQualifiedName!~E2ETests"
-
-      # Fail the build on any known-vulnerable package (direct or transitive) in
-      # the deployed app or the test surface. The Aspire AppHost is intentionally
-      # excluded: it is local-only orchestration (never shipped — the Docker image
-      # builds the AndreGoepel.FinanceApp project alone).
-      - name: Vulnerability scan
-        run: |
-          for proj in \
-            src/AndreGoepel.FinanceApp/AndreGoepel.FinanceApp.csproj \
-            src/AndreGoepel.FinanceApp.Domain/AndreGoepel.FinanceApp.Domain.csproj \
-            src/AndreGoepel.FinanceApp.Connectors/AndreGoepel.FinanceApp.Connectors.csproj \
-            src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj \
-            tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj \
-            tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj \
-            tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj \
-            tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj; do
-            dotnet list "$proj" package --vulnerable --include-transitive 2>&1 | tee -a vulnerable.txt
-          done
-          if grep -qiE '\b(Critical|High|Moderate|Low)\b' vulnerable.txt; then
-            echo "::error::Vulnerable NuGet packages detected (see log above)."
-            exit 1
-          fi
+  ci:
+    uses: andregoepel/workflows/.github/workflows/ci-hostapp.yml@main
+    with:
+      global-json-file: global.json
+      restore-projects: |
+        src/AndreGoepel.FinanceApp/AndreGoepel.FinanceApp.csproj
+        src/AndreGoepel.FinanceApp.Domain/AndreGoepel.FinanceApp.Domain.csproj
+        src/AndreGoepel.FinanceApp.Connectors/AndreGoepel.FinanceApp.Connectors.csproj
+        src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj
+        tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj
+        tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj
+        tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj
+        tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj
+      apphost-project: src/AndreGoepel.FinanceApp.AppHost/AndreGoepel.FinanceApp.AppHost.csproj
+      e2e-project: tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj
+      test-filter: "FullyQualifiedName!~E2ETests"
