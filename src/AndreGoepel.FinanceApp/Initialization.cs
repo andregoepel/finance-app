@@ -5,6 +5,8 @@ using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Insights;
 using AndreGoepel.FinanceApp.Planning;
 using AndreGoepel.FinanceApp.Sync;
+using AndreGoepel.Marten.Configuration;
+using Marten;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Quartz;
 
@@ -34,6 +36,11 @@ public static class Initialization
                 job.WithIdentity(DailySyncJob.JobName).StoreDurably()
             )
         );
+        // ISettingsStore itself is already registered transitively via AddAppFoundation ->
+        // AddMartenIdentity, but AddMartenConfiguration() is idempotent (TryAdd) — call it
+        // explicitly so this module doesn't rely on that incidental wiring.
+        services.AddMartenConfiguration();
+        services.ConfigureMarten(marten => marten.AddSettingsDocument<SyncSchedule>());
         services.AddSingleton<ISyncScheduleService, SyncScheduleService>();
         services.AddHostedService<SyncScheduleStartup>();
 
