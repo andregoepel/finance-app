@@ -169,7 +169,7 @@
             new SetCryptoHoldingCommand(accountId, symbolInput!, coinGeckoIdInput!, quantityInput));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
             return;
         }
         selectedAccountId = null;
@@ -190,7 +190,7 @@
             new DeleteCryptoHoldingCommand(row.AccountId, row.CoinGeckoId));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
             return;
         }
         await LoadAsync();
@@ -206,7 +206,7 @@
                 new RefreshCryptoValuationsCommand());
             if (result.IsFailure)
             {
-                NotificationService.Notify(NotificationSeverity.Error, "Refresh failed", result.Error!);
+                NotificationService.Notify(NotificationSeverity.Error, "Refresh failed", result.Error);
                 return;
             }
             var summary = result.Value!;

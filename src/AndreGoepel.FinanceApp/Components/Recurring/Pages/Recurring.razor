@@ -94,7 +94,7 @@
 
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Could not add", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Could not add", result.Error);
             return;
         }
         NotificationService.Notify(

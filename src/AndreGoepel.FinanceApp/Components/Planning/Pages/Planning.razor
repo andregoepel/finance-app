@@ -289,7 +289,7 @@
             new SetPlannedMatchCommand(o.PlannedItemId, o.DueDate, transaction.Id));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Match failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Match failed", result.Error);
             return;
         }
         matchingOccurrence = null;
@@ -303,7 +303,7 @@
             new ClearPlannedMatchCommand(occurrence.PlannedItemId, occurrence.DueDate));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Unmatch failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Unmatch failed", result.Error);
             return;
         }
         await LoadAsync();
@@ -354,7 +354,7 @@
 
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
             return;
         }
         ResetForm();
@@ -371,7 +371,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new DeletePlannedItemCommand(item.Id));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
             return;
         }
         if (editingId == item.Id)

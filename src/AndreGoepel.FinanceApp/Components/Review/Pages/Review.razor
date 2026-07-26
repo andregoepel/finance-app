@@ -156,7 +156,7 @@
             );
             if (result.IsFailure)
             {
-                NotificationService.Notify(NotificationSeverity.Error, "Failed", result.Error!);
+                NotificationService.Notify(NotificationSeverity.Error, "Failed", result.Error);
                 break;
             }
         }
@@ -168,7 +168,7 @@
         var result = await MessageBus.InvokeAsync<Result>(command);
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Failed", result.Error);
         }
         else
         {

@@ -228,7 +228,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Categorization failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Categorization failed", result.Error);
             return;
         }
 
@@ -262,7 +262,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Rule creation failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Rule creation failed", result.Error);
         }
         else
         {
@@ -287,7 +287,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Linking failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Linking failed", result.Error);
             return;
         }
         NotificationService.Notify(NotificationSeverity.Success, "Linked", "Transactions linked as transfer.");
@@ -299,7 +299,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new UnlinkTransferCommand(transaction.Id));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Unlinking failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Unlinking failed", result.Error);
             return;
         }
         await ReloadAsync();

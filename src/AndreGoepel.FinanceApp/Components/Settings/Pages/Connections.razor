@@ -239,7 +239,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new SaveProviderCredentialCommand(key, value));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
             return;
         }
         clearInput();
@@ -253,7 +253,7 @@
             newProvider, newLabel, newOwnerUserId, newEnvironment, newAspspName, newAspspCountry);
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Could not add connection", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Could not add connection", result.Error);
             return;
         }
         newLabel = "";
@@ -270,7 +270,7 @@
         var result = await ConnectionService.SetEnvironmentAsync(connectionId, environment);
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Could not change environment", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Could not change environment", result.Error);
             return;
         }
         await LoadAsync();
@@ -284,7 +284,7 @@
             var result = await WiseBalanceService.SyncConnectionAsync(connectionId);
             if (result.IsFailure)
             {
-                NotificationService.Notify(NotificationSeverity.Error, "Balance sync failed", result.Error!);
+                NotificationService.Notify(NotificationSeverity.Error, "Balance sync failed", result.Error);
                 return;
             }
             balanceResults[connectionId] = result.Value!.Balances;
@@ -309,7 +309,7 @@
         var result = await ConnectionService.DeleteAsync(connection.Id);
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
             return;
         }
         await LoadAsync();
@@ -321,7 +321,7 @@
         var result = await ConnectionService.SaveWiseTokenAsync(connectionId, WiseInput(connectionId));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
             return;
         }
         wiseInputs[connectionId] = "";
@@ -334,7 +334,7 @@
         var result = await ConnectionService.StartConsentAsync(connectionId, CallbackUrl);
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Cannot connect", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Cannot connect", result.Error);
             return;
         }
         Navigation.NavigateTo(result.Value!, forceLoad: true); // leave for the bank's authorization page

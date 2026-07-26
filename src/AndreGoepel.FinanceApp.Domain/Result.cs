@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace AndreGoepel.FinanceApp.Domain;
 
 /// <summary>
@@ -10,6 +12,7 @@ public record Result
 
     public string? Error { get; init; }
 
+    [MemberNotNullWhen(true, nameof(Error))]
     public bool IsFailure => !IsSuccess;
 
     public static Result Ok() => new() { IsSuccess = true };

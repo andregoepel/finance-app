@@ -33,7 +33,7 @@ public static class CreateAccountCommandHandler
         var owners = AccountOwners.Validate(command.IsShared, command.OwnerUserIds);
         if (owners.IsFailure)
         {
-            return Result.Fail<Account>(owners.Error!);
+            return Result.Fail<Account>(owners.Error);
         }
 
         var account = new Account

@@ -116,7 +116,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Rename failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Rename failed", result.Error);
             return;
         }
         CancelEdit();
@@ -130,7 +130,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Creating failed", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Creating failed", result.Error);
             return;
         }
         if (parentId is Guid groupId)
@@ -153,7 +153,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryCommand(category.Id));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete refused", result.Error!);
+            NotificationService.Notify(NotificationSeverity.Error, "Delete refused", result.Error);
             return;
         }
         await ReloadAsync();

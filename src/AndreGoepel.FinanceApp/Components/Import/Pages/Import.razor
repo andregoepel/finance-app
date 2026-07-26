@@ -280,7 +280,7 @@
 
             if (result.IsFailure)
             {
-                NotificationService.Notify(NotificationSeverity.Error, "Import failed", result.Error!);
+                NotificationService.Notify(NotificationSeverity.Error, "Import failed", result.Error);
                 return;
             }
 

@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace AndreGoepel.FinanceApp.Sync;
 
 /// <summary>
@@ -29,4 +31,8 @@ public sealed record AccountSyncSummary(
     string? Error,
     int Imported,
     int Duplicates
-);
+)
+{
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsFailure => !Success;
+}
