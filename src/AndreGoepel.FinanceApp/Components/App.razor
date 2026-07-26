@@ -7,16 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="@NavigationManager.BaseUri" />
 
-    <!-- Self-hosted design-system fonts (Manrope / Space Grotesk / JetBrains Mono). -->
-    <link rel="stylesheet" href="_content/AndreGoepel.Design.Blazor/css/fonts.css" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
-    <!-- AndreGoepel.Design.Blazor token layer — must load AFTER Radzen's material-base. -->
-    <link rel="stylesheet" href="_content/AndreGoepel.Design.Blazor/css/design.css" />
-    <link rel="stylesheet" href="_content/AndreGoepel.AppFoundation/app.css" />
+    <!-- Order-critical stylesheet stack (fonts -> Radzen material-base -> design tokens) plus
+         theme.js, which applies the persisted theme before first paint. AppFoundation's own
+         stylesheet loads as the "app-specific" slot here so the host's own bundle can still load
+         — and override it — afterwards, preserving the original AppFoundation -> host cascade. -->
+    <DesignBlazorHead AppStylesheetHref="_content/AndreGoepel.AppFoundation/app.css" />
     <link rel="stylesheet" href="@Assets["AndreGoepel.FinanceApp.styles.css"]" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <!-- Resolve + apply the persisted theme before first paint; off-canvas nav toggle. -->
-    <script src="_content/AndreGoepel.Design.Blazor/js/theme.js"></script>
+    <!-- Off-canvas nav toggle; not part of DesignBlazorHead's fixed tag set. -->
     <script src="_content/AndreGoepel.Design.Blazor/js/nav.js"></script>
 
     <HeadOutlet @rendermode="InteractiveServer" />

@@ -7,80 +7,78 @@
 
 <AppPageTitle Title="Review" />
 
-<div class="rz-p-4 rz-p-md-6">
-    <RadzenStack Gap="1.5rem">
+<PageBody>
 
-        <PageHeader Title="Review queue"
-                    Subtitle="Uncategorized transactions and low-confidence AI suggestions. High-confidence suggestions are applied automatically and flagged &quot;Ai&quot; in the transactions grid." />
+    <PageHeader Title="Review queue"
+                Subtitle="Uncategorized transactions and low-confidence AI suggestions. High-confidence suggestions are applied automatically and flagged &quot;Ai&quot; in the transactions grid." />
 
-        <RadzenCard>
-            <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
-                <RadzenButton Text="Accept suggestions"
-                              Icon="check_circle"
-                              ButtonStyle="ButtonStyle.Primary"
-                              Disabled=@(!SelectedWithSuggestion.Any())
-                              Click=@AcceptSelectedAsync />
-                <RadzenButton Text="Dismiss suggestions"
-                              Icon="cancel"
-                              ButtonStyle="ButtonStyle.Light"
-                              Disabled=@(!SelectedWithSuggestion.Any())
-                              Click=@DismissSelectedAsync />
-                <FormField Label="Set category for selection" For="BulkCategory">
-                    <CategoryPicker Options="@categoryOptions" Name="BulkCategory"
-                                    @bind-Value=@bulkCategoryId
-                                    Placeholder="Choose category" Style="min-width: 14rem;" />
-                </FormField>
-                <RadzenButton Text="Apply to selection"
-                              Icon="done_all"
-                              ButtonStyle="ButtonStyle.Secondary"
-                              Disabled=@(bulkCategoryId is null || selected.Count == 0)
-                              Click=@BulkCategorizeAsync />
-            </RadzenStack>
-        </RadzenCard>
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
+            <RadzenButton Text="Accept suggestions"
+                          Icon="check_circle"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Disabled=@(!SelectedWithSuggestion.Any())
+                          Click=@AcceptSelectedAsync />
+            <RadzenButton Text="Dismiss suggestions"
+                          Icon="cancel"
+                          ButtonStyle="ButtonStyle.Light"
+                          Disabled=@(!SelectedWithSuggestion.Any())
+                          Click=@DismissSelectedAsync />
+            <FormField Label="Set category for selection" For="BulkCategory">
+                <CategoryPicker Options="@categoryOptions" Name="BulkCategory"
+                                @bind-Value=@bulkCategoryId
+                                Placeholder="Choose category" Style="min-width: 14rem;" />
+            </FormField>
+            <RadzenButton Text="Apply to selection"
+                          Icon="done_all"
+                          ButtonStyle="ButtonStyle.Secondary"
+                          Disabled=@(bulkCategoryId is null || selected.Count == 0)
+                          Click=@BulkCategorizeAsync />
+        </RadzenStack>
+    </RadzenCard>
 
-        <RadzenDataGrid TItem="TransactionView"
-                        Data=@items
-                        AllowPaging="true"
-                        PageSize="25"
-                        SelectionMode="DataGridSelectionMode.Multiple"
-                        @bind-Value=@selected
-                        Density="Density.Compact">
-            <Columns>
-                <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="110px">
-                    <Template Context="transaction">@transaction.BookingDate.ToString("dd.MM.yyyy")</Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="TransactionView" Title="Account" Width="140px" Sortable="false">
-                    <Template Context="transaction">@AccountName(transaction.AccountId)</Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="Counterparty" Width="180px" />
-                <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
-                <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="Amount" Width="130px" TextAlign="TextAlign.Right">
-                    <Template Context="transaction">
-                        <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="TransactionView" Title="AI suggestion" Width="240px" Sortable="false">
-                    <Template Context="transaction">
-                        @if (suggestions.TryGetValue(transaction.Id, out var suggestion))
-                        {
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                                <StatusBadge Variant="BadgeVariant.Info"
-                                             Text="@($"{CategoryLabel(suggestion.CategoryId)} ({suggestion.Confidence:P0})")" />
-                                <IconButton Icon="check" Title="Accept suggestion"
-                                            Click=@(_ => AcceptOneAsync(transaction.Id)) />
-                            </RadzenStack>
-                        }
-                        else
-                        {
-                            <span style="color: var(--rz-text-disabled-color);">—</span>
-                        }
-                    </Template>
-                </RadzenDataGridColumn>
-            </Columns>
-        </RadzenDataGrid>
+    <RadzenDataGrid TItem="TransactionView"
+                    Data=@items
+                    AllowPaging="true"
+                    PageSize="25"
+                    SelectionMode="DataGridSelectionMode.Multiple"
+                    @bind-Value=@selected
+                    Density="Density.Compact">
+        <Columns>
+            <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="110px">
+                <Template Context="transaction">@transaction.BookingDate.ToString("dd.MM.yyyy")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="TransactionView" Title="Account" Width="140px" Sortable="false">
+                <Template Context="transaction">@AccountName(transaction.AccountId)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="Counterparty" Width="180px" />
+            <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
+            <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="Amount" Width="130px" TextAlign="TextAlign.Right">
+                <Template Context="transaction">
+                    <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="TransactionView" Title="AI suggestion" Width="240px" Sortable="false">
+                <Template Context="transaction">
+                    @if (suggestions.TryGetValue(transaction.Id, out var suggestion))
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <StatusBadge Variant="BadgeVariant.Info"
+                                         Text="@($"{CategoryLabel(suggestion.CategoryId)} ({suggestion.Confidence:P0})")" />
+                            <IconButton Icon="check" Title="Accept suggestion"
+                                        Click=@(_ => AcceptOneAsync(transaction.Id)) />
+                        </RadzenStack>
+                    }
+                    else
+                    {
+                        <span style="color: var(--rz-text-disabled-color);">—</span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
 
-    </RadzenStack>
-</div>
+</PageBody>
 
 @code {
     private const int MaxRows = 500;
@@ -156,7 +154,7 @@
             );
             if (result.IsFailure)
             {
-                NotificationService.Notify(NotificationSeverity.Error, "Failed", result.Error);
+                NotificationService.Error("Failed", result.Error);
                 break;
             }
         }
@@ -168,11 +166,11 @@
         var result = await MessageBus.InvokeAsync<Result>(command);
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Failed", result.Error);
+            NotificationService.Error("Failed", result.Error);
         }
         else
         {
-            NotificationService.Notify(NotificationSeverity.Success, "Done", successMessage);
+            NotificationService.Success("Done", successMessage);
         }
         await ReloadAsync();
     }
