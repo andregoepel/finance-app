@@ -57,7 +57,9 @@ public sealed class E2EAppFixture : IAsyncLifetime
         await notifications.WaitForResourceHealthyAsync(WebResource, startupCts.Token);
 
         AppBaseUrl = _app.GetEndpoint(WebResource, "https").ToString();
-        MailHogApiUrl = _app.GetEndpoint(MailHogResource, "web").ToString();
+        // AppHost.cs wires MailHog via AddStandardMailHog, which names the HTTP endpoint
+        // "http" (the ecosystem-wide convention) rather than this repo's historical "web".
+        MailHogApiUrl = _app.GetEndpoint(MailHogResource, "http").ToString();
         MailHog = new MailHogClient(MailHogApiUrl);
 
         _playwright = await Playwright.CreateAsync();

@@ -10,7 +10,7 @@ middleware, PostgreSQL, and the CSV import pipeline — through a Chromium brows
   Blazor web app (Aspire resource `financeapp`). The AppHost is started with `E2E=true`, which
   drops Postgres' persistent volume and fixed host port so every run starts from an empty
   database on a dynamic port. The fixture waits for `financeapp` to become healthy, then reads
-  its `https` endpoint and MailHog's `web` (HTTP) endpoint. The secret `database-password`
+  its `https` endpoint and MailHog's `http` (HTTP) endpoint. The secret `database-password`
   parameter is supplied by the fixture.
 - **Microsoft.Playwright** (Chromium) drives the browser. Each test gets a fresh
   `IBrowserContext` so cookies never leak between tests.

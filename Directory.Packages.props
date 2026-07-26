@@ -16,6 +16,7 @@
 
   <ItemGroup Label="AndreGoepel">
     <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.8.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="1.9.0" />
     <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.8.0" />
     <PackageVersion Include="AndreGoepel.Core" Version="1.0.1" />
     <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.4.2" />
