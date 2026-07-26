@@ -19,8 +19,12 @@
     <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="1.9.0" />
     <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.8.0" />
     <PackageVersion Include="AndreGoepel.Core" Version="1.0.1" />
-    <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.4.2" />
+    <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.6.0" />
     <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.8.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="AndreGoepel Testing">
+    <PackageVersion Include="AndreGoepel.Testing.E2E" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup Label="Aspire">

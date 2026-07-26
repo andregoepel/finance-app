@@ -11,132 +11,124 @@
 
 <AppPageTitle Title="Import" />
 
-<div class="rz-p-4 rz-p-md-6">
-    <RadzenStack Gap="1.5rem">
+<PageBody>
 
-        <PageHeader Title="Import" />
+    <PageHeader Title="Import" />
 
-        <RadzenCard>
-            <RadzenStack Gap="1rem">
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                    <FormField Label="Account" For="Account">
-                        <RadzenDropDown TValue="Guid?"
-                                        @bind-Value=@selectedAccountId Name="Account"
-                                        Data=@accounts
-                                        TextProperty="Name"
-                                        ValueProperty="Id"
-                                        Placeholder="Select account"
-                                        Style="min-width: 14rem;"
-                                        Change=@(_ => OnAccountChangedAsync()) />
-                    </FormField>
-                    <div>
-                        <InputFile OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(selectedAccountId is null) />
-                    </div>
-                </RadzenStack>
-                @if (SelectedAccount is not null)
-                {
-                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                        Provider: @SelectedAccount.Provider — upload the CSV export; unknown formats are rejected, nothing is imported partially by surprise.
-                    </RadzenText>
-                }
+    <RadzenCard>
+        <RadzenStack Gap="1rem">
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                <FormField Label="Account" For="Account">
+                    <RadzenDropDown TValue="Guid?"
+                                    @bind-Value=@selectedAccountId Name="Account"
+                                    Data=@accounts
+                                    TextProperty="Name"
+                                    ValueProperty="Id"
+                                    Placeholder="Select account"
+                                    Style="min-width: 14rem;"
+                                    Change=@(_ => OnAccountChangedAsync()) />
+                </FormField>
+                <div>
+                    <InputFile OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(selectedAccountId is null) />
+                </div>
             </RadzenStack>
-        </RadzenCard>
+            @if (SelectedAccount is not null)
+            {
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                    Provider: @SelectedAccount.Provider — upload the CSV export; unknown formats are rejected, nothing is imported partially by surprise.
+                </RadzenText>
+            }
+        </RadzenStack>
+    </RadzenCard>
 
-        @if (parseFailure is not null)
-        {
-            <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@parseFailure</RadzenAlert>
-        }
+    @if (parseFailure is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" AllowClose="false">@parseFailure</RadzenAlert>
+    }
 
-        @if (preview is not null)
-        {
-            <RadzenCard>
-                <RadzenStack Gap="1rem">
-                    <RadzenText TextStyle="TextStyle.H6">
-                        Preview — @fileName (@preview.ParserId)
-                    </RadzenText>
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1.5rem">
-                        <StatusBadge Variant="BadgeVariant.Success" Text="@($"{NewRowCount} new")" />
-                        <StatusBadge Variant="BadgeVariant.Warning" Text="@($"{duplicateHashes.Count(kv => kv.Value)} duplicates")" />
-                        <StatusBadge Variant="BadgeVariant.Danger" Text="@($"{preview.Errors.Count} problem rows")" />
-                    </RadzenStack>
+    @if (preview is not null)
+    {
+        <SectionCard Title="@($"Preview — {fileName} ({preview.ParserId})")">
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1.5rem">
+                    <StatusBadge Variant="BadgeVariant.Success" Text="@($"{NewRowCount} new")" />
+                    <StatusBadge Variant="BadgeVariant.Warning" Text="@($"{duplicateHashes.Count(kv => kv.Value)} duplicates")" />
+                    <StatusBadge Variant="BadgeVariant.Danger" Text="@($"{preview.Errors.Count} problem rows")" />
+                </RadzenStack>
 
-                    <RadzenDataGrid TItem="NormalizedTransaction" Data=@preview.Rows AllowPaging="true" PageSize="15" Density="Density.Compact">
+                <RadzenDataGrid TItem="NormalizedTransaction" Data=@preview.Rows AllowPaging="true" PageSize="15" Density="Density.Compact">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="NormalizedTransaction" Property="SourceRow" Title="Row" Width="70px" />
+                        <RadzenDataGridColumn TItem="NormalizedTransaction" Property="BookingDate" Title="Date" Width="110px">
+                            <Template Context="row">@row.BookingDate.ToString("dd.MM.yyyy")</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Counterparty" Title="Counterparty" Width="170px" />
+                        <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Description" Title="Description" />
+                        <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Amount" Title="Amount" Width="120px" TextAlign="TextAlign.Right">
+                            <Template Context="row">@row.Amount.ToString("N2") @row.Currency</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="NormalizedTransaction" Title="Status" Width="110px">
+                            <Template Context="row">
+                                @if (IsDuplicate(row))
+                                {
+                                    <StatusBadge Variant="BadgeVariant.Warning" Text="Duplicate" />
+                                }
+                                else
+                                {
+                                    <StatusBadge Variant="BadgeVariant.Success" Text="New" />
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+
+                @if (preview.Errors.Count > 0)
+                {
+                    <RadzenText TextStyle="TextStyle.H6">Problem rows (not imported)</RadzenText>
+                    <RadzenDataGrid TItem="ImportRowError" Data=@preview.Errors AllowPaging="true" PageSize="10" Density="Density.Compact">
                         <Columns>
-                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="SourceRow" Title="Row" Width="70px" />
-                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="BookingDate" Title="Date" Width="110px">
-                                <Template Context="row">@row.BookingDate.ToString("dd.MM.yyyy")</Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Counterparty" Title="Counterparty" Width="170px" />
-                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Description" Title="Description" />
-                            <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Amount" Title="Amount" Width="120px" TextAlign="TextAlign.Right">
-                                <Template Context="row">@row.Amount.ToString("N2") @row.Currency</Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="NormalizedTransaction" Title="Status" Width="110px">
-                                <Template Context="row">
-                                    @if (IsDuplicate(row))
-                                    {
-                                        <StatusBadge Variant="BadgeVariant.Warning" Text="Duplicate" />
-                                    }
-                                    else
-                                    {
-                                        <StatusBadge Variant="BadgeVariant.Success" Text="New" />
-                                    }
-                                </Template>
-                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="ImportRowError" Property="RowNumber" Title="Row" Width="70px" />
+                            <RadzenDataGridColumn TItem="ImportRowError" Property="Message" Title="Problem" Width="320px" />
+                            <RadzenDataGridColumn TItem="ImportRowError" Property="RawLine" Title="Raw line" />
                         </Columns>
                     </RadzenDataGrid>
+                }
 
-                    @if (preview.Errors.Count > 0)
-                    {
-                        <RadzenText TextStyle="TextStyle.H6">Problem rows (not imported)</RadzenText>
-                        <RadzenDataGrid TItem="ImportRowError" Data=@preview.Errors AllowPaging="true" PageSize="10" Density="Density.Compact">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="ImportRowError" Property="RowNumber" Title="Row" Width="70px" />
-                                <RadzenDataGridColumn TItem="ImportRowError" Property="Message" Title="Problem" Width="320px" />
-                                <RadzenDataGridColumn TItem="ImportRowError" Property="RawLine" Title="Raw line" />
-                            </Columns>
-                        </RadzenDataGrid>
-                    }
-
-                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                        <RadzenButton Text="@($"Import {NewRowCount} transactions")"
-                                      Icon="download_done"
-                                      ButtonStyle="ButtonStyle.Primary"
-                                      Disabled=@(isImporting || NewRowCount == 0)
-                                      IsBusy=@isImporting
-                                      BusyText="Importing..."
-                                      Click=@RunImportAsync />
-                    </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                    <RadzenButton Text="@($"Import {NewRowCount} transactions")"
+                                  Icon="download_done"
+                                  ButtonStyle="ButtonStyle.Primary"
+                                  Disabled=@(isImporting || NewRowCount == 0)
+                                  IsBusy=@isImporting
+                                  BusyText="Importing..."
+                                  Click=@RunImportAsync />
                 </RadzenStack>
-            </RadzenCard>
-        }
+            </RadzenStack>
+        </SectionCard>
+    }
 
-        @if (history.Count > 0)
-        {
-            <RadzenCard>
-                <RadzenStack Gap="1rem">
-                    <RadzenText TextStyle="TextStyle.H6">Import history</RadzenText>
-                    <RadzenDataGrid TItem="ImportBatch" Data=@history Density="Density.Compact" AllowPaging="true" PageSize="10">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedAt" Title="When" Width="160px">
-                                <Template Context="batch">@batch.ImportedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="ImportBatch" Property="Source" Title="File" />
-                            <RadzenDataGridColumn TItem="ImportBatch" Property="ParserId" Title="Format" Width="140px" />
-                            <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedCount" Title="Imported" Width="90px" TextAlign="TextAlign.Right" />
-                            <RadzenDataGridColumn TItem="ImportBatch" Property="DuplicateCount" Title="Duplicates" Width="100px" TextAlign="TextAlign.Right" />
-                            <RadzenDataGridColumn TItem="ImportBatch" Title="Errors" Width="80px" TextAlign="TextAlign.Right">
-                                <Template Context="batch">@batch.ErrorCount</Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedBy" Title="By" Width="140px" />
-                        </Columns>
-                    </RadzenDataGrid>
-                </RadzenStack>
-            </RadzenCard>
-        }
+    @if (history.Count > 0)
+    {
+        <SectionCard Title="Import history">
+            <RadzenDataGrid TItem="ImportBatch" Data=@history Density="Density.Compact" AllowPaging="true" PageSize="10">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedAt" Title="When" Width="160px">
+                            <Template Context="batch">@batch.ImportedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ImportBatch" Property="Source" Title="File" />
+                        <RadzenDataGridColumn TItem="ImportBatch" Property="ParserId" Title="Format" Width="140px" />
+                        <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedCount" Title="Imported" Width="90px" TextAlign="TextAlign.Right" />
+                        <RadzenDataGridColumn TItem="ImportBatch" Property="DuplicateCount" Title="Duplicates" Width="100px" TextAlign="TextAlign.Right" />
+                        <RadzenDataGridColumn TItem="ImportBatch" Title="Errors" Width="80px" TextAlign="TextAlign.Right">
+                            <Template Context="batch">@batch.ErrorCount</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedBy" Title="By" Width="140px" />
+                    </Columns>
+                </RadzenDataGrid>
+        </SectionCard>
+    }
 
-    </RadzenStack>
-</div>
+</PageBody>
 
 @code {
     private const long MaxFileSize = 5 * 1024 * 1024;
@@ -280,7 +272,7 @@
 
             if (result.IsFailure)
             {
-                NotificationService.Notify(NotificationSeverity.Error, "Import failed", result.Error);
+                NotificationService.Error("Import failed", result.Error);
                 return;
             }
 
@@ -296,8 +288,7 @@
                 await MessageBus.PublishAsync(new MatchPlannedTransactionsCommand());
             }
 
-            NotificationService.Notify(
-                NotificationSeverity.Success,
+            NotificationService.Success(
                 "Import complete",
                 $"{result.Value.ImportedCount} imported, {result.Value.DuplicateCount} duplicates skipped."
             );
