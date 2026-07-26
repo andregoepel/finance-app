@@ -1,5 +1,5 @@
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Connectors.Providers.Wise;
-using AndreGoepel.FinanceApp.Domain;
 
 namespace AndreGoepel.FinanceApp.Connections;
 

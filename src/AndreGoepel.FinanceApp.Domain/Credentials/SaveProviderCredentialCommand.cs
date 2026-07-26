@@ -1,3 +1,5 @@
+using AndreGoepel.Core;
+
 namespace AndreGoepel.FinanceApp.Domain.Credentials;
 
 /// <summary>Stores or rotates a provider secret. The payload is never logged.</summary>

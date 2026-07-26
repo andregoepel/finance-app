@@ -1,3 +1,4 @@
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;

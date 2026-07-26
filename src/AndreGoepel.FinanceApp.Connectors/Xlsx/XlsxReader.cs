@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.IO.Compression;
 using System.Xml.Linq;
-using AndreGoepel.FinanceApp.Domain;
+using AndreGoepel.Core;
 
 namespace AndreGoepel.FinanceApp.Connectors.Xlsx;
 

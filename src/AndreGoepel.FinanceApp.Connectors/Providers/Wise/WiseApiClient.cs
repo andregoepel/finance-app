@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using AndreGoepel.FinanceApp.Domain;
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Providers.Wise;

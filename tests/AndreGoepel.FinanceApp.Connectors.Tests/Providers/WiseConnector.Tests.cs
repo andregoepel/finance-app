@@ -1,5 +1,5 @@
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Connectors.Providers.Wise;
-using AndreGoepel.FinanceApp.Domain;
 using AndreGoepel.FinanceApp.Domain.Credentials;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using NSubstitute;

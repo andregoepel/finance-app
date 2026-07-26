@@ -780,6 +780,7 @@
       "andregoepel.financeapp.categorization": {
         "type": "Project",
         "dependencies": {
+          "AndreGoepel.Core": "[1.0.1, )",
           "AndreGoepel.FinanceApp.Domain": "[1.0.0, )",
           "Marten": "[9.18.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.10, )",
@@ -791,11 +792,18 @@
       "andregoepel.financeapp.domain": {
         "type": "Project",
         "dependencies": {
+          "AndreGoepel.Core": "[1.0.1, )",
           "Marten": "[9.18.0, )",
           "Microsoft.AspNetCore.DataProtection.Abstractions": "[10.0.10, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.10, )",
           "WolverineFx.Marten": "[6.22.0, )"
         }
+      },
+      "AndreGoepel.Core": {
+        "type": "CentralTransitive",
+        "requested": "[1.0.1, )",
+        "resolved": "1.0.1",
+        "contentHash": "jA27iMianyxUdrCtz5b6KxZOYxXlhZqkxDVKD6sed1sDCHF1upfV28CnczJ6kYPcrqJNj9+cDaxMWPlNvDkjcA=="
       },
       "Marten": {
         "type": "CentralTransitive",
