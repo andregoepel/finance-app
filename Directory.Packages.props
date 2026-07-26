@@ -15,11 +15,11 @@
   </ItemGroup>
 
   <ItemGroup Label="AndreGoepel">
-    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.2.3" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.2.3" />
+    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.8.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.8.0" />
     <PackageVersion Include="AndreGoepel.Core" Version="1.0.1" />
-    <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.4.1" />
-    <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.6.0" />
+    <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.4.2" />
+    <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.8.1" />
   </ItemGroup>
 
   <ItemGroup Label="Aspire">
@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Libraries">
-    <PackageVersion Include="Marten" Version="9.18.0" />
+    <PackageVersion Include="Marten" Version="9.19.0" />
     <PackageVersion Include="WolverineFx.Marten" Version="6.22.0" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
