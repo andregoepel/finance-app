@@ -18,6 +18,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj" />
     <Project Path="tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj" />
+    <Project Path="tests/AndreGoepel.FinanceApp.Domain.IntegrationTests/AndreGoepel.FinanceApp.Domain.IntegrationTests.csproj" />
     <Project Path="tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj" />
     <Project Path="tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj" />
     <Project Path="tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj" />

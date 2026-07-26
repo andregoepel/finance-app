@@ -34,6 +34,7 @@ jobs:
             src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj \
             tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj \
             tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Domain.IntegrationTests/AndreGoepel.FinanceApp.Domain.IntegrationTests.csproj \
             tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj \
             tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj; do
             dotnet restore "$proj" --locked-mode
@@ -74,6 +75,7 @@ jobs:
             src/AndreGoepel.FinanceApp.Categorization/AndreGoepel.FinanceApp.Categorization.csproj \
             tests/AndreGoepel.FinanceApp.Tests/AndreGoepel.FinanceApp.Tests.csproj \
             tests/AndreGoepel.FinanceApp.Domain.Tests/AndreGoepel.FinanceApp.Domain.Tests.csproj \
+            tests/AndreGoepel.FinanceApp.Domain.IntegrationTests/AndreGoepel.FinanceApp.Domain.IntegrationTests.csproj \
             tests/AndreGoepel.FinanceApp.Connectors.Tests/AndreGoepel.FinanceApp.Connectors.Tests.csproj \
             tests/AndreGoepel.FinanceApp.Categorization.Tests/AndreGoepel.FinanceApp.Categorization.Tests.csproj; do
             dotnet list "$proj" package --vulnerable --include-transitive 2>&1 | tee -a vulnerable.txt
