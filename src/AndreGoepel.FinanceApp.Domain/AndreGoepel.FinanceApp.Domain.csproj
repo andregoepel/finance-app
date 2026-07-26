@@ -17,5 +17,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="AndreGoepel.FinanceApp.Domain.Tests" />
+    <InternalsVisibleTo Include="AndreGoepel.FinanceApp.Domain.IntegrationTests" />
   </ItemGroup>
 </Project>
