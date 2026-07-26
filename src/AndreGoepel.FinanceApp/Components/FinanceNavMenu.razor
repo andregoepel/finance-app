@@ -1,24 +1,22 @@
 @* Finance menu entries, injected into the AppFoundation management shell via
-   AppFoundationLayoutOptions.Menu. Rendered with the design system's ag-nav-*
-   markup so the entries match the shell's own sections. Both household users
-   carry the Administrator role in this private app. *@
-<div class="ag-nav-section">FINANCE</div>
-<div class="ag-nav-group">
-    <NavLink class="ag-nav-item" href="transactions">Transactions</NavLink>
-    <NavLink class="ag-nav-item" href="review">Review</NavLink>
-    <NavLink class="ag-nav-item" href="recurring">Recurring</NavLink>
-    <NavLink class="ag-nav-item" href="planning">Planning</NavLink>
-    <NavLink class="ag-nav-item" href="import">Import</NavLink>
-    <NavLink class="ag-nav-item" href="sync">Sync</NavLink>
-</div>
+   AppFoundationLayoutOptions.Menu. Rendered via NavSection/NavItem so the
+   entries match the shell's own sections. Both household users carry the
+   Administrator role in this private app. *@
+<NavSection Title="FINANCE">
+    <NavItem Href="transactions" Text="Transactions" />
+    <NavItem Href="review" Text="Review" />
+    <NavItem Href="recurring" Text="Recurring" />
+    <NavItem Href="planning" Text="Planning" />
+    <NavItem Href="import" Text="Import" />
+    <NavItem Href="sync" Text="Sync" />
+</NavSection>
 
-<div class="ag-nav-section">FINANCE SETTINGS</div>
-<div class="ag-nav-group">
-    <NavLink class="ag-nav-item" href="settings/accounts">Accounts</NavLink>
-    <NavLink class="ag-nav-item" href="settings/categories">Categories</NavLink>
-    <NavLink class="ag-nav-item" href="settings/budgets">Budgets</NavLink>
-    <NavLink class="ag-nav-item" href="settings/crypto">Crypto</NavLink>
-    <NavLink class="ag-nav-item" href="settings/rules">Rules</NavLink>
-    <NavLink class="ag-nav-item" href="settings/connections">Connections</NavLink>
-    <NavLink class="ag-nav-item" href="settings/credentials">API Keys</NavLink>
-</div>
+<NavSection Title="FINANCE SETTINGS">
+    <NavItem Href="settings/accounts" Text="Accounts" />
+    <NavItem Href="settings/categories" Text="Categories" />
+    <NavItem Href="settings/budgets" Text="Budgets" />
+    <NavItem Href="settings/crypto" Text="Crypto" />
+    <NavItem Href="settings/rules" Text="Rules" />
+    <NavItem Href="settings/connections" Text="Connections" />
+    <NavItem Href="settings/credentials" Text="API Keys" />
+</NavSection>

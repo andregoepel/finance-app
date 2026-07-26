@@ -8,67 +8,65 @@
 
 <AppPageTitle Title="Categories" Breadcrumb="Settings / Categories" />
 
-<div class="rz-p-4 rz-p-md-6">
-    <RadzenStack Gap="1.5rem">
+<PageBody>
 
-        <PageHeader Title="Categories" />
+    <PageHeader Title="Categories" />
 
-        @foreach (var group in Groups)
-        {
-            <RadzenCard>
-                <RadzenStack Gap="0.75rem">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        @if (editingId == group.Id)
+    @foreach (var group in Groups)
+    {
+        <RadzenCard>
+            <RadzenStack Gap="0.75rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    @if (editingId == group.Id)
+                    {
+                        <RadzenTextBox @bind-Value=@editingName Style="min-width: 12rem;" />
+                        <RadzenButton Icon="check" Size="ButtonSize.ExtraSmall" Click=@(() => RenameAsync(group.Id)) />
+                        <RadzenButton Icon="close" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@CancelEdit />
+                    }
+                    else
+                    {
+                        <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@group.Name</RadzenText>
+                        <RadzenButton Icon="edit" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@(() => StartEdit(group)) />
+                        <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@(() => DeleteAsync(group)) />
+                    }
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    @foreach (var child in ChildrenOf(group.Id))
+                    {
+                        @if (editingId == child.Id)
                         {
-                            <RadzenTextBox @bind-Value=@editingName Style="min-width: 12rem;" />
-                            <RadzenButton Icon="check" Size="ButtonSize.ExtraSmall" Click=@(() => RenameAsync(group.Id)) />
+                            <RadzenTextBox @bind-Value=@editingName Style="width: 11rem;" />
+                            <RadzenButton Icon="check" Size="ButtonSize.ExtraSmall" Click=@(() => RenameAsync(child.Id)) />
                             <RadzenButton Icon="close" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@CancelEdit />
                         }
                         else
                         {
-                            <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@group.Name</RadzenText>
-                            <RadzenButton Icon="edit" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@(() => StartEdit(group)) />
-                            <RadzenButton Icon="delete" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@(() => DeleteAsync(group)) />
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Style="cursor: pointer;" @onclick=@(() => StartEdit(child))>
+                                @child.Name
+                            </RadzenBadge>
+                            <RadzenButton Icon="close"
+                                          Size="ButtonSize.ExtraSmall"
+                                          ButtonStyle="ButtonStyle.Light"
+                                          Click=@(() => DeleteAsync(child))
+                                          title="Delete" />
                         }
-                    </RadzenStack>
-
-                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.5rem" AlignItems="AlignItems.Center">
-                        @foreach (var child in ChildrenOf(group.Id))
-                        {
-                            @if (editingId == child.Id)
-                            {
-                                <RadzenTextBox @bind-Value=@editingName Style="width: 11rem;" />
-                                <RadzenButton Icon="check" Size="ButtonSize.ExtraSmall" Click=@(() => RenameAsync(child.Id)) />
-                                <RadzenButton Icon="close" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click=@CancelEdit />
-                            }
-                            else
-                            {
-                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Style="cursor: pointer;" @onclick=@(() => StartEdit(child))>
-                                    @child.Name
-                                </RadzenBadge>
-                                <RadzenButton Icon="close"
-                                              Size="ButtonSize.ExtraSmall"
-                                              ButtonStyle="ButtonStyle.Light"
-                                              Click=@(() => DeleteAsync(child))
-                                              title="Delete" />
-                            }
-                        }
-                        <RadzenTextBox @bind-Value=@newChildNames[group.Id] Placeholder="New subcategory" Style="width: 11rem;" />
-                        <RadzenButton Icon="add" Size="ButtonSize.ExtraSmall" Click=@(() => AddAsync(newChildNames[group.Id], group.Id)) />
-                    </RadzenStack>
+                    }
+                    <RadzenTextBox @bind-Value=@newChildNames[group.Id] Placeholder="New subcategory" Style="width: 11rem;" />
+                    <RadzenButton Icon="add" Size="ButtonSize.ExtraSmall" Click=@(() => AddAsync(newChildNames[group.Id], group.Id)) />
                 </RadzenStack>
-            </RadzenCard>
-        }
-
-        <RadzenCard>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                <RadzenTextBox @bind-Value=@newGroupName Placeholder="New group" Style="min-width: 12rem;" />
-                <RadzenButton Text="Add group" Icon="add" Click=@(() => AddAsync(newGroupName, null)) />
             </RadzenStack>
         </RadzenCard>
+    }
 
-    </RadzenStack>
-</div>
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <RadzenTextBox @bind-Value=@newGroupName Placeholder="New group" Style="min-width: 12rem;" />
+            <RadzenButton Text="Add group" Icon="add" Click=@(() => AddAsync(newGroupName, null)) />
+        </RadzenStack>
+    </RadzenCard>
+
+</PageBody>
 
 @code {
     private List<Category> categories = [];
@@ -116,7 +114,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Rename failed", result.Error);
+            NotificationService.Error("Rename failed", result.Error);
             return;
         }
         CancelEdit();
@@ -130,7 +128,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Creating failed", result.Error);
+            NotificationService.Error("Creating failed", result.Error);
             return;
         }
         if (parentId is Guid groupId)
@@ -153,7 +151,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryCommand(category.Id));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete refused", result.Error);
+            NotificationService.Error("Delete refused", result.Error);
             return;
         }
         await ReloadAsync();

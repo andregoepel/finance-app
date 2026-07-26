@@ -8,67 +8,65 @@
 
 <AppPageTitle Title="Rules" Breadcrumb="Settings / Rules" />
 
-<div class="rz-p-4 rz-p-md-6">
-    <RadzenStack Gap="1.5rem">
+<PageBody>
 
-        <PageHeader Title="Categorization rules"
-                    Subtitle="Rules run before the AI on every import. All set conditions must match (text matching is case-insensitive &quot;contains&quot;)." />
+    <PageHeader Title="Categorization rules"
+                Subtitle="Rules run before the AI on every import. All set conditions must match (text matching is case-insensitive &quot;contains&quot;)." />
 
-        @if (rules.Count == 0)
-        {
-            <EmptyState Icon="@("⚙")" Title="No rules yet"
-                        Text="Add a rule below to categorize matching transactions before the AI runs." />
-        }
-        else
-        {
-            <DataCard>
-                <RadzenDataGrid TItem="Domain.Categories.CategoryRule" Data=@rules Density="Density.Compact" AllowPaging="true" PageSize="15">
-                    <Columns>
-                        <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="Category" Width="200px" Sortable="false">
-                            <Template Context="rule">@CategoryLabel(rule.CategoryId)</Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="CounterpartyContains" Title="Counterparty contains" />
-                        <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="DescriptionContains" Title="Description contains" />
-                        <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="Amount" Width="150px" Sortable="false">
-                            <Template Context="rule">
-                                @(rule.MinAmount?.ToString("N2") ?? "−∞") … @(rule.MaxAmount?.ToString("N2") ?? "∞")
-                            </Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="Source" Title="Source" Width="170px" />
-                        <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="" Width="80px" TextAlign="TextAlign.End" Sortable="false">
-                            <Template Context="rule">
-                                <RowActions>
-                                    <IconButton Icon="delete" Title="Delete" Danger="true" Click=@(_ => DeleteAsync(rule.Id)) />
-                                </RowActions>
-                            </Template>
-                        </RadzenDataGridColumn>
-                    </Columns>
-                </RadzenDataGrid>
-            </DataCard>
-        }
+    @if (rules.Count == 0)
+    {
+        <EmptyState Icon="@("⚙")" Title="No rules yet"
+                    Text="Add a rule below to categorize matching transactions before the AI runs." />
+    }
+    else
+    {
+        <DataCard>
+            <RadzenDataGrid TItem="Domain.Categories.CategoryRule" Data=@rules Density="Density.Compact" AllowPaging="true" PageSize="15">
+                <Columns>
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="Category" Width="200px" Sortable="false">
+                        <Template Context="rule">@CategoryLabel(rule.CategoryId)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="CounterpartyContains" Title="Counterparty contains" />
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="DescriptionContains" Title="Description contains" />
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="Amount" Width="150px" Sortable="false">
+                        <Template Context="rule">
+                            @(rule.MinAmount?.ToString("N2") ?? "−∞") … @(rule.MaxAmount?.ToString("N2") ?? "∞")
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="Source" Title="Source" Width="170px" />
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="" Width="80px" TextAlign="TextAlign.End" Sortable="false">
+                        <Template Context="rule">
+                            <RowActions>
+                                <IconButton Icon="delete" Title="Delete" Danger="true" Click=@(_ => DeleteAsync(rule.Id)) />
+                            </RowActions>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </DataCard>
+    }
 
-        <CardForm TItem="InputModel" Data="form" Submit="CreateAsync" Title="Add rule" SubmitText="Add">
-            <div class="ag-form-grid">
-                <FormField Label="Category" For="Category">
-                    <CategoryPicker Options="@categoryOptions" Name="Category" @bind-Value=@form.CategoryId />
-                </FormField>
-                <FormField Label="Counterparty contains" For="Counterparty">
-                    <RadzenTextBox @bind-Value=@form.Counterparty Name="Counterparty" Style="width: 100%;" />
-                </FormField>
-                <FormField Label="Description contains" For="Description">
-                    <RadzenTextBox @bind-Value=@form.Description Name="Description" Style="width: 100%;" />
-                </FormField>
-                <FormField Label="Min amount" For="MinAmount">
-                    <RadzenNumeric TValue="decimal?" @bind-Value=@form.MinAmount Name="MinAmount" Style="width: 100%;" />
-                </FormField>
-                <FormField Label="Max amount" For="MaxAmount">
-                    <RadzenNumeric TValue="decimal?" @bind-Value=@form.MaxAmount Name="MaxAmount" Style="width: 100%;" />
-                </FormField>
-            </div>
-        </CardForm>
+    <CardForm TItem="InputModel" Data="form" Submit="CreateAsync" Title="Add rule" SubmitText="Add">
+        <div class="ag-form-grid">
+            <FormField Label="Category" For="Category">
+                <CategoryPicker Options="@categoryOptions" Name="Category" @bind-Value=@form.CategoryId />
+            </FormField>
+            <FormField Label="Counterparty contains" For="Counterparty">
+                <RadzenTextBox @bind-Value=@form.Counterparty Name="Counterparty" Style="width: 100%;" />
+            </FormField>
+            <FormField Label="Description contains" For="Description">
+                <RadzenTextBox @bind-Value=@form.Description Name="Description" Style="width: 100%;" />
+            </FormField>
+            <FormField Label="Min amount" For="MinAmount">
+                <RadzenNumeric TValue="decimal?" @bind-Value=@form.MinAmount Name="MinAmount" Style="width: 100%;" />
+            </FormField>
+            <FormField Label="Max amount" For="MaxAmount">
+                <RadzenNumeric TValue="decimal?" @bind-Value=@form.MaxAmount Name="MaxAmount" Style="width: 100%;" />
+            </FormField>
+        </div>
+    </CardForm>
 
-    </RadzenStack>
-</div>
+</PageBody>
 
 @code {
     private List<Domain.Categories.CategoryRule> rules = [];
@@ -99,7 +97,7 @@
     {
         if (form.CategoryId is not Guid categoryId)
         {
-            NotificationService.Notify(NotificationSeverity.Warning, "Missing category", "Pick a category first.");
+            NotificationService.Warning("Missing category", "Pick a category first.");
             return;
         }
 
@@ -115,7 +113,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Creating failed", result.Error);
+            NotificationService.Error("Creating failed", result.Error);
             return;
         }
 
@@ -132,7 +130,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryRuleCommand(ruleId));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
+            NotificationService.Error("Delete failed", result.Error);
             return;
         }
         await ReloadAsync();
