@@ -15,7 +15,10 @@ public sealed class CoinGeckoPriceProviderTests
         var provider = ProviderReturning(json, out var handler);
 
         // Act
-        var result = await provider.GetEurPricesAsync(["bitcoin", "ethereum"]);
+        var result = await provider.GetEurPricesAsync(
+            ["bitcoin", "ethereum"],
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -34,7 +37,10 @@ public sealed class CoinGeckoPriceProviderTests
         var provider = ProviderReturning("""{"bitcoin":{"eur":95000.0}}""", out _);
 
         // Act
-        var result = await provider.GetEurPricesAsync(["bitcoin", "no-such-coin"]);
+        var result = await provider.GetEurPricesAsync(
+            ["bitcoin", "no-such-coin"],
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -49,7 +55,7 @@ public sealed class CoinGeckoPriceProviderTests
         var provider = ProviderReturning("", out var handler);
 
         // Act
-        var result = await provider.GetEurPricesAsync([]);
+        var result = await provider.GetEurPricesAsync([], TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -66,7 +72,10 @@ public sealed class CoinGeckoPriceProviderTests
         var provider = ProviderReturning("throttled", out _, status);
 
         // Act
-        var result = await provider.GetEurPricesAsync(["bitcoin"]);
+        var result = await provider.GetEurPricesAsync(
+            ["bitcoin"],
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsFailure);
@@ -89,7 +98,10 @@ public sealed class CoinGeckoPriceProviderTests
         var provider = new CoinGeckoPriceProvider(factory);
 
         // Act
-        var result = await provider.GetEurPricesAsync(["bitcoin"]);
+        var result = await provider.GetEurPricesAsync(
+            ["bitcoin"],
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsFailure);

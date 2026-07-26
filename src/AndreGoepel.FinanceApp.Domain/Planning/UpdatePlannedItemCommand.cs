@@ -33,7 +33,7 @@ public static class UpdatePlannedItemCommandHandler
         );
         if (validation.IsFailure)
         {
-            return Result.Fail<PlannedItem>(validation.Error);
+            return Result.Fail<PlannedItem>(validation.Error!);
         }
 
         var item = await session.LoadAsync<PlannedItem>(command.Id, cancellationToken);

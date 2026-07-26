@@ -126,7 +126,7 @@
             new SetBudgetCommand(categoryId, limitInput));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error);
+            NotificationService.Notify(NotificationSeverity.Error, "Saving failed", result.Error!);
             return;
         }
         selectedCategoryId = null;
@@ -144,7 +144,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new DeleteBudgetCommand(row.CategoryId));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
+            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error!);
             return;
         }
         await LoadAsync();

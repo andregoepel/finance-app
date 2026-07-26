@@ -98,7 +98,7 @@ public sealed class WiseConnectorTests
         var connector = new WiseConnector(client, store);
 
         // Act
-        var result = await connector.FetchAsync(Request());
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
 
         // Assert — USD and IN_PROGRESS rows stay out; the EUR completed one imports.
         Assert.True(result.IsSuccess);
@@ -152,7 +152,10 @@ public sealed class WiseConnectorTests
         );
 
         // Act
-        var result = await connector.FetchAsync(Request(externalId: null));
+        var result = await connector.FetchAsync(
+            Request(externalId: null),
+            TestContext.Current.CancellationToken
+        );
 
         // Assert
         Assert.True(result.IsFailure);
@@ -170,7 +173,7 @@ public sealed class WiseConnectorTests
         var connector = new WiseConnector(Substitute.For<IWiseApiClient>(), store);
 
         // Act
-        var result = await connector.FetchAsync(Request());
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -200,7 +203,7 @@ public sealed class WiseConnectorTests
         var connector = new WiseConnector(client, store);
 
         // Act
-        var result = await connector.FetchAsync(Request());
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(result.IsFailure);

@@ -115,7 +115,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Creating failed", result.Error);
+            NotificationService.Notify(NotificationSeverity.Error, "Creating failed", result.Error!);
             return;
         }
 
@@ -132,7 +132,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryRuleCommand(ruleId));
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error);
+            NotificationService.Notify(NotificationSeverity.Error, "Delete failed", result.Error!);
             return;
         }
         await ReloadAsync();

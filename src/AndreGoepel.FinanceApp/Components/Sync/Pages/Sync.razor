@@ -143,7 +143,7 @@
         var result = await ScheduleService.UpdateAsync(cronInput, scheduleEnabled);
         if (result.IsFailure)
         {
-            NotificationService.Notify(NotificationSeverity.Error, "Invalid schedule", result.Error);
+            NotificationService.Notify(NotificationSeverity.Error, "Invalid schedule", result.Error!);
             return;
         }
         NotificationService.Notify(NotificationSeverity.Success, "Schedule saved",
@@ -226,7 +226,7 @@
         }
         else
         {
-            NotificationService.Notify(NotificationSeverity.Warning, $"{summary.AccountName} not synced", summary.Error);
+            NotificationService.Notify(NotificationSeverity.Warning, $"{summary.AccountName} not synced", summary.Error!);
         }
     }
 }
