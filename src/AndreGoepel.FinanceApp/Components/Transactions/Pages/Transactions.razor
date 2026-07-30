@@ -7,6 +7,7 @@
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject UserManager<User> UserManager
+@implements IDisposable
 
 <AppPageTitle Title="Transactions" />
 
@@ -138,6 +139,8 @@
 @code {
     private const int MaxRows = 1000;
 
+    private readonly CancellationTokenSource _cts = new();
+
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
     private List<CategoryOption> categoryOptions = [];
@@ -154,12 +157,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+        accounts = (await QuerySession.Query<Account>().ToListAsync(_cts.Token)).OrderBy(a => a.Name).ToList();
         users = await UserManager
             .Users.Where(u => !u.Deleted)
             .OrderBy(u => u.UserName)
-            .ToListAsync();
-        var categories = await QuerySession.Query<Category>().ToListAsync();
+            .ToListAsync(_cts.Token);
+        var categories = await QuerySession.Query<Category>().ToListAsync(_cts.Token);
         categoryOptions = CategoryPaths.Build(categories);
         await ReloadAsync();
     }
@@ -181,7 +184,7 @@
             query = query.Where(t => t.BookingDate <= to);
         }
 
-        var loaded = await query.OrderByDescending(t => t.BookingDate).Take(MaxRows).ToListAsync();
+        var loaded = await query.OrderByDescending(t => t.BookingDate).Take(MaxRows).ToListAsync(_cts.Token);
 
         if (!string.IsNullOrWhiteSpace(textFilter))
         {
@@ -222,7 +225,8 @@
         }
 
         var result = await MessageBus.InvokeAsync<Result>(
-            new CategorizeTransactionCommand(transaction.Id, newCategoryId)
+            new CategorizeTransactionCommand(transaction.Id, newCategoryId),
+            _cts.Token
         );
         if (result.IsFailure)
         {
@@ -256,7 +260,8 @@
                 MinAmount: null,
                 MaxAmount: null,
                 CategoryRuleSource.LearnedFromCorrection
-            )
+            ),
+            _cts.Token
         );
         if (result.IsFailure)
         {
@@ -280,7 +285,8 @@
         }
 
         var result = await MessageBus.InvokeAsync<Result>(
-            new LinkTransactionsAsTransferCommand(selected[0].Id, selected[1].Id)
+            new LinkTransactionsAsTransferCommand(selected[0].Id, selected[1].Id),
+            _cts.Token
         );
         if (result.IsFailure)
         {
@@ -293,7 +299,10 @@
 
     private async Task UnlinkTransferAsync(TransactionView transaction)
     {
-        var result = await MessageBus.InvokeAsync<Result>(new UnlinkTransferCommand(transaction.Id));
+        var result = await MessageBus.InvokeAsync<Result>(
+            new UnlinkTransferCommand(transaction.Id),
+            _cts.Token
+        );
         if (result.IsFailure)
         {
             NotificationService.Error("Unlinking failed", result.Error);
@@ -303,4 +312,10 @@
     }
 
     private sealed record RuleOffer(string Counterparty, Guid CategoryId, string CategoryLabel);
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 }

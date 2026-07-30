@@ -8,6 +8,7 @@
 @inject IMessageBus MessageBus
 @inject IStatementParserRegistry ParserRegistry
 @inject NotificationService NotificationService
+@implements IDisposable
 
 <AppPageTitle Title="Import" />
 
@@ -136,6 +137,8 @@
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationState { get; set; }
 
+    private readonly CancellationTokenSource _cts = new();
+
     private List<Account> accounts = [];
     private Guid? selectedAccountId;
     private string fileName = "";
@@ -158,7 +161,7 @@
             await QuerySession
                 .Query<Account>()
                 .Where(a => a.Status == AccountStatus.Active)
-                .ToListAsync()
+                .ToListAsync(_cts.Token)
         )
             .OrderBy(a => a.Name)
             .ToList();
@@ -179,7 +182,7 @@
                 .Where(b => b.AccountId == accountId)
                 .OrderByDescending(b => b.ImportedAt)
                 .Take(20)
-                .ToListAsync()).ToList()
+                .ToListAsync(_cts.Token)).ToList()
             : [];
     }
 
@@ -197,9 +200,9 @@
         StatementFile statementFile;
         try
         {
-            await using var stream = args.File.OpenReadStream(MaxFileSize);
+            await using var stream = args.File.OpenReadStream(MaxFileSize, _cts.Token);
             using var buffer = new MemoryStream();
-            await stream.CopyToAsync(buffer);
+            await stream.CopyToAsync(buffer, _cts.Token);
             statementFile = new StatementFile(args.File.Name, buffer.ToArray());
         }
         catch (Exception ex)
@@ -231,7 +234,7 @@
                 .Query<TransactionView>()
                 .Where(t => t.AccountId == account.Id && t.DedupHash.IsOneOf(candidates))
                 .Select(t => t.DedupHash)
-                .ToListAsync()
+                .ToListAsync(_cts.Token)
         ).ToHashSet();
 
         duplicateHashes = [];
@@ -267,7 +270,8 @@
                     preview.Rows,
                     preview.Errors,
                     user
-                )
+                ),
+                _cts.Token
             );
 
             if (result.IsFailure)
@@ -299,5 +303,11 @@
         {
             isImporting = false;
         }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }
