@@ -1,18 +1,7 @@
 ﻿<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <!-- Let a central PackageVersion override a transitive dependency's resolved
-         version without a direct PackageReference (see AngleSharp pin below). -->
-    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
-
-  <ItemGroup Label="Transitive security pins">
-    <!-- bUnit -> AngleSharp.Diffing pulls AngleSharp 1.4.0, which has a moderate
-         mXSS advisory (GHSA-pgww-w46g-26qg / CVE-2026-54570). Pin to the patched
-         1.5.x line to clear the CI vulnerability gate. Remove once bUnit ships a
-         transitive chain that resolves to >= 1.5.0 on its own (tracked in #48). -->
-    <PackageVersion Include="AngleSharp" Version="1.5.2" />
-  </ItemGroup>
 
   <ItemGroup Label="AndreGoepel">
     <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.8.0" />
@@ -54,7 +43,7 @@
 
   <ItemGroup Label="Testing">
     <PackageVersion Include="AndreGoepel.Marten.Testing" Version="1.0.0" />
-    <PackageVersion Include="bunit" Version="2.7.2" />
+    <PackageVersion Include="bunit" Version="2.8.6" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.61.0" />
