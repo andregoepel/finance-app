@@ -1,4 +1,5 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Categories;
 using Marten;
 
 namespace AndreGoepel.FinanceApp.Categorization.Suggestions;

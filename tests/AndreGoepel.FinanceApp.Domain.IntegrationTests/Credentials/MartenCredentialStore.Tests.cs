@@ -1,9 +1,10 @@
 using AndreGoepel.FinanceApp.Domain.Credentials;
-using Marten;
-using Microsoft.AspNetCore.DataProtection;
 // AndreGoepel.Marten.Testing (global-used, see GlobalUsings.cs) ships its own
 // IntegrationCollection as a copy-paste starting point, which collides by name with this
 // project's own — alias the local one instead of a plain namespace `using`.
+using AndreGoepel.FinanceApp.Domain.IntegrationTests.Infrastructure;
+using Marten;
+using Microsoft.AspNetCore.DataProtection;
 using IntegrationCollection = AndreGoepel.FinanceApp.Domain.IntegrationTests.Infrastructure.IntegrationCollection;
 
 namespace AndreGoepel.FinanceApp.Domain.IntegrationTests.Credentials;
@@ -15,7 +16,7 @@ namespace AndreGoepel.FinanceApp.Domain.IntegrationTests.Credentials;
 /// round trip through Postgres, not a mocked <see cref="IDocumentStore"/>.
 /// </summary>
 [Collection(IntegrationCollection.Name)]
-public sealed class MartenCredentialStoreTests(MartenFixture fixture) : IAsyncLifetime
+public sealed class MartenCredentialStoreTests(FinanceMartenFixture fixture) : IAsyncLifetime
 {
     private readonly IDataProtectionProvider dataProtection = new EphemeralDataProtectionProvider();
     private MartenCredentialStore CredentialStore => new(fixture.Store, dataProtection);

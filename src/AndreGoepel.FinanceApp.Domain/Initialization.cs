@@ -19,17 +19,24 @@ public static class Initialization
     /// </summary>
     public static IServiceCollection AddFinanceDomain(this IServiceCollection services)
     {
-        services.ConfigureMarten(options =>
-        {
-            options.Projections.Snapshot<TransactionView>(SnapshotLifecycle.Inline);
-
-            options.Schema.For<TransactionView>().Index(x => x.AccountId).Index(x => x.DedupHash);
-        });
+        services.ConfigureMarten(ConfigureStore);
 
         services.InitializeMartenWith(new DefaultCategorySeed());
 
         services.AddSingleton<ICredentialStore, MartenCredentialStore>();
 
         return services;
+    }
+
+    /// <summary>
+    /// The store shape the finance domain needs. Public so integration tests can
+    /// build a store that matches the app's — projections included — instead of
+    /// re-declaring it and drifting.
+    /// </summary>
+    public static void ConfigureStore(StoreOptions options)
+    {
+        options.Projections.Snapshot<TransactionView>(SnapshotLifecycle.Inline);
+
+        options.Schema.For<TransactionView>().Index(x => x.AccountId).Index(x => x.DedupHash);
     }
 }

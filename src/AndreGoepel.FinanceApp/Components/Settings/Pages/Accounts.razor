@@ -40,7 +40,7 @@
                                      Variant="@(account.IsActive ? BadgeVariant.Success : BadgeVariant.Neutral)" />
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="Account" Title="" Width="140px" Sortable="false" TextAlign="TextAlign.End">
+                <RadzenDataGridColumn TItem="Account" Title="" Width="170px" Sortable="false" TextAlign="TextAlign.End">
                     <Template Context="account">
                         <RowActions>
                             <IconButton Icon="edit" Title="Edit" Click=@(_ => StartEdit(account)) />
@@ -56,8 +56,10 @@
                                               class="ag-icon-btn" title="Reactivate" aria-label="Reactivate"
                                               Click=@(() => ReactivateAsync(account)) />
                             }
-                            <IconButton Icon="delete" Title="Delete permanently" Danger="true"
+                            <IconButton Icon="delete" Title="Delete" Danger="true"
                                         Click=@(_ => DeleteAsync(account)) />
+                            <IconButton Icon="delete_forever" Title="Delete permanently…" Danger="true"
+                                        Click=@(_ => HardDeleteAsync(account)) />
                         </RowActions>
                     </Template>
                 </RadzenDataGridColumn>
@@ -401,6 +403,36 @@
 
         var result = await MessageBus.InvokeAsync<Result>(new DeleteAccountCommand(account.Id), _cts.Token);
         await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account deleted");
+    }
+
+    // The blast radius is computed first and spelled out in the dialog: there is no
+    // confirm button to press until the user has been told exactly what disappears.
+    private async Task HardDeleteAsync(Account account)
+    {
+        var preview = await AccountDeletionPreview.ForAccountAsync(QuerySession, account.Id);
+        if (preview.IsFailure)
+        {
+            NotificationService.Error("Action failed", preview.Error);
+            return;
+        }
+
+        var confirmed = await ConfirmService.ConfirmAsync(
+            $"Permanently delete '{account.Name}'? {preview.Value!.Describe()} This cannot be undone.",
+            title: "Delete account permanently",
+            okText: "Delete permanently"
+        );
+        if (!confirmed)
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result<AccountDeletionImpact>>(
+            new HardDeleteAccountCommand(account.Id)
+        );
+        await AfterLifecycleAsync(
+            result.IsFailure ? result.Error : null,
+            "Account permanently deleted"
+        );
     }
 
     private async Task AfterLifecycleAsync(string? error, string successMessage)
