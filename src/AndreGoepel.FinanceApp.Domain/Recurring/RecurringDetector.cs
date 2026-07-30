@@ -111,19 +111,10 @@ public static class RecurringDetector
         items.GroupBy(c => c.Counterparty.Trim()).OrderByDescending(g => g.Count()).First().Key;
 
     private static string Normalize(string counterparty) =>
-        string.Join(
-            ' ',
-            counterparty
-                .ToLowerInvariant()
-                .Split(default(char[]), StringSplitOptions.RemoveEmptyEntries)
-        );
+        TextNormalization.NormalizeWhitespace(counterparty);
 
-    private static int Median(IReadOnlyList<int> values)
-    {
-        var sorted = values.OrderBy(v => v).ToList();
-        var mid = sorted.Count / 2;
-        return sorted.Count % 2 == 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-    }
+    private static int Median(IReadOnlyList<int> values) =>
+        (int)Median(values.Select(v => (decimal)v).ToList());
 
     private static decimal Median(IReadOnlyList<decimal> values)
     {

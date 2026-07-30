@@ -32,25 +32,6 @@ public static class DedupHash
     /// Lower-cases and collapses whitespace so cosmetic differences between
     /// exports of the same booking do not defeat deduplication.
     /// </summary>
-    internal static string NormalizeDescription(string description)
-    {
-        var builder = new StringBuilder(description.Length);
-        var pendingSpace = false;
-        foreach (var character in description.Trim())
-        {
-            if (char.IsWhiteSpace(character))
-            {
-                pendingSpace = builder.Length > 0;
-                continue;
-            }
-
-            if (pendingSpace)
-            {
-                builder.Append(' ');
-                pendingSpace = false;
-            }
-            builder.Append(char.ToLowerInvariant(character));
-        }
-        return builder.ToString();
-    }
+    internal static string NormalizeDescription(string description) =>
+        TextNormalization.NormalizeWhitespace(description);
 }
