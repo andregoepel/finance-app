@@ -10,6 +10,7 @@
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
 @inject UserManager<User> UserManager
+@implements IDisposable
 
 <AppPageTitle Title="Accounts" Breadcrumb="Settings / Accounts" />
 
@@ -171,6 +172,8 @@
     private static readonly AccountType[] TypeChoices = Enum.GetValues<AccountType>();
     private static readonly SyncMethod[] SyncChoices = Enum.GetValues<SyncMethod>();
 
+    private readonly CancellationTokenSource _cts = new();
+
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
     private IReadOnlyList<ProviderConnection> connections = [];
@@ -203,8 +206,8 @@
         users = await UserManager
             .Users.Where(u => !u.Deleted)
             .OrderBy(u => u.UserName)
-            .ToListAsync();
-        connections = (await QuerySession.Query<ProviderConnection>().ToListAsync())
+            .ToListAsync(_cts.Token);
+        connections = (await QuerySession.Query<ProviderConnection>().ToListAsync(_cts.Token))
             .OrderBy(c => c.Label)
             .ToList();
         await ReloadAsync();
@@ -212,7 +215,9 @@
 
     private async Task ReloadAsync()
     {
-        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
+        accounts = (await QuerySession.Query<Account>().ToListAsync(_cts.Token))
+            .OrderBy(a => a.Name)
+            .ToList();
     }
 
     private string OwnerLabel(Account account)
@@ -298,7 +303,8 @@
                         connectionId,
                         externalId,
                         identificationHash
-                    )
+                    ),
+                    _cts.Token
                 )
                 : await MessageBus.InvokeAsync<Result<Account>>(
                     new CreateAccountCommand(
@@ -313,7 +319,8 @@
                         connectionId,
                         externalId,
                         identificationHash
-                    )
+                    ),
+                    _cts.Token
                 );
 
             if (result.IsFailure)
@@ -346,7 +353,8 @@
         {
             var rate = await ExchangeRateProvider.GetEurRateAsync(
                 currency,
-                DateOnly.FromDateTime(DateTime.UtcNow)
+                DateOnly.FromDateTime(DateTime.UtcNow),
+                _cts.Token
             );
             if (rate.IsSuccess)
             {
@@ -361,14 +369,16 @@
             }
         }
         await MessageBus.InvokeAsync<Result>(
-            new SetAccountBalanceCommand(accountId, balance, balanceEur, DateTimeOffset.UtcNow)
+            new SetAccountBalanceCommand(accountId, balance, balanceEur, DateTimeOffset.UtcNow),
+            _cts.Token
         );
     }
 
     private async Task DeactivateAsync(Account account)
     {
         var result = await MessageBus.InvokeAsync<Result<Account>>(
-            new DeactivateAccountCommand(account.Id)
+            new DeactivateAccountCommand(account.Id),
+            _cts.Token
         );
         await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account deactivated");
     }
@@ -376,7 +386,8 @@
     private async Task ReactivateAsync(Account account)
     {
         var result = await MessageBus.InvokeAsync<Result<Account>>(
-            new ReactivateAccountCommand(account.Id)
+            new ReactivateAccountCommand(account.Id),
+            _cts.Token
         );
         await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account reactivated");
     }
@@ -388,7 +399,7 @@
             return;
         }
 
-        var result = await MessageBus.InvokeAsync<Result>(new DeleteAccountCommand(account.Id));
+        var result = await MessageBus.InvokeAsync<Result>(new DeleteAccountCommand(account.Id), _cts.Token);
         await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account deleted");
     }
 
@@ -422,5 +433,11 @@
         public string ExternalId { get; set; } = "";
         public string? IdentificationHash { get; set; }
         public decimal? CurrentBalance { get; set; }
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

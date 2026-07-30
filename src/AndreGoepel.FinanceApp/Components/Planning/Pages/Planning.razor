@@ -8,6 +8,7 @@
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@implements IDisposable
 
 <AppPageTitle Title="Planning" />
 
@@ -217,6 +218,8 @@
     private static readonly PlannedFrequency[] Frequencies = Enum.GetValues<PlannedFrequency>();
     private static readonly TypeChoice[] TypeChoices = [new("Expense", true), new("Income", false)];
 
+    private readonly CancellationTokenSource _cts = new();
+
     private DateOnly monthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private PlanMonth? plan;
     private List<PlannedItem> items = [];
@@ -232,18 +235,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var categories = await QuerySession.Query<Category>().ToListAsync();
+        var categories = await QuerySession.Query<Category>().ToListAsync(_cts.Token);
         categoryOptions = CategoryPaths.Build(categories.ToList());
         categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
-        accounts = (await QuerySession.Query<Account>().Where(a => a.Status == AccountStatus.Active).ToListAsync())
-            .OrderBy(a => a.Name).Select(a => new AccountOption(a.Id, a.Name)).ToList();
+        accounts = (
+            await QuerySession
+                .Query<Account>()
+                .Where(a => a.Status == AccountStatus.Active)
+                .ToListAsync(_cts.Token)
+        )
+            .OrderBy(a => a.Name)
+            .Select(a => new AccountOption(a.Id, a.Name))
+            .ToList();
         await LoadAsync();
     }
 
     private async Task LoadAsync()
     {
-        items = (await PlanningService.GetItemsAsync()).OrderBy(i => i.Description).ToList();
-        plan = await PlanningService.GetMonthAsync(monthStart.Year, monthStart.Month);
+        items = (await PlanningService.GetItemsAsync(_cts.Token)).OrderBy(i => i.Description).ToList();
+        plan = await PlanningService.GetMonthAsync(monthStart.Year, monthStart.Month, _cts.Token);
     }
 
     private async Task OnMonthChangedAsync(DateOnly month)
@@ -251,7 +261,7 @@
         monthStart = month;
         matchingOccurrence = null;
         plan = null;
-        plan = await PlanningService.GetMonthAsync(monthStart.Year, monthStart.Month);
+        plan = await PlanningService.GetMonthAsync(monthStart.Year, monthStart.Month, _cts.Token);
     }
 
     private async Task MatchNowAsync()
@@ -259,7 +269,7 @@
         matching = true;
         try
         {
-            await MessageBus.InvokeAsync(new MatchPlannedTransactionsCommand());
+            await MessageBus.InvokeAsync(new MatchPlannedTransactionsCommand(), _cts.Token);
             await LoadAsync();
             NotificationService.Success("Matching complete");
         }
@@ -272,7 +282,7 @@
     private async Task StartMatchAsync(PlannedOccurrence occurrence)
     {
         matchingOccurrence = occurrence;
-        candidates = (await PlanningService.GetMatchCandidatesAsync(occurrence.DueDate)).ToList();
+        candidates = (await PlanningService.GetMatchCandidatesAsync(occurrence.DueDate, _cts.Token)).ToList();
     }
 
     private async Task UseMatchAsync(TransactionView transaction)
@@ -282,7 +292,9 @@
             return;
         }
         var result = await MessageBus.InvokeAsync<Result>(
-            new SetPlannedMatchCommand(o.PlannedItemId, o.DueDate, transaction.Id));
+            new SetPlannedMatchCommand(o.PlannedItemId, o.DueDate, transaction.Id),
+            _cts.Token
+        );
         if (result.IsFailure)
         {
             NotificationService.Error("Match failed", result.Error);
@@ -296,7 +308,9 @@
     private async Task UnmatchAsync(PlannedOccurrence occurrence)
     {
         var result = await MessageBus.InvokeAsync<Result>(
-            new ClearPlannedMatchCommand(occurrence.PlannedItemId, occurrence.DueDate));
+            new ClearPlannedMatchCommand(occurrence.PlannedItemId, occurrence.DueDate),
+            _cts.Token
+        );
         if (result.IsFailure)
         {
             NotificationService.Error("Unmatch failed", result.Error);
@@ -341,12 +355,16 @@
         var tolerance = form.TolerancePercent / 100m;
 
         Result result = editingId is Guid id
-            ? await MessageBus.InvokeAsync<Result<PlannedItem>>(new UpdatePlannedItemCommand(
-                id, form.Description, amount, form.CategoryId, form.Frequency, start, end,
-                form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays, form.Active))
-            : await MessageBus.InvokeAsync<Result<PlannedItem>>(new CreatePlannedItemCommand(
-                form.Description, amount, form.CategoryId, form.Frequency, start, end,
-                form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays));
+            ? await MessageBus.InvokeAsync<Result<PlannedItem>>(
+                new UpdatePlannedItemCommand(
+                    id, form.Description, amount, form.CategoryId, form.Frequency, start, end,
+                    form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays, form.Active),
+                _cts.Token)
+            : await MessageBus.InvokeAsync<Result<PlannedItem>>(
+                new CreatePlannedItemCommand(
+                    form.Description, amount, form.CategoryId, form.Frequency, start, end,
+                    form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays),
+                _cts.Token);
 
         if (result.IsFailure)
         {
@@ -364,7 +382,7 @@
         {
             return;
         }
-        var result = await MessageBus.InvokeAsync<Result>(new DeletePlannedItemCommand(item.Id));
+        var result = await MessageBus.InvokeAsync<Result>(new DeletePlannedItemCommand(item.Id), _cts.Token);
         if (result.IsFailure)
         {
             NotificationService.Error("Delete failed", result.Error);
@@ -408,5 +426,11 @@
         public decimal TolerancePercent { get; set; } = 10;
         public int DateWindowDays { get; set; } = 7;
         public bool Active { get; set; } = true;
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

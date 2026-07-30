@@ -8,6 +8,7 @@
 @inject INetWorthService NetWorthService
 @inject IPlanningService PlanningService
 @inject ICryptoService CryptoService
+@implements IDisposable
 
 <AppPageTitle Title="Dashboard" />
 
@@ -227,6 +228,8 @@
 @code {
     private sealed record ChartPoint(string Label, decimal Amount);
 
+    private readonly CancellationTokenSource _cts = new();
+
     private DateOnly MonthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private MonthlyOverview? overview;
     private NetWorthOverview? netWorth;
@@ -240,21 +243,31 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
-        netWorth = await NetWorthService.GetAsync();
+        netWorth = await NetWorthService.GetAsync(cancellationToken: _cts.Token);
         netWorthChart = netWorth
             .Series.Select(p => new ChartPoint(p.Date.ToString("MMM yy"), p.Amount))
             .ToList();
-        upcoming = await PlanningService.GetUpcomingAsync();
-        crypto = await CryptoService.GetOverviewAsync();
+        upcoming = await PlanningService.GetUpcomingAsync(cancellationToken: _cts.Token);
+        crypto = await CryptoService.GetOverviewAsync(_cts.Token);
     }
 
     private async Task LoadAsync() =>
-        overview = await DashboardService.GetMonthlyOverviewAsync(MonthStart.Year, MonthStart.Month);
+        overview = await DashboardService.GetMonthlyOverviewAsync(
+            MonthStart.Year,
+            MonthStart.Month,
+            _cts.Token
+        );
 
     private async Task OnMonthChangedAsync(DateOnly month)
     {
         MonthStart = month;
         overview = null;
         await LoadAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }
