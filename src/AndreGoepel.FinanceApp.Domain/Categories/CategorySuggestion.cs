@@ -1,4 +1,4 @@
-namespace AndreGoepel.FinanceApp.Categorization.Suggestions;
+namespace AndreGoepel.FinanceApp.Domain.Categories;
 
 /// <summary>
 /// A low-confidence AI category suggestion awaiting human review. One per
@@ -7,6 +7,12 @@ namespace AndreGoepel.FinanceApp.Categorization.Suggestions;
 /// other way. High-confidence suggestions are applied directly as events and
 /// never stored here.
 /// </summary>
+/// <remarks>
+/// Kept in the Domain assembly — like <c>CategorizeImportedTransactionsCommand</c>
+/// — so account and transaction cleanup can purge the review queue without the
+/// Domain referencing the categorization module. The suggestion commands and the
+/// Claude pipeline that write it stay in <c>AndreGoepel.FinanceApp.Categorization</c>.
+/// </remarks>
 public sealed class CategorySuggestion
 {
     /// <summary>Transaction id.</summary>
