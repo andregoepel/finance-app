@@ -13,17 +13,17 @@
   </ItemGroup>
 
   <ItemGroup Label="AndreGoepel">
-    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.10.0" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="1.10.0" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.10.0" />
-    <PackageVersion Include="AndreGoepel.Core" Version="1.0.1" />
-    <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.6.0" />
-    <PackageVersion Include="AndreGoepel.Marten.Configuration" Version="1.1.0" />
-    <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.9.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation" Version="1.11.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="1.11.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="1.11.0" />
+    <PackageVersion Include="AndreGoepel.Core" Version="1.0.2" />
+    <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.6.3" />
+    <PackageVersion Include="AndreGoepel.Marten.Configuration" Version="1.2.0" />
+    <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="1.9.3" />
   </ItemGroup>
 
   <ItemGroup Label="AndreGoepel Testing">
-    <PackageVersion Include="AndreGoepel.Testing.E2E" Version="1.0.0" />
+    <PackageVersion Include="AndreGoepel.Testing.E2E" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup Label="Aspire">
@@ -33,16 +33,16 @@
   </ItemGroup>
 
   <ItemGroup Label="Libraries">
-    <PackageVersion Include="Marten" Version="9.22.0" />
-    <PackageVersion Include="WolverineFx.Marten" Version="6.24.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.8.0" />
+    <PackageVersion Include="Marten" Version="9.23.0" />
+    <PackageVersion Include="WolverineFx.Marten" Version="6.28.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.9.0" />
     <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.19.1" />
-    <PackageVersion Include="Radzen.Blazor" Version="11.2.0" />
+    <PackageVersion Include="Radzen.Blazor" Version="11.2.4" />
     <PackageVersion
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
-      Version="10.0.10"
+      Version="10.0.11"
     />
     <PackageVersion
       Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
@@ -51,12 +51,12 @@
   </ItemGroup>
 
   <ItemGroup Label="Testing">
-    <PackageVersion Include="AndreGoepel.Marten.Testing" Version="1.0.0" />
-    <PackageVersion Include="bunit" Version="2.8.6" />
+    <PackageVersion Include="AndreGoepel.Marten.Testing" Version="1.0.1" />
+    <PackageVersion Include="bunit" Version="2.9.0" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
-    <PackageVersion Include="Microsoft.Playwright" Version="1.61.0" />
-    <PackageVersion Include="NSubstitute" Version="6.0.0" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.62.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
   </ItemGroup>
