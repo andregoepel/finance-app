@@ -41,14 +41,47 @@ public static class ImportStatementCommandHandler
             ))
             .ToList();
 
-        var candidateHashes = hashedRows.Select(hashed => hashed.Hash).Distinct().ToArray();
-        var existingHashes = await session
-            .Query<TransactionView>()
-            .Where(t => t.AccountId == account.Id && t.DedupHash.IsOneOf(candidateHashes))
-            .Select(t => t.DedupHash)
-            .ToListAsync(cancellationToken);
+        // A row carrying the provider's own reference (Enable Banking's EntryReference, mapped to
+        // ExternalId) dedups on that instead of the hash: two distinct same-day, same-amount,
+        // same-description transactions — ordinary card spending — would otherwise collapse into
+        // one under the hash alone, which has no way to tell them apart.
+        var candidateExternalIds = hashedRows
+            .Where(hashed => !string.IsNullOrEmpty(hashed.Row.ExternalId))
+            .Select(hashed => hashed.Row.ExternalId!)
+            .Distinct()
+            .ToArray();
+        var existingExternalIds =
+            candidateExternalIds.Length == 0
+                ? []
+                : await session
+                    .Query<TransactionView>()
+                    .Where(t =>
+                        t.AccountId == account.Id
+                        && t.ExternalId != null
+                        && t.ExternalId.IsOneOf(candidateExternalIds)
+                    )
+                    .Select(t => t.ExternalId!)
+                    .ToListAsync(cancellationToken);
 
-        var (newRows, duplicateCount) = SplitNewRows(hashedRows, existingHashes.ToHashSet());
+        var candidateHashes = hashedRows
+            .Where(hashed => string.IsNullOrEmpty(hashed.Row.ExternalId))
+            .Select(hashed => hashed.Hash)
+            .Distinct()
+            .ToArray();
+        var existingHashes =
+            candidateHashes.Length == 0
+                ? []
+                : await session
+                    .Query<TransactionView>()
+                    .Where(t => t.AccountId == account.Id && t.DedupHash.IsOneOf(candidateHashes))
+                    .Select(t => t.DedupHash)
+                    .ToListAsync(cancellationToken);
+
+        var (newRows, duplicateCount) = SplitNewRows(
+            hashedRows,
+            existingExternalIds.ToHashSet(),
+            existingHashes.ToHashSet()
+        );
 
         var batch = new ImportBatch
         {
@@ -96,11 +129,15 @@ public static class ImportStatementCommandHandler
     }
 
     /// <summary>
-    /// Splits rows into new vs. duplicate — against both the database and
-    /// earlier rows of the same file (re-exported files often repeat bookings).
+    /// Splits rows into new vs. duplicate — against both the database and earlier rows of the same
+    /// file (re-exported files often repeat bookings). A row with a provider reference is checked
+    /// against <paramref name="existingExternalIds"/>; every other row falls back to
+    /// <paramref name="existingHashes"/>. Both sets are mutated in place, so two rows of the same
+    /// file sharing a key dedup against each other too, not only against the database.
     /// </summary>
     internal static (List<HashedRow> NewRows, int DuplicateCount) SplitNewRows(
         IReadOnlyList<HashedRow> rows,
+        HashSet<string> existingExternalIds,
         HashSet<string> existingHashes
     )
     {
@@ -108,7 +145,11 @@ public static class ImportStatementCommandHandler
         var duplicateCount = 0;
         foreach (var hashed in rows)
         {
-            if (existingHashes.Add(hashed.Hash))
+            var isNew = !string.IsNullOrEmpty(hashed.Row.ExternalId)
+                ? existingExternalIds.Add(hashed.Row.ExternalId!)
+                : existingHashes.Add(hashed.Hash);
+
+            if (isNew)
             {
                 newRows.Add(hashed);
             }

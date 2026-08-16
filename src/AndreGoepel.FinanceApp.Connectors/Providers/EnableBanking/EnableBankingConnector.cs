@@ -1,6 +1,7 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 
@@ -12,8 +13,12 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 /// session-specific account uid and passes it as
 /// <see cref="ProviderSyncRequest.ProviderAccountReference"/>.
 /// </summary>
-public sealed class EnableBankingConnector(IEnableBankingClient client) : IProviderConnector
+public sealed class EnableBankingConnector(
+    IEnableBankingClient client,
+    ILogger<EnableBankingConnector> logger
+) : IProviderConnector
 {
+    internal const string BookedStatus = "BOOK";
     internal const string SyncSource = "enablebanking-api-v1";
 
     public bool Supports(ProviderKind provider) =>
@@ -42,10 +47,37 @@ public sealed class EnableBankingConnector(IEnableBankingClient client) : IProvi
             return Result.Fail<ProviderSyncResult>(transactions.Error!);
         }
 
-        var rows = transactions
-            .Value!.Where(t => t.Status == "BOOK") // only booked; pending entries change
-            .Select(Normalize)
+        var fetched = transactions.Value!;
+
+        // Case-insensitive so an unexpected casing/spelling from the bank drops nothing silently
+        // — a mismatch here used to filter out every row and still report a successful sync (#98).
+        var booked = fetched
+            .Where(t => string.Equals(t.Status, BookedStatus, StringComparison.OrdinalIgnoreCase))
             .ToList();
+
+        if (fetched.Count > 0 && booked.Count == 0)
+        {
+            logger.LogWarning(
+                "Enable Banking returned {Count} transactions for {Provider} but none matched "
+                    + "status {BookedStatus}; statuses seen: {Statuses}. No rows will import.",
+                fetched.Count,
+                request.Provider,
+                BookedStatus,
+                string.Join(", ", fetched.Select(t => t.Status).Distinct())
+            );
+        }
+        else
+        {
+            logger.LogInformation(
+                "Enable Banking fetch for {Provider}: {BookedCount} booked, {DroppedCount} "
+                    + "dropped (pending or other status).",
+                request.Provider,
+                booked.Count,
+                fetched.Count - booked.Count
+            );
+        }
+
+        var rows = booked.Select(Normalize).ToList();
 
         return Result.Ok(new ProviderSyncResult(SyncSource, rows, []));
     }

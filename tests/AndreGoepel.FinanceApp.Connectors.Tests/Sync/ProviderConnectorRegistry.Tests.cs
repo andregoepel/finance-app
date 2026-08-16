@@ -1,6 +1,7 @@
 using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 using AndreGoepel.FinanceApp.Connectors.Sync;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Sync;
@@ -8,7 +9,8 @@ namespace AndreGoepel.FinanceApp.Connectors.Tests.Sync;
 public sealed class ProviderConnectorRegistryTests
 {
     private readonly EnableBankingConnector enableBanking = new(
-        Substitute.For<IEnableBankingClient>()
+        Substitute.For<IEnableBankingClient>(),
+        NullLogger<EnableBankingConnector>.Instance
     );
 
     private ProviderConnectorRegistry BuildRegistry() => new([enableBanking]);
