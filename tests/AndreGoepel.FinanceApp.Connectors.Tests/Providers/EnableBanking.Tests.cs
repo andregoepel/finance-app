@@ -1,5 +1,9 @@
 using System.Text.Json.Nodes;
+using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
+using AndreGoepel.FinanceApp.Domain.Providers;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace AndreGoepel.FinanceApp.Connectors.Tests.Providers;
 
@@ -104,5 +108,113 @@ public sealed class EnableBankingConnectorNormalizeTests
         Assert.Equal(3.38m, row.Amount);
         Assert.Equal("Ella Nieminen", row.Counterparty);
         Assert.Equal("Ella Nieminen", row.Description); // falls back to counterparty when no remittance
+    }
+}
+
+public sealed class EnableBankingConnectorFetchTests
+{
+    private readonly IEnableBankingClient client = Substitute.For<IEnableBankingClient>();
+    private readonly EnableBankingConnector connector;
+
+    public EnableBankingConnectorFetchTests() =>
+        connector = new EnableBankingConnector(client, NullLogger<EnableBankingConnector>.Instance);
+
+    private static EnableBankingTransaction Transaction(string status, string entryReference) =>
+        new(
+            entryReference,
+            new DateOnly(2026, 7, 2),
+            null,
+            1m,
+            "EUR",
+            "DBIT",
+            CreditorName: "Someone",
+            DebtorName: null,
+            RemittanceInformation: [],
+            Status: status,
+            RawJson: "{}"
+        );
+
+    private static ProviderSyncRequest Request() =>
+        new(
+            AccountId: Guid.CreateVersion7(),
+            Provider: ProviderKind.Revolut,
+            ConnectionId: Guid.CreateVersion7(),
+            ExternalId: null,
+            IdentificationHash: null,
+            ProviderAccountReference: "session-account-1",
+            Since: new DateOnly(2026, 1, 1)
+        );
+
+    [Theory]
+    [InlineData("BOOK")]
+    [InlineData("book")]
+    [InlineData("Book")]
+    public async Task FetchAsync_BookedStatusInAnyCasing_IsImported(string status)
+    {
+        // Arrange
+        client
+            .GetTransactionsAsync(
+                Arg.Any<string>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok<IReadOnlyList<EnableBankingTransaction>>([Transaction(status, "ref1")])
+            );
+
+        // Act
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value!.Rows);
+    }
+
+    [Fact]
+    public async Task FetchAsync_PendingStatus_IsExcludedButSyncStillSucceeds()
+    {
+        // Arrange
+        client
+            .GetTransactionsAsync(
+                Arg.Any<string>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok<IReadOnlyList<EnableBankingTransaction>>([Transaction("PDNG", "ref1")])
+            );
+
+        // Act
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert — a real "not booked yet" case must not look like a failure.
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value!.Rows);
+    }
+
+    [Fact]
+    public async Task FetchAsync_MixOfBookedAndOtherStatuses_OnlyBookedIsImported()
+    {
+        // Arrange
+        client
+            .GetTransactionsAsync(
+                Arg.Any<string>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok<IReadOnlyList<EnableBankingTransaction>>([
+                    Transaction("BOOK", "ref1"),
+                    Transaction("PDNG", "ref2"),
+                    Transaction("BOOK", "ref3"),
+                ])
+            );
+
+        // Act
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(2, result.Value!.Rows.Count);
+        Assert.Equal(["ref1", "ref3"], result.Value.Rows.Select(row => row.ExternalId));
     }
 }
