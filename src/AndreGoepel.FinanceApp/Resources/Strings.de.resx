@@ -239,4 +239,69 @@
   <data name="Dashboard.UpcomingOverdue" xml:space="preserve"><value><![CDATA[Anstehend & überfällig]]></value></data>
   <data name="Dashboard.NothingUpcoming" xml:space="preserve"><value><![CDATA[Nichts anstehend —]]></value><comment>An "add planned items" link follows</comment></data>
   <data name="Dashboard.AddPlannedItemsLink" xml:space="preserve"><value><![CDATA[geplante Posten hinzufügen]]></value></data>
+
+  <!-- Shared across the grid pages -->
+  <data name="Common.Add" xml:space="preserve"><value><![CDATA[Hinzufügen]]></value></data>
+  <data name="Common.Edit" xml:space="preserve"><value><![CDATA[Bearbeiten]]></value></data>
+  <data name="Common.Apply" xml:space="preserve"><value><![CDATA[Anwenden]]></value></data>
+  <data name="Common.No" xml:space="preserve"><value><![CDATA[Nein]]></value></data>
+  <data name="Common.Owner" xml:space="preserve"><value><![CDATA[Inhaber]]></value></data>
+  <data name="Common.Search" xml:space="preserve"><value><![CDATA[Suche]]></value></data>
+  <data name="Common.From" xml:space="preserve"><value><![CDATA[Von]]></value></data>
+  <data name="Common.To" xml:space="preserve"><value><![CDATA[Bis]]></value></data>
+  <data name="Common.AllPlaceholder" xml:space="preserve"><value><![CDATA[Alle]]></value></data>
+  <data name="Common.SelectCategoryPlaceholder" xml:space="preserve"><value><![CDATA[Kategorie auswählen]]></value></data>
+  <data name="Common.DeleteFailedTitle" xml:space="preserve"><value><![CDATA[Löschen fehlgeschlagen]]></value></data>
+
+  <!-- Transactions.razor -->
+  <data name="Transactions.RuleOfferPrefix" xml:space="preserve"><value><![CDATA[Immer]]></value><comment>Followed by the counterparty in bold, then Transactions.RuleOfferInfix</comment></data>
+  <data name="Transactions.RuleOfferInfix" xml:space="preserve"><value><![CDATA[kategorisieren als]]></value><comment>Sits between the bold counterparty and the bold category</comment></data>
+  <data name="Transactions.RuleOfferSuffix" xml:space="preserve"><value><![CDATA[?]]></value><comment>Trails the bold category; a separate key so German can move punctuation if needed</comment></data>
+  <data name="Transactions.CreateRule" xml:space="preserve"><value><![CDATA[Regel erstellen]]></value></data>
+  <data name="Transactions.SearchPlaceholder" xml:space="preserve"><value><![CDATA[Beschreibung oder Gegenpartei]]></value></data>
+  <data name="Transactions.LinkAsTransfer" xml:space="preserve"><value><![CDATA[Als Umbuchung verknüpfen]]></value></data>
+  <data name="Transactions.UncategorizedPlaceholder" xml:space="preserve"><value><![CDATA[Unkategorisiert]]></value></data>
+  <data name="Transactions.TransferBadge" xml:space="preserve"><value><![CDATA[Umbuchung]]></value></data>
+  <data name="Transactions.UnlinkTransfer" xml:space="preserve"><value><![CDATA[Umbuchung trennen]]></value></data>
+  <data name="Transactions.CategorizationFailedTitle" xml:space="preserve"><value><![CDATA[Kategorisierung fehlgeschlagen]]></value></data>
+  <data name="Transactions.RuleCreationFailedTitle" xml:space="preserve"><value><![CDATA[Regelerstellung fehlgeschlagen]]></value></data>
+  <data name="Transactions.RuleCreatedTitle" xml:space="preserve"><value><![CDATA[Regel erstellt]]></value></data>
+  <data name="Transactions.LinkingFailedTitle" xml:space="preserve"><value><![CDATA[Verknüpfen fehlgeschlagen]]></value></data>
+  <data name="Transactions.LinkedTitle" xml:space="preserve"><value><![CDATA[Verknüpft]]></value></data>
+  <data name="Transactions.LinkedMessage" xml:space="preserve"><value><![CDATA[Transaktionen als Umbuchung verknüpft.]]></value></data>
+  <data name="Transactions.UnlinkingFailedTitle" xml:space="preserve"><value><![CDATA[Trennen fehlgeschlagen]]></value></data>
+  <data name="Enum.CategorySource.Provider" xml:space="preserve"><value><![CDATA[Anbieter]]></value></data>
+  <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Regel]]></value></data>
+  <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[KI]]></value><comment>Matches the „KI“ wording referenced in Review.Subtitle</comment></data>
+  <data name="Enum.CategorySource.Manual" xml:space="preserve"><value><![CDATA[Manuell]]></value></data>
+
+  <!-- Rules.razor -->
+  <data name="Rules.PageTitle" xml:space="preserve"><value><![CDATA[Kategorisierungsregeln]]></value></data>
+  <data name="Rules.Subtitle" xml:space="preserve"><value><![CDATA[Regeln laufen bei jedem Import vor der KI. Alle gesetzten Bedingungen müssen zutreffen (Textabgleich ist ein „enthält“ ohne Berücksichtigung der Groß-/Kleinschreibung).]]></value></data>
+  <data name="Rules.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Regeln]]></value></data>
+  <data name="Rules.EmptyText" xml:space="preserve"><value><![CDATA[Unten eine Regel hinzufügen, um passende Transaktionen vor dem KI-Lauf zu kategorisieren.]]></value></data>
+  <data name="Rules.ColCounterpartyContains" xml:space="preserve"><value><![CDATA[Gegenpartei enthält]]></value></data>
+  <data name="Rules.ColDescriptionContains" xml:space="preserve"><value><![CDATA[Beschreibung enthält]]></value></data>
+  <data name="Rules.ColSource" xml:space="preserve"><value><![CDATA[Quelle]]></value></data>
+  <data name="Rules.AddRuleTitle" xml:space="preserve"><value><![CDATA[Regel hinzufügen]]></value></data>
+  <data name="Rules.MinAmountLabel" xml:space="preserve"><value><![CDATA[Mindestbetrag]]></value></data>
+  <data name="Rules.MaxAmountLabel" xml:space="preserve"><value><![CDATA[Höchstbetrag]]></value></data>
+  <data name="Rules.MissingCategoryTitle" xml:space="preserve"><value><![CDATA[Kategorie fehlt]]></value></data>
+  <data name="Rules.MissingCategoryMessage" xml:space="preserve"><value><![CDATA[Zuerst eine Kategorie auswählen.]]></value></data>
+  <data name="Rules.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[diese Regel]]></value><comment>Substituted into the shared "Delete {0}? …" confirm template</comment></data>
+  <data name="Enum.CategoryRuleSource.Manual" xml:space="preserve"><value><![CDATA[Manuell]]></value></data>
+  <data name="Enum.CategoryRuleSource.LearnedFromCorrection" xml:space="preserve"><value><![CDATA[Aus Korrektur gelernt]]></value></data>
+
+  <!-- Budgets.razor -->
+  <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Ein monatliches EUR-Limit pro Kategorie festlegen. Ein Limit auf einer übergeordneten Kategorie zählt die Ausgaben dieser Kategorie und aller ihrer Unterkategorien. Der Fortschritt wird auf der Übersicht angezeigt.]]></value></data>
+  <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Budget festlegen]]></value></data>
+  <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monatliches Limit (€)]]></value></data>
+  <data name="Budgets.CurrentBudgetsHeading" xml:space="preserve"><value><![CDATA[Aktuelle Budgets]]></value></data>
+  <data name="Budgets.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Budgets festgelegt]]></value></data>
+  <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Oben ein monatliches Limit für eine Kategorie festlegen, um sie zu verfolgen.]]></value></data>
+  <data name="Budgets.ColMonthlyLimit" xml:space="preserve"><value><![CDATA[Monatliches Limit]]></value></data>
+  <data name="Budgets.DeletedCategory" xml:space="preserve"><value><![CDATA[(gelöschte Kategorie)]]></value></data>
+  <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget gespeichert]]></value></data>
+  <data name="Budgets.RemovedTitle" xml:space="preserve"><value><![CDATA[Budget entfernt]]></value></data>
+  <data name="Budgets.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[das Budget für „{0}“]]></value><comment>{0} = category path; substituted into the shared "Delete {0}? …" confirm template</comment></data>
 </root>

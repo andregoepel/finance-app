@@ -5,39 +5,40 @@
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject IStringLocalizer<Strings> L
 
-<AppPageTitle Title="Rules" Breadcrumb="Settings / Rules" />
+<AppPageTitle Title="@L["Nav.Rules"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Rules"]]" />
 
 <PageBody>
 
-    <PageHeader Title="Categorization rules"
-                Subtitle="Rules run before the AI on every import. All set conditions must match (text matching is case-insensitive &quot;contains&quot;)." />
+    <PageHeader Title="@L["Rules.PageTitle"]" Subtitle="@L["Rules.Subtitle"]" />
 
     @if (rules.Count == 0)
     {
-        <EmptyState Icon="@("⚙")" Title="No rules yet"
-                    Text="Add a rule below to categorize matching transactions before the AI runs." />
+        <EmptyState Icon="@("⚙")" Title="@L["Rules.EmptyTitle"]" Text="@L["Rules.EmptyText"]" />
     }
     else
     {
         <DataCard>
             <RadzenDataGrid TItem="Domain.Categories.CategoryRule" Data=@rules Density="Density.Compact" AllowPaging="true" PageSize="15">
                 <Columns>
-                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="Category" Width="200px" Sortable="false">
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="@L["Dashboard.ColCategory"]" Width="200px" Sortable="false">
                         <Template Context="rule">@CategoryLabel(rule.CategoryId)</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="CounterpartyContains" Title="Counterparty contains" />
-                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="DescriptionContains" Title="Description contains" />
-                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="Amount" Width="150px" Sortable="false">
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="CounterpartyContains" Title="@L["Rules.ColCounterpartyContains"]" />
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="DescriptionContains" Title="@L["Rules.ColDescriptionContains"]" />
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="@L["Common.Amount"]" Width="150px" Sortable="false">
                         <Template Context="rule">
                             @(rule.MinAmount?.ToString("N2") ?? "−∞") … @(rule.MaxAmount?.ToString("N2") ?? "∞")
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="Source" Title="Source" Width="170px" />
+                    <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Property="Source" Title="@L["Rules.ColSource"]" Width="170px">
+                        <Template Context="rule">@L[$"Enum.CategoryRuleSource.{rule.Source}"]</Template>
+                    </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="Domain.Categories.CategoryRule" Title="" Width="80px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="rule">
                             <RowActions>
-                                <IconButton Icon="delete" Title="Delete" Danger="true" Click=@(_ => DeleteAsync(rule.Id)) />
+                                <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true" Click=@(_ => DeleteAsync(rule.Id)) />
                             </RowActions>
                         </Template>
                     </RadzenDataGridColumn>
@@ -46,21 +47,21 @@
         </DataCard>
     }
 
-    <CardForm TItem="InputModel" Data="form" Submit="CreateAsync" Title="Add rule" SubmitText="Add">
+    <CardForm TItem="InputModel" Data="form" Submit="CreateAsync" Title="@L["Rules.AddRuleTitle"]" SubmitText="@L["Common.Add"]">
         <div class="ag-form-grid">
-            <FormField Label="Category" For="Category">
+            <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
                 <CategoryPicker Options="@categoryOptions" Name="Category" @bind-Value=@form.CategoryId />
             </FormField>
-            <FormField Label="Counterparty contains" For="Counterparty">
+            <FormField Label="@L["Rules.ColCounterpartyContains"]" For="Counterparty">
                 <RadzenTextBox @bind-Value=@form.Counterparty Name="Counterparty" Style="width: 100%;" />
             </FormField>
-            <FormField Label="Description contains" For="Description">
+            <FormField Label="@L["Rules.ColDescriptionContains"]" For="Description">
                 <RadzenTextBox @bind-Value=@form.Description Name="Description" Style="width: 100%;" />
             </FormField>
-            <FormField Label="Min amount" For="MinAmount">
+            <FormField Label="@L["Rules.MinAmountLabel"]" For="MinAmount">
                 <RadzenNumeric TValue="decimal?" @bind-Value=@form.MinAmount Name="MinAmount" Style="width: 100%;" />
             </FormField>
-            <FormField Label="Max amount" For="MaxAmount">
+            <FormField Label="@L["Rules.MaxAmountLabel"]" For="MaxAmount">
                 <RadzenNumeric TValue="decimal?" @bind-Value=@form.MaxAmount Name="MaxAmount" Style="width: 100%;" />
             </FormField>
         </div>
@@ -97,7 +98,10 @@
     {
         if (form.CategoryId is not Guid categoryId)
         {
-            NotificationService.Warning("Missing category", "Pick a category first.");
+            NotificationService.Warning(
+                L["Rules.MissingCategoryTitle"],
+                L["Rules.MissingCategoryMessage"]
+            );
             return;
         }
 
@@ -113,7 +117,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Error("Creating failed", result.Error);
+            NotificationService.Error(L["Categories.CreatingFailedTitle"], result.Error);
             return;
         }
 
@@ -123,14 +127,14 @@
 
     private async Task DeleteAsync(Guid ruleId)
     {
-        if (!await ConfirmService.ConfirmDeleteAsync("this rule"))
+        if (!await ConfirmService.ConfirmDeleteAsync(L["Rules.DeleteConfirmSubject"]))
         {
             return;
         }
         var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryRuleCommand(ruleId));
         if (result.IsFailure)
         {
-            NotificationService.Error("Delete failed", result.Error);
+            NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);
             return;
         }
         await ReloadAsync();
