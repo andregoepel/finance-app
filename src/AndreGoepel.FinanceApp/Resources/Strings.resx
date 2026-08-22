@@ -104,4 +104,63 @@
   <data name="Categories.RenameFailedTitle" xml:space="preserve"><value><![CDATA[Rename failed]]></value></data>
   <data name="Categories.CreatingFailedTitle" xml:space="preserve"><value><![CDATA[Creating failed]]></value></data>
   <data name="Categories.DeleteRefusedTitle" xml:space="preserve"><value><![CDATA[Delete refused]]></value></data>
+
+  <!-- Shared across mid pages (Sync, Recurring) -->
+  <data name="Common.Loading" xml:space="preserve"><value><![CDATA[Loading…]]></value></data>
+  <data name="Common.Counterparty" xml:space="preserve"><value><![CDATA[Counterparty]]></value></data>
+  <data name="Common.Account" xml:space="preserve"><value><![CDATA[Account]]></value></data>
+  <data name="Common.Provider" xml:space="preserve"><value><![CDATA[Provider]]></value></data>
+  <data name="Common.Enabled" xml:space="preserve"><value><![CDATA[Enabled]]></value></data>
+  <data name="Common.Disabled" xml:space="preserve"><value><![CDATA[Disabled]]></value></data>
+
+  <!-- Recurring.razor -->
+  <data name="Recurring.Subtitle" xml:space="preserve"><value><![CDATA[Detected subscriptions and other regular payments or income, based on repeating counterparties with a consistent interval and amount.]]></value></data>
+  <data name="Recurring.EmptyTitle" xml:space="preserve"><value><![CDATA[No recurring payments detected yet]]></value></data>
+  <data name="Recurring.EmptyText" xml:space="preserve"><value><![CDATA[This needs a few months of transactions before patterns emerge.]]></value></data>
+  <data name="Recurring.ColInterval" xml:space="preserve"><value><![CDATA[Interval]]></value></data>
+  <data name="Recurring.ColTypicalAmount" xml:space="preserve"><value><![CDATA[Typical amount]]></value></data>
+  <data name="Recurring.ColSeen" xml:space="preserve"><value><![CDATA[Seen]]></value></data>
+  <data name="Recurring.ColLast" xml:space="preserve"><value><![CDATA[Last]]></value></data>
+  <data name="Recurring.ColNextExpected" xml:space="preserve"><value><![CDATA[Next expected]]></value></data>
+  <data name="Recurring.AddAsPlanned" xml:space="preserve"><value><![CDATA[Add as planned]]></value></data>
+  <data name="Recurring.CouldNotAddTitle" xml:space="preserve"><value><![CDATA[Could not add]]></value></data>
+  <data name="Recurring.AddedToPlanningTitle" xml:space="preserve"><value><![CDATA[Added to planning]]></value></data>
+  <data name="Recurring.AddedToPlanningMessage" xml:space="preserve"><value><![CDATA[“{0}” — adjust it on the Planning page.]]></value><comment>{0} = the counterparty name</comment></data>
+  <data name="Enum.RecurrenceInterval.Weekly" xml:space="preserve"><value><![CDATA[Weekly]]></value></data>
+  <data name="Enum.RecurrenceInterval.Biweekly" xml:space="preserve"><value><![CDATA[Biweekly]]></value></data>
+  <data name="Enum.RecurrenceInterval.Monthly" xml:space="preserve"><value><![CDATA[Monthly]]></value></data>
+  <data name="Enum.RecurrenceInterval.Quarterly" xml:space="preserve"><value><![CDATA[Quarterly]]></value></data>
+  <data name="Enum.RecurrenceInterval.Yearly" xml:space="preserve"><value><![CDATA[Yearly]]></value></data>
+
+  <!-- Sync.razor -->
+  <data name="Sync.SyncAllNow" xml:space="preserve"><value><![CDATA[Sync all now]]></value></data>
+  <data name="Sync.SyncingBusyText" xml:space="preserve"><value><![CDATA[Syncing...]]></value></data>
+  <data name="Sync.Intro" xml:space="preserve"><value><![CDATA[API-backed accounts sync automatically on the schedule below; trigger a manual sync any time here. Configure credentials and bank consents under]]></value></data>
+  <data name="Sync.SettingsConnectionsLink" xml:space="preserve"><value><![CDATA[Settings → Connections]]></value></data>
+  <data name="Sync.ConsentAttentionNeeded" xml:space="preserve"><value><![CDATA[Consent attention needed:]]></value></data>
+  <data name="Sync.ConsentExpired" xml:space="preserve"><value><![CDATA[expired]]></value></data>
+  <data name="Sync.ConsentExpiresOn" xml:space="preserve"><value><![CDATA[expires {0}]]></value><comment>{0} = the expiry date</comment></data>
+  <data name="Sync.AutomaticScheduleTitle" xml:space="preserve"><value><![CDATA[Automatic schedule]]></value></data>
+  <data name="Sync.CronLabel" xml:space="preserve"><value><![CDATA[Cron expression (Quartz)]]></value></data>
+  <data name="Sync.SaveScheduleButton" xml:space="preserve"><value><![CDATA[Save schedule]]></value></data>
+  <data name="Sync.PresetsLabel" xml:space="preserve"><value><![CDATA[Presets:]]></value></data>
+  <data name="Sync.PresetDaily3am" xml:space="preserve"><value><![CDATA[Daily 03:00]]></value></data>
+  <data name="Sync.PresetDaily6am" xml:space="preserve"><value><![CDATA[Daily 06:00]]></value></data>
+  <data name="Sync.PresetEvery6Hours" xml:space="preserve"><value><![CDATA[Every 6 hours]]></value></data>
+  <data name="Sync.PresetHourly" xml:space="preserve"><value><![CDATA[Hourly]]></value></data>
+  <data name="Sync.OffPrompt" xml:space="preserve"><value><![CDATA[Automatic sync is off — use “{0}” to run manually.]]></value><comment>{0} = the "Sync all now" button's label</comment></data>
+  <data name="Sync.NextRun" xml:space="preserve"><value><![CDATA[Next run: {0}]]></value><comment>{0} = the formatted next-run date/time</comment></data>
+  <data name="Sync.InvalidCronExpression" xml:space="preserve"><value><![CDATA[Not a valid cron expression.]]></value></data>
+  <data name="Sync.EmptyTitle" xml:space="preserve"><value><![CDATA[No API-backed accounts yet]]></value></data>
+  <data name="Sync.EmptyText" xml:space="preserve"><value><![CDATA[Set an account's sync method to API under {0} to sync it here.]]></value><comment>{0} = the "Accounts" nav label</comment></data>
+  <data name="Sync.ColLastSync" xml:space="preserve"><value><![CDATA[Last sync]]></value></data>
+  <data name="Sync.NeverSynced" xml:space="preserve"><value><![CDATA[never]]></value></data>
+  <data name="Sync.SyncNowButton" xml:space="preserve"><value><![CDATA[Sync now]]></value></data>
+  <data name="Sync.InvalidScheduleTitle" xml:space="preserve"><value><![CDATA[Invalid schedule]]></value></data>
+  <data name="Sync.ScheduleSavedTitle" xml:space="preserve"><value><![CDATA[Schedule saved]]></value></data>
+  <data name="Sync.RescheduledMessage" xml:space="preserve"><value><![CDATA[Automatic sync rescheduled.]]></value></data>
+  <data name="Sync.DisabledMessage" xml:space="preserve"><value><![CDATA[Automatic sync disabled.]]></value></data>
+  <data name="Sync.AccountNotSyncedTitle" xml:space="preserve"><value><![CDATA[{0} not synced]]></value><comment>{0} = the account name</comment></data>
+  <data name="Sync.AccountSyncedTitle" xml:space="preserve"><value><![CDATA[{0} synced]]></value><comment>{0} = the account name</comment></data>
+  <data name="Sync.SyncedMessage" xml:space="preserve"><value><![CDATA[{0} imported, {1} duplicates.]]></value><comment>{0} = imported count, {1} = duplicate count</comment></data>
 </root>

@@ -196,4 +196,303 @@ public sealed class StringsResourceTests
         Assert.Equal("configured 22.08.2026", en);
         Assert.Equal("konfiguriert am 22.08.2026", de);
     }
+
+    [Theory]
+    [InlineData("en", "Common.Loading", "Loading…")]
+    [InlineData("de", "Common.Loading", "Wird geladen…")]
+    [InlineData("en", "Common.Counterparty", "Counterparty")]
+    [InlineData("de", "Common.Counterparty", "Gegenpartei")]
+    [InlineData("en", "Common.Account", "Account")]
+    [InlineData("de", "Common.Account", "Konto")]
+    [InlineData("en", "Common.Provider", "Provider")]
+    [InlineData("de", "Common.Provider", "Anbieter")]
+    [InlineData("en", "Common.Enabled", "Enabled")]
+    [InlineData("de", "Common.Enabled", "Aktiviert")]
+    [InlineData("en", "Common.Disabled", "Disabled")]
+    [InlineData("de", "Common.Disabled", "Deaktiviert")]
+    [InlineData(
+        "en",
+        "Recurring.Subtitle",
+        "Detected subscriptions and other regular payments or income, based on repeating counterparties with a consistent interval and amount."
+    )]
+    [InlineData(
+        "de",
+        "Recurring.Subtitle",
+        "Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Gegenparteien mit konsistentem Intervall und Betrag."
+    )]
+    [InlineData("en", "Recurring.EmptyTitle", "No recurring payments detected yet")]
+    [InlineData("de", "Recurring.EmptyTitle", "Noch keine wiederkehrenden Zahlungen erkannt")]
+    [InlineData(
+        "en",
+        "Recurring.EmptyText",
+        "This needs a few months of transactions before patterns emerge."
+    )]
+    [InlineData(
+        "de",
+        "Recurring.EmptyText",
+        "Dafür werden einige Monate an Transaktionen benötigt, bevor sich Muster abzeichnen."
+    )]
+    [InlineData("en", "Recurring.ColInterval", "Interval")]
+    [InlineData("de", "Recurring.ColInterval", "Intervall")]
+    [InlineData("en", "Recurring.ColTypicalAmount", "Typical amount")]
+    [InlineData("de", "Recurring.ColTypicalAmount", "Typischer Betrag")]
+    [InlineData("en", "Recurring.ColSeen", "Seen")]
+    [InlineData("de", "Recurring.ColSeen", "Gesehen")]
+    [InlineData("en", "Recurring.ColLast", "Last")]
+    [InlineData("de", "Recurring.ColLast", "Zuletzt")]
+    [InlineData("en", "Recurring.ColNextExpected", "Next expected")]
+    [InlineData("de", "Recurring.ColNextExpected", "Nächste erwartet")]
+    [InlineData("en", "Recurring.AddAsPlanned", "Add as planned")]
+    [InlineData("de", "Recurring.AddAsPlanned", "Als geplant hinzufügen")]
+    [InlineData("en", "Recurring.CouldNotAddTitle", "Could not add")]
+    [InlineData("de", "Recurring.CouldNotAddTitle", "Konnte nicht hinzugefügt werden")]
+    [InlineData("en", "Recurring.AddedToPlanningTitle", "Added to planning")]
+    [InlineData("de", "Recurring.AddedToPlanningTitle", "Zur Planung hinzugefügt")]
+    [InlineData("en", "Enum.RecurrenceInterval.Weekly", "Weekly")]
+    [InlineData("de", "Enum.RecurrenceInterval.Weekly", "Wöchentlich")]
+    [InlineData("en", "Enum.RecurrenceInterval.Biweekly", "Biweekly")]
+    [InlineData("de", "Enum.RecurrenceInterval.Biweekly", "Zweiwöchentlich")]
+    [InlineData("en", "Enum.RecurrenceInterval.Monthly", "Monthly")]
+    [InlineData("de", "Enum.RecurrenceInterval.Monthly", "Monatlich")]
+    [InlineData("en", "Enum.RecurrenceInterval.Quarterly", "Quarterly")]
+    [InlineData("de", "Enum.RecurrenceInterval.Quarterly", "Vierteljährlich")]
+    [InlineData("en", "Enum.RecurrenceInterval.Yearly", "Yearly")]
+    [InlineData("de", "Enum.RecurrenceInterval.Yearly", "Jährlich")]
+    [InlineData("en", "Sync.SyncAllNow", "Sync all now")]
+    [InlineData("de", "Sync.SyncAllNow", "Jetzt alle synchronisieren")]
+    [InlineData("en", "Sync.SyncingBusyText", "Syncing...")]
+    [InlineData("de", "Sync.SyncingBusyText", "Synchronisiere...")]
+    [InlineData(
+        "en",
+        "Sync.Intro",
+        "API-backed accounts sync automatically on the schedule below; trigger a manual sync any time here. Configure credentials and bank consents under"
+    )]
+    [InlineData(
+        "de",
+        "Sync.Intro",
+        "API-basierte Konten werden automatisch nach dem unten stehenden Zeitplan synchronisiert; hier kann jederzeit eine manuelle Synchronisierung ausgelöst werden. Zugangsdaten und Bank-Einwilligungen befinden sich unter"
+    )]
+    [InlineData("en", "Sync.SettingsConnectionsLink", "Settings → Connections")]
+    [InlineData("de", "Sync.SettingsConnectionsLink", "Einstellungen → Verbindungen")]
+    [InlineData("en", "Sync.ConsentAttentionNeeded", "Consent attention needed:")]
+    [InlineData("de", "Sync.ConsentAttentionNeeded", "Einwilligung erfordert Aufmerksamkeit:")]
+    [InlineData("en", "Sync.ConsentExpired", "expired")]
+    [InlineData("de", "Sync.ConsentExpired", "abgelaufen")]
+    [InlineData("en", "Sync.AutomaticScheduleTitle", "Automatic schedule")]
+    [InlineData("de", "Sync.AutomaticScheduleTitle", "Automatischer Zeitplan")]
+    [InlineData("en", "Sync.CronLabel", "Cron expression (Quartz)")]
+    [InlineData("de", "Sync.CronLabel", "Cron-Ausdruck (Quartz)")]
+    [InlineData("en", "Sync.SaveScheduleButton", "Save schedule")]
+    [InlineData("de", "Sync.SaveScheduleButton", "Zeitplan speichern")]
+    [InlineData("en", "Sync.PresetsLabel", "Presets:")]
+    [InlineData("de", "Sync.PresetsLabel", "Vorlagen:")]
+    [InlineData("en", "Sync.PresetDaily3am", "Daily 03:00")]
+    [InlineData("de", "Sync.PresetDaily3am", "Täglich 03:00")]
+    [InlineData("en", "Sync.PresetDaily6am", "Daily 06:00")]
+    [InlineData("de", "Sync.PresetDaily6am", "Täglich 06:00")]
+    [InlineData("en", "Sync.PresetEvery6Hours", "Every 6 hours")]
+    [InlineData("de", "Sync.PresetEvery6Hours", "Alle 6 Stunden")]
+    [InlineData("en", "Sync.PresetHourly", "Hourly")]
+    [InlineData("de", "Sync.PresetHourly", "Stündlich")]
+    [InlineData("en", "Sync.InvalidCronExpression", "Not a valid cron expression.")]
+    [InlineData("de", "Sync.InvalidCronExpression", "Kein gültiger Cron-Ausdruck.")]
+    [InlineData("en", "Sync.EmptyTitle", "No API-backed accounts yet")]
+    [InlineData("de", "Sync.EmptyTitle", "Noch keine API-basierten Konten")]
+    [InlineData("en", "Sync.ColLastSync", "Last sync")]
+    [InlineData("de", "Sync.ColLastSync", "Letzte Synchronisierung")]
+    [InlineData("en", "Sync.NeverSynced", "never")]
+    [InlineData("de", "Sync.NeverSynced", "nie")]
+    [InlineData("en", "Sync.SyncNowButton", "Sync now")]
+    [InlineData("de", "Sync.SyncNowButton", "Jetzt synchronisieren")]
+    [InlineData("en", "Sync.InvalidScheduleTitle", "Invalid schedule")]
+    [InlineData("de", "Sync.InvalidScheduleTitle", "Ungültiger Zeitplan")]
+    [InlineData("en", "Sync.ScheduleSavedTitle", "Schedule saved")]
+    [InlineData("de", "Sync.ScheduleSavedTitle", "Zeitplan gespeichert")]
+    [InlineData("en", "Sync.RescheduledMessage", "Automatic sync rescheduled.")]
+    [InlineData("de", "Sync.RescheduledMessage", "Automatische Synchronisierung neu geplant.")]
+    [InlineData("en", "Sync.DisabledMessage", "Automatic sync disabled.")]
+    [InlineData("de", "Sync.DisabledMessage", "Automatische Synchronisierung deaktiviert.")]
+    public void GetString_B3Key_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Fact]
+    public void GetString_RecurringAddedToPlanningMessage_FormatsTheCounterpartyIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Recurring.AddedToPlanningMessage", "Netflix"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Recurring.AddedToPlanningMessage", "Netflix"];
+        }
+
+        // Assert
+        Assert.Equal("“Netflix” — adjust it on the Planning page.", en);
+        Assert.Equal("„Netflix“ — auf der Planungsseite anpassen.", de);
+    }
+
+    [Fact]
+    public void GetString_SyncConsentExpiresOn_FormatsTheDateIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Sync.ConsentExpiresOn", "22.08.2026"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Sync.ConsentExpiresOn", "22.08.2026"];
+        }
+
+        // Assert
+        Assert.Equal("expires 22.08.2026", en);
+        Assert.Equal("läuft ab am 22.08.2026", de);
+    }
+
+    [Fact]
+    public void GetString_SyncOffPrompt_FormatsTheButtonLabelIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Sync.OffPrompt", "Sync all now"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Sync.OffPrompt", "Jetzt alle synchronisieren"];
+        }
+
+        // Assert
+        Assert.Equal("Automatic sync is off — use “Sync all now” to run manually.", en);
+        Assert.Equal(
+            "Automatische Synchronisierung ist deaktiviert — „Jetzt alle synchronisieren“ nutzen, um manuell zu synchronisieren.",
+            de
+        );
+    }
+
+    [Fact]
+    public void GetString_SyncNextRun_FormatsTheDateTimeIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Sync.NextRun", "Monday, 24.08.2026 03:00"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Sync.NextRun", "Montag, 24.08.2026 03:00"];
+        }
+
+        // Assert
+        Assert.Equal("Next run: Monday, 24.08.2026 03:00", en);
+        Assert.Equal("Nächster Lauf: Montag, 24.08.2026 03:00", de);
+    }
+
+    [Fact]
+    public void GetString_SyncEmptyText_FormatsTheNavLabelIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Sync.EmptyText", "Accounts"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Sync.EmptyText", "Konten"];
+        }
+
+        // Assert
+        Assert.Equal("Set an account's sync method to API under Accounts to sync it here.", en);
+        Assert.Equal(
+            "Die Synchronisierungsmethode eines Kontos unter Konten auf API setzen, um es hier zu synchronisieren.",
+            de
+        );
+    }
+
+    [Fact]
+    public void GetString_SyncAccountNotSyncedTitle_FormatsTheAccountNameIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Sync.AccountNotSyncedTitle", "Checking"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Sync.AccountNotSyncedTitle", "Checking"];
+        }
+
+        // Assert
+        Assert.Equal("Checking not synced", en);
+        Assert.Equal("Checking nicht synchronisiert", de);
+    }
+
+    [Fact]
+    public void GetString_SyncAccountSyncedTitle_FormatsTheAccountNameIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Sync.AccountSyncedTitle", "Checking"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Sync.AccountSyncedTitle", "Checking"];
+        }
+
+        // Assert
+        Assert.Equal("Checking synced", en);
+        Assert.Equal("Checking synchronisiert", de);
+    }
+
+    [Fact]
+    public void GetString_SyncSyncedMessage_FormatsTheCountsIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Sync.SyncedMessage", 3, 1];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Sync.SyncedMessage", 3, 1];
+        }
+
+        // Assert
+        Assert.Equal("3 imported, 1 duplicates.", en);
+        Assert.Equal("3 importiert, 1 Duplikate.", de);
+    }
 }
