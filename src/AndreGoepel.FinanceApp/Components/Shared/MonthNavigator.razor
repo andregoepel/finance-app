@@ -6,7 +6,7 @@
     <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                   Click="@(() => ShiftAsync(-1))" />
     <RadzenText TextStyle="TextStyle.Subtitle1" Style="min-width: 9rem; text-align: center;">
-        @Month.ToString("MMMM yyyy")
+        @Dates.Month(Month)
     </RadzenText>
     <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
                   Disabled="@DisableNext" Click="@(() => ShiftAsync(1))" />

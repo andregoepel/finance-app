@@ -29,7 +29,7 @@
     {
         <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
             Consent attention needed:
-            @string.Join(", ", expiringConnections.Select(c => $"{c.Label} ({(c.ConsentExpired ? "expired" : "expires " + c.ConsentExpiresAt?.ToLocalTime().ToString("dd.MM.yyyy"))})")).
+            @string.Join(", ", expiringConnections.Select(c => $"{c.Label} ({(c.ConsentExpired ? "expired" : "expires " + Dates.Short(c.ConsentExpiresAt?.ToLocalTime()))})")).
         </RadzenAlert>
     }
 
@@ -62,7 +62,7 @@
                     }
                     else if (ScheduleService.NextRun(cronInput) is DateTimeOffset next)
                     {
-                        <span>Next run: @next.ToLocalTime().ToString("dddd, dd.MM.yyyy HH:mm")</span>
+                        <span>Next run: @Dates.Long(next.ToLocalTime())</span>
                     }
                     else
                     {
@@ -89,7 +89,7 @@
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="AccountRow" Title="Last sync" Width="200px">
                         <Template Context="row">
-                            @(row.LastSync is null ? "never" : row.LastSync.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
+                            @(row.LastSync is null ? "never" : Dates.ShortTime(row.LastSync.Value.ToLocalTime()))
                         </Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="AccountRow" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">

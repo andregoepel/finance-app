@@ -182,7 +182,7 @@
                                     && DateTimeOffset.UtcNow - pricesAsOf > TimeSpan.FromHours(48))
                                 {
                                     <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                                        Prices from @pricesAsOf.LocalDateTime.ToString("dd.MM.yyyy") — refresh on the
+                                        Prices from @Dates.Short(pricesAsOf.LocalDateTime) — refresh on the
                                         <RadzenLink Path="settings/crypto" Text="holdings page" />.
                                     </RadzenText>
                                 }
@@ -245,7 +245,7 @@
         await LoadAsync();
         netWorth = await NetWorthService.GetAsync(cancellationToken: _cts.Token);
         netWorthChart = netWorth
-            .Series.Select(p => new ChartPoint(p.Date.ToString("MMM yy"), p.Amount))
+            .Series.Select(p => new ChartPoint(Dates.ChartMonth(p.Date), p.Amount))
             .ToList();
         upcoming = await PlanningService.GetUpcomingAsync(cancellationToken: _cts.Token);
         crypto = await CryptoService.GetOverviewAsync(_cts.Token);

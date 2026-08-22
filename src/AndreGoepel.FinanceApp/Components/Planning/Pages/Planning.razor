@@ -55,7 +55,7 @@
                 <RadzenDataGrid TItem="PlannedOccurrence" Data=@plan.Occurrences Density="Density.Compact" AllowPaging="false">
                     <Columns>
                         <RadzenDataGridColumn TItem="PlannedOccurrence" Property="DueDate" Title="Due" Width="105px">
-                            <Template Context="o">@o.DueDate.ToString("dd.MM.yyyy")</Template>
+                            <Template Context="o">@Dates.Short(o.DueDate)</Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="PlannedOccurrence" Property="Description" Title="Description" />
                         <RadzenDataGridColumn TItem="PlannedOccurrence" Title="Category" Width="130px">
@@ -92,7 +92,7 @@
                     <RadzenStack Gap="0.75rem">
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
                             <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">
-                                Match “@matchingOccurrence.Description” (@matchingOccurrence.DueDate.ToString("dd.MM.yyyy"))
+                                Match “@matchingOccurrence.Description” (@Dates.Short(matchingOccurrence.DueDate))
                             </RadzenText>
                             <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" Click=@(() => matchingOccurrence = null) />
                         </RadzenStack>
@@ -105,7 +105,7 @@
                             <RadzenDataGrid TItem="TransactionView" Data=@candidates Density="Density.Compact" AllowPaging="true" PageSize="8">
                                 <Columns>
                                     <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="105px">
-                                        <Template Context="t">@t.BookingDate.ToString("dd.MM.yyyy")</Template>
+                                        <Template Context="t">@Dates.Short(t.BookingDate)</Template>
                                     </RadzenDataGridColumn>
                                     <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="Counterparty" Width="160px" />
                                     <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
@@ -145,12 +145,12 @@
                     <RadzenDropDown TValue="PlannedFrequency" @bind-Value=@form.Frequency Name="Frequency" Data=@Frequencies Style="min-width: 9rem;" />
                 </FormField>
                 <FormField Label="Start date" For="StartDate">
-                    <RadzenDatePicker TValue="DateTime" @bind-Value=@form.StartDate Name="StartDate" DateFormat="dd.MM.yyyy" Style="width: 11rem;" />
+                    <RadzenDatePicker TValue="DateTime" @bind-Value=@form.StartDate Name="StartDate" DateFormat="@Dates.ShortFormat" Style="width: 11rem;" />
                 </FormField>
                 @if (form.Frequency != PlannedFrequency.OneTime)
                 {
                     <FormField Label="End date (optional)" For="EndDate">
-                        <RadzenDatePicker TValue="DateTime?" @bind-Value=@form.EndDate Name="EndDate" DateFormat="dd.MM.yyyy" AllowClear="true" Style="width: 11rem;" />
+                        <RadzenDatePicker TValue="DateTime?" @bind-Value=@form.EndDate Name="EndDate" DateFormat="@Dates.ShortFormat" AllowClear="true" Style="width: 11rem;" />
                     </FormField>
                 }
                 <FormField Label="Expected account" For="ExpectedAccount">

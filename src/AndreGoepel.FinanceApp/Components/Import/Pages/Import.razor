@@ -61,7 +61,7 @@
                     <Columns>
                         <RadzenDataGridColumn TItem="NormalizedTransaction" Property="SourceRow" Title="Row" Width="70px" />
                         <RadzenDataGridColumn TItem="NormalizedTransaction" Property="BookingDate" Title="Date" Width="110px">
-                            <Template Context="row">@row.BookingDate.ToString("dd.MM.yyyy")</Template>
+                            <Template Context="row">@Dates.Short(row.BookingDate)</Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Counterparty" Title="Counterparty" Width="170px" />
                         <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Description" Title="Description" />
@@ -114,7 +114,7 @@
             <RadzenDataGrid TItem="ImportBatch" Data=@history Density="Density.Compact" AllowPaging="true" PageSize="10">
                     <Columns>
                         <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedAt" Title="When" Width="160px">
-                            <Template Context="batch">@batch.ImportedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</Template>
+                            <Template Context="batch">@Dates.ShortTime(batch.ImportedAt.ToLocalTime())</Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="ImportBatch" Property="Source" Title="File" />
                         <RadzenDataGridColumn TItem="ImportBatch" Property="ParserId" Title="Format" Width="140px" />

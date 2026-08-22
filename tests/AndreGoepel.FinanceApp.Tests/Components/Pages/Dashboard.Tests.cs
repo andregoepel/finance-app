@@ -1,6 +1,5 @@
 using AndreGoepel.FinanceApp.Components.Pages;
 using AndreGoepel.FinanceApp.Insights;
-using Bunit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,16 +8,13 @@ using Radzen;
 
 namespace AndreGoepel.FinanceApp.Tests.Components.Pages;
 
-public sealed class DashboardTests : BunitContext
+public sealed class DashboardTests : LocalizedTestContext
 {
     private void RegisterDashboardService(
         MonthlyOverview overview,
         CryptoOverview? cryptoOverview = null
     )
     {
-        // RadzenChart resolves TooltipService (and friends) from DI.
-        Services.AddRadzenComponents();
-
         var service = Substitute.For<IDashboardService>();
         service
             .GetMonthlyOverviewAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
@@ -52,7 +48,6 @@ public sealed class DashboardTests : BunitContext
     public void Render_DefaultOverview_ShowsHeadingTotalsAndSectionCards()
     {
         // Arrange
-        JSInterop.Mode = JSRuntimeMode.Loose;
         RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
 
         // Act
@@ -70,7 +65,6 @@ public sealed class DashboardTests : BunitContext
     public void Render_WithBudget_ShowsBudgetProgress()
     {
         // Arrange — no spending list (keeps RadzenChart out of bUnit), one budget.
-        JSInterop.Mode = JSRuntimeMode.Loose;
         RegisterDashboardService(
             new MonthlyOverview(
                 Income: 2000m,
@@ -94,7 +88,6 @@ public sealed class DashboardTests : BunitContext
     public void Render_WithCryptoPositions_ShowsCryptoTile()
     {
         // Arrange
-        JSInterop.Mode = JSRuntimeMode.Loose;
         RegisterDashboardService(
             new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
             new CryptoOverview(
@@ -128,7 +121,6 @@ public sealed class DashboardTests : BunitContext
     public void Render_WithoutCryptoPositions_HidesCryptoTile()
     {
         // Arrange
-        JSInterop.Mode = JSRuntimeMode.Loose;
         RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
 
         // Act
