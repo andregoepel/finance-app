@@ -63,4 +63,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+
+  <!-- FinanceNavMenu.razor -->
+  <data name="Nav.SectionFinance" xml:space="preserve"><value><![CDATA[FINANCE]]></value></data>
+  <data name="Nav.SectionFinanceSettings" xml:space="preserve"><value><![CDATA[FINANCE SETTINGS]]></value></data>
+  <data name="Nav.Transactions" xml:space="preserve"><value><![CDATA[Transactions]]></value></data>
+  <data name="Nav.Review" xml:space="preserve"><value><![CDATA[Review]]></value></data>
+  <data name="Nav.Recurring" xml:space="preserve"><value><![CDATA[Recurring]]></value></data>
+  <data name="Nav.Planning" xml:space="preserve"><value><![CDATA[Planning]]></value></data>
+  <data name="Nav.Import" xml:space="preserve"><value><![CDATA[Import]]></value></data>
+  <data name="Nav.Sync" xml:space="preserve"><value><![CDATA[Sync]]></value></data>
+  <data name="Nav.Accounts" xml:space="preserve"><value><![CDATA[Accounts]]></value></data>
+  <data name="Nav.Categories" xml:space="preserve"><value><![CDATA[Categories]]></value></data>
+  <data name="Nav.Budgets" xml:space="preserve"><value><![CDATA[Budgets]]></value></data>
+  <data name="Nav.Crypto" xml:space="preserve"><value><![CDATA[Crypto]]></value></data>
+  <data name="Nav.Rules" xml:space="preserve"><value><![CDATA[Rules]]></value></data>
+  <data name="Nav.Connections" xml:space="preserve"><value><![CDATA[Connections]]></value></data>
+  <data name="Nav.ApiKeys" xml:space="preserve"><value><![CDATA[API Keys]]></value></data>
 </root>

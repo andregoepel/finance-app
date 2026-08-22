@@ -2,21 +2,23 @@
    AppFoundationLayoutOptions.Menu. Rendered via NavSection/NavItem so the
    entries match the shell's own sections. Both household users carry the
    Administrator role in this private app. *@
-<NavSection Title="FINANCE">
-    <NavItem Href="transactions" Text="Transactions" />
-    <NavItem Href="review" Text="Review" />
-    <NavItem Href="recurring" Text="Recurring" />
-    <NavItem Href="planning" Text="Planning" />
-    <NavItem Href="import" Text="Import" />
-    <NavItem Href="sync" Text="Sync" />
+@inject IStringLocalizer<Strings> L
+
+<NavSection Title="@L["Nav.SectionFinance"]">
+    <NavItem Href="transactions" Text="@L["Nav.Transactions"]" />
+    <NavItem Href="review" Text="@L["Nav.Review"]" />
+    <NavItem Href="recurring" Text="@L["Nav.Recurring"]" />
+    <NavItem Href="planning" Text="@L["Nav.Planning"]" />
+    <NavItem Href="import" Text="@L["Nav.Import"]" />
+    <NavItem Href="sync" Text="@L["Nav.Sync"]" />
 </NavSection>
 
-<NavSection Title="FINANCE SETTINGS">
-    <NavItem Href="settings/accounts" Text="Accounts" />
-    <NavItem Href="settings/categories" Text="Categories" />
-    <NavItem Href="settings/budgets" Text="Budgets" />
-    <NavItem Href="settings/crypto" Text="Crypto" />
-    <NavItem Href="settings/rules" Text="Rules" />
-    <NavItem Href="settings/connections" Text="Connections" />
-    <NavItem Href="settings/credentials" Text="API Keys" />
+<NavSection Title="@L["Nav.SectionFinanceSettings"]">
+    <NavItem Href="settings/accounts" Text="@L["Nav.Accounts"]" />
+    <NavItem Href="settings/categories" Text="@L["Nav.Categories"]" />
+    <NavItem Href="settings/budgets" Text="@L["Nav.Budgets"]" />
+    <NavItem Href="settings/crypto" Text="@L["Nav.Crypto"]" />
+    <NavItem Href="settings/rules" Text="@L["Nav.Rules"]" />
+    <NavItem Href="settings/connections" Text="@L["Nav.Connections"]" />
+    <NavItem Href="settings/credentials" Text="@L["Nav.ApiKeys"]" />
 </NavSection>
