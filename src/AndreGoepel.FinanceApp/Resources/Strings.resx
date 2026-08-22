@@ -80,4 +80,28 @@
   <data name="Nav.Rules" xml:space="preserve"><value><![CDATA[Rules]]></value></data>
   <data name="Nav.Connections" xml:space="preserve"><value><![CDATA[Connections]]></value></data>
   <data name="Nav.ApiKeys" xml:space="preserve"><value><![CDATA[API Keys]]></value></data>
+
+  <!-- Shared across settings pages -->
+  <data name="Common.SettingsBreadcrumb" xml:space="preserve"><value><![CDATA[Settings / {0}]]></value><comment>{0} = the current settings page's name</comment></data>
+  <data name="Common.Save" xml:space="preserve"><value><![CDATA[Save]]></value></data>
+  <data name="Common.Saved" xml:space="preserve"><value><![CDATA[Saved]]></value></data>
+  <data name="Common.SavingFailedTitle" xml:space="preserve"><value><![CDATA[Saving failed]]></value></data>
+  <data name="Common.Delete" xml:space="preserve"><value><![CDATA[Delete]]></value></data>
+
+  <!-- Credentials.razor ("API Keys" page) -->
+  <data name="ApiKeys.SecretsIntro" xml:space="preserve"><value><![CDATA[Secrets are stored encrypted in the database (DataProtection) and never shown again after saving. Wise and Enable Banking credentials live under]]></value></data>
+  <data name="ApiKeys.ClaudeSectionTitle" xml:space="preserve"><value><![CDATA[Claude API key]]></value></data>
+  <data name="ApiKeys.ConfiguredOn" xml:space="preserve"><value><![CDATA[configured {0}]]></value><comment>{0} = the date it was configured or last rotated</comment></data>
+  <data name="ApiKeys.NotConfigured" xml:space="preserve"><value><![CDATA[not configured]]></value></data>
+  <data name="ApiKeys.ClaudeDescription" xml:space="preserve"><value><![CDATA[Used for AI categorization of imported transactions. Without a key, uncategorized transactions simply stay in the review queue.]]></value></data>
+  <data name="ApiKeys.RotateKeyPlaceholder" xml:space="preserve"><value><![CDATA[Enter new key to rotate]]></value></data>
+  <data name="ApiKeys.ClaudeKeySavedMessage" xml:space="preserve"><value><![CDATA[Claude API key stored encrypted.]]></value></data>
+
+  <!-- Categories.razor -->
+  <data name="Categories.NewSubcategoryPlaceholder" xml:space="preserve"><value><![CDATA[New subcategory]]></value></data>
+  <data name="Categories.NewGroupPlaceholder" xml:space="preserve"><value><![CDATA[New group]]></value></data>
+  <data name="Categories.AddGroup" xml:space="preserve"><value><![CDATA[Add group]]></value></data>
+  <data name="Categories.RenameFailedTitle" xml:space="preserve"><value><![CDATA[Rename failed]]></value></data>
+  <data name="Categories.CreatingFailedTitle" xml:space="preserve"><value><![CDATA[Creating failed]]></value></data>
+  <data name="Categories.DeleteRefusedTitle" xml:space="preserve"><value><![CDATA[Delete refused]]></value></data>
 </root>
