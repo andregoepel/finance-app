@@ -163,4 +163,54 @@
   <data name="Sync.AccountNotSyncedTitle" xml:space="preserve"><value><![CDATA[{0} nicht synchronisiert]]></value><comment>{0} = the account name</comment></data>
   <data name="Sync.AccountSyncedTitle" xml:space="preserve"><value><![CDATA[{0} synchronisiert]]></value><comment>{0} = the account name</comment></data>
   <data name="Sync.SyncedMessage" xml:space="preserve"><value><![CDATA[{0} importiert, {1} Duplikate.]]></value><comment>{0} = imported count, {1} = duplicate count</comment></data>
+
+  <!-- Shared across review/import pages -->
+  <data name="Common.Date" xml:space="preserve"><value><![CDATA[Datum]]></value></data>
+  <data name="Common.Description" xml:space="preserve"><value><![CDATA[Beschreibung]]></value></data>
+  <data name="Common.Amount" xml:space="preserve"><value><![CDATA[Betrag]]></value></data>
+  <data name="Common.Status" xml:space="preserve"><value><![CDATA[Status]]></value></data>
+  <data name="Common.FailedTitle" xml:space="preserve"><value><![CDATA[Fehlgeschlagen]]></value></data>
+  <data name="Common.DoneTitle" xml:space="preserve"><value><![CDATA[Fertig]]></value></data>
+  <data name="Common.ChooseCategoryPlaceholder" xml:space="preserve"><value><![CDATA[Kategorie wählen]]></value></data>
+
+  <!-- Review.razor -->
+  <data name="Review.PageTitle" xml:space="preserve"><value><![CDATA[Prüfwarteschlange]]></value></data>
+  <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Transaktionsübersicht mit „KI“ markiert.]]></value></data>
+  <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge übernehmen]]></value></data>
+  <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge verwerfen]]></value></data>
+  <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Kategorie für Auswahl festlegen]]></value></data>
+  <data name="Review.ApplyToSelection" xml:space="preserve"><value><![CDATA[Auf Auswahl anwenden]]></value></data>
+  <data name="Review.ColAiSuggestion" xml:space="preserve"><value><![CDATA[KI-Vorschlag]]></value></data>
+  <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Vorschlag übernehmen]]></value></data>
+  <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Vorschlag übernommen.]]></value></data>
+  <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Vorschläge übernommen.]]></value></data>
+  <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Vorschläge verworfen.]]></value></data>
+
+  <!-- Import.razor -->
+  <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Konto auswählen]]></value></data>
+  <data name="Import.ProviderCaption" xml:space="preserve"><value><![CDATA[Anbieter: {0} — CSV-Export hochladen; unbekannte Formate werden abgelehnt, nichts wird überraschend teilweise importiert.]]></value><comment>{0} = the provider (proper noun, e.g. DKB)</comment></data>
+  <data name="Import.PreviewTitle" xml:space="preserve"><value><![CDATA[Vorschau — {0} ({1})]]></value><comment>{0} = file name, {1} = detected parser id</comment></data>
+  <data name="Import.NewCount" xml:space="preserve"><value><![CDATA[{0} neu]]></value><comment>{0} = count of new rows</comment></data>
+  <data name="Import.DuplicatesCount" xml:space="preserve"><value><![CDATA[{0} Duplikate]]></value><comment>{0} = count of duplicate rows</comment></data>
+  <data name="Import.ProblemRowsCount" xml:space="preserve"><value><![CDATA[{0} fehlerhafte Zeilen]]></value><comment>{0} = count of problem rows</comment></data>
+  <data name="Import.ColRow" xml:space="preserve"><value><![CDATA[Zeile]]></value></data>
+  <data name="Import.DuplicateBadge" xml:space="preserve"><value><![CDATA[Duplikat]]></value></data>
+  <data name="Import.NewBadge" xml:space="preserve"><value><![CDATA[Neu]]></value></data>
+  <data name="Import.ProblemRowsHeading" xml:space="preserve"><value><![CDATA[Fehlerhafte Zeilen (nicht importiert)]]></value></data>
+  <data name="Import.ColProblem" xml:space="preserve"><value><![CDATA[Problem]]></value></data>
+  <data name="Import.ColRawLine" xml:space="preserve"><value><![CDATA[Rohzeile]]></value></data>
+  <data name="Import.ImportButton" xml:space="preserve"><value><![CDATA[{0} Transaktionen importieren]]></value><comment>{0} = count of new transactions</comment></data>
+  <data name="Import.ImportingBusyText" xml:space="preserve"><value><![CDATA[Importiere...]]></value></data>
+  <data name="Import.HistoryTitle" xml:space="preserve"><value><![CDATA[Import-Verlauf]]></value></data>
+  <data name="Import.ColWhen" xml:space="preserve"><value><![CDATA[Wann]]></value></data>
+  <data name="Import.ColFile" xml:space="preserve"><value><![CDATA[Datei]]></value></data>
+  <data name="Import.ColFormat" xml:space="preserve"><value><![CDATA[Format]]></value></data>
+  <data name="Import.ColImported" xml:space="preserve"><value><![CDATA[Importiert]]></value></data>
+  <data name="Import.ColDuplicates" xml:space="preserve"><value><![CDATA[Duplikate]]></value></data>
+  <data name="Import.ColErrors" xml:space="preserve"><value><![CDATA[Fehler]]></value></data>
+  <data name="Import.ColImportedBy" xml:space="preserve"><value><![CDATA[Von]]></value></data>
+  <data name="Import.CouldNotReadFile" xml:space="preserve"><value><![CDATA[Datei konnte nicht gelesen werden: {0}]]></value><comment>{0} = the exception message (technical, stays untranslated)</comment></data>
+  <data name="Import.ImportFailedTitle" xml:space="preserve"><value><![CDATA[Import fehlgeschlagen]]></value></data>
+  <data name="Import.ImportCompleteTitle" xml:space="preserve"><value><![CDATA[Import abgeschlossen]]></value></data>
+  <data name="Import.ImportCompleteMessage" xml:space="preserve"><value><![CDATA[{0} importiert, {1} Duplikate übersprungen.]]></value><comment>{0} = imported count, {1} = duplicate count</comment></data>
 </root>
