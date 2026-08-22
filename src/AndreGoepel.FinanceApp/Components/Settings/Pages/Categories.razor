@@ -5,12 +5,13 @@
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject IStringLocalizer<Strings> L
 
-<AppPageTitle Title="Categories" Breadcrumb="Settings / Categories" />
+<AppPageTitle Title="@L["Nav.Categories"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Categories"]]" />
 
 <PageBody>
 
-    <PageHeader Title="Categories" />
+    <PageHeader Title="@L["Nav.Categories"]" />
 
     @foreach (var group in Groups)
     {
@@ -49,10 +50,10 @@
                                           Size="ButtonSize.ExtraSmall"
                                           ButtonStyle="ButtonStyle.Light"
                                           Click=@(() => DeleteAsync(child))
-                                          title="Delete" />
+                                          title="@L["Common.Delete"]" />
                         }
                     }
-                    <RadzenTextBox @bind-Value=@newChildNames[group.Id] Placeholder="New subcategory" Style="width: 11rem;" />
+                    <RadzenTextBox @bind-Value=@newChildNames[group.Id] Placeholder="@L["Categories.NewSubcategoryPlaceholder"]" Style="width: 11rem;" />
                     <RadzenButton Icon="add" Size="ButtonSize.ExtraSmall" Click=@(() => AddAsync(newChildNames[group.Id], group.Id)) />
                 </RadzenStack>
             </RadzenStack>
@@ -61,8 +62,8 @@
 
     <RadzenCard>
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-            <RadzenTextBox @bind-Value=@newGroupName Placeholder="New group" Style="min-width: 12rem;" />
-            <RadzenButton Text="Add group" Icon="add" Click=@(() => AddAsync(newGroupName, null)) />
+            <RadzenTextBox @bind-Value=@newGroupName Placeholder="@L["Categories.NewGroupPlaceholder"]" Style="min-width: 12rem;" />
+            <RadzenButton Text="@L["Categories.AddGroup"]" Icon="add" Click=@(() => AddAsync(newGroupName, null)) />
         </RadzenStack>
     </RadzenCard>
 
@@ -114,7 +115,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Error("Rename failed", result.Error);
+            NotificationService.Error(L["Categories.RenameFailedTitle"], result.Error);
             return;
         }
         CancelEdit();
@@ -128,7 +129,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Error("Creating failed", result.Error);
+            NotificationService.Error(L["Categories.CreatingFailedTitle"], result.Error);
             return;
         }
         if (parentId is Guid groupId)
@@ -151,7 +152,7 @@
         var result = await MessageBus.InvokeAsync<Result>(new DeleteCategoryCommand(category.Id));
         if (result.IsFailure)
         {
-            NotificationService.Error("Delete refused", result.Error);
+            NotificationService.Error(L["Categories.DeleteRefusedTitle"], result.Error);
             return;
         }
         await ReloadAsync();

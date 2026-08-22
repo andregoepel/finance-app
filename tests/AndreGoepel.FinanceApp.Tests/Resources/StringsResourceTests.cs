@@ -85,4 +85,115 @@ public sealed class StringsResourceTests
         Assert.Equal(expected, value);
         Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
     }
+
+    [Theory]
+    [InlineData("en", "Common.Save", "Save")]
+    [InlineData("de", "Common.Save", "Speichern")]
+    [InlineData("en", "Common.Saved", "Saved")]
+    [InlineData("de", "Common.Saved", "Gespeichert")]
+    [InlineData("en", "Common.SavingFailedTitle", "Saving failed")]
+    [InlineData("de", "Common.SavingFailedTitle", "Speichern fehlgeschlagen")]
+    [InlineData("en", "Common.Delete", "Delete")]
+    [InlineData("de", "Common.Delete", "Löschen")]
+    [InlineData("en", "ApiKeys.ClaudeSectionTitle", "Claude API key")]
+    [InlineData("de", "ApiKeys.ClaudeSectionTitle", "Claude-API-Schlüssel")]
+    [InlineData(
+        "en",
+        "ApiKeys.SecretsIntro",
+        "Secrets are stored encrypted in the database (DataProtection) and never shown again after saving. Wise and Enable Banking credentials live under"
+    )]
+    [InlineData(
+        "de",
+        "ApiKeys.SecretsIntro",
+        "Geheimnisse werden verschlüsselt in der Datenbank gespeichert (DataProtection) und nach dem Speichern nie wieder angezeigt. Wise- und Enable-Banking-Zugangsdaten befinden sich unter"
+    )]
+    [InlineData(
+        "en",
+        "ApiKeys.ClaudeDescription",
+        "Used for AI categorization of imported transactions. Without a key, uncategorized transactions simply stay in the review queue."
+    )]
+    [InlineData(
+        "de",
+        "ApiKeys.ClaudeDescription",
+        "Wird für die KI-Kategorisierung importierter Transaktionen verwendet. Ohne Schlüssel bleiben unkategorisierte Transaktionen einfach in der Prüfung."
+    )]
+    [InlineData("en", "ApiKeys.NotConfigured", "not configured")]
+    [InlineData("de", "ApiKeys.NotConfigured", "nicht konfiguriert")]
+    [InlineData("en", "ApiKeys.RotateKeyPlaceholder", "Enter new key to rotate")]
+    [InlineData("de", "ApiKeys.RotateKeyPlaceholder", "Neuen Schlüssel zum Rotieren eingeben")]
+    [InlineData("en", "ApiKeys.ClaudeKeySavedMessage", "Claude API key stored encrypted.")]
+    [InlineData(
+        "de",
+        "ApiKeys.ClaudeKeySavedMessage",
+        "Claude-API-Schlüssel verschlüsselt gespeichert."
+    )]
+    [InlineData("en", "Categories.NewSubcategoryPlaceholder", "New subcategory")]
+    [InlineData("de", "Categories.NewSubcategoryPlaceholder", "Neue Unterkategorie")]
+    [InlineData("en", "Categories.NewGroupPlaceholder", "New group")]
+    [InlineData("de", "Categories.NewGroupPlaceholder", "Neue Gruppe")]
+    [InlineData("en", "Categories.AddGroup", "Add group")]
+    [InlineData("de", "Categories.AddGroup", "Gruppe hinzufügen")]
+    [InlineData("en", "Categories.RenameFailedTitle", "Rename failed")]
+    [InlineData("de", "Categories.RenameFailedTitle", "Umbenennen fehlgeschlagen")]
+    [InlineData("en", "Categories.CreatingFailedTitle", "Creating failed")]
+    [InlineData("de", "Categories.CreatingFailedTitle", "Erstellen fehlgeschlagen")]
+    [InlineData("en", "Categories.DeleteRefusedTitle", "Delete refused")]
+    [InlineData("de", "Categories.DeleteRefusedTitle", "Löschen abgelehnt")]
+    public void GetString_B2Key_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Fact]
+    public void GetString_SettingsBreadcrumb_FormatsThePageNameIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Common.SettingsBreadcrumb", "Categories"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Common.SettingsBreadcrumb", "Kategorien"];
+        }
+
+        // Assert
+        Assert.Equal("Settings / Categories", en);
+        Assert.Equal("Einstellungen / Kategorien", de);
+    }
+
+    [Fact]
+    public void GetString_ApiKeysConfiguredOn_FormatsTheDateIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["ApiKeys.ConfiguredOn", "22.08.2026"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["ApiKeys.ConfiguredOn", "22.08.2026"];
+        }
+
+        // Assert
+        Assert.Equal("configured 22.08.2026", en);
+        Assert.Equal("konfiguriert am 22.08.2026", de);
+    }
 }

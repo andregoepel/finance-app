@@ -80,4 +80,28 @@
   <data name="Nav.Rules" xml:space="preserve"><value><![CDATA[Regeln]]></value></data>
   <data name="Nav.Connections" xml:space="preserve"><value><![CDATA[Verbindungen]]></value></data>
   <data name="Nav.ApiKeys" xml:space="preserve"><value><![CDATA[API-Schlüssel]]></value></data>
+
+  <!-- Shared across settings pages -->
+  <data name="Common.SettingsBreadcrumb" xml:space="preserve"><value><![CDATA[Einstellungen / {0}]]></value><comment>{0} = the current settings page's name</comment></data>
+  <data name="Common.Save" xml:space="preserve"><value><![CDATA[Speichern]]></value></data>
+  <data name="Common.Saved" xml:space="preserve"><value><![CDATA[Gespeichert]]></value></data>
+  <data name="Common.SavingFailedTitle" xml:space="preserve"><value><![CDATA[Speichern fehlgeschlagen]]></value></data>
+  <data name="Common.Delete" xml:space="preserve"><value><![CDATA[Löschen]]></value></data>
+
+  <!-- Credentials.razor ("API Keys" page) -->
+  <data name="ApiKeys.SecretsIntro" xml:space="preserve"><value><![CDATA[Geheimnisse werden verschlüsselt in der Datenbank gespeichert (DataProtection) und nach dem Speichern nie wieder angezeigt. Wise- und Enable-Banking-Zugangsdaten befinden sich unter]]></value></data>
+  <data name="ApiKeys.ClaudeSectionTitle" xml:space="preserve"><value><![CDATA[Claude-API-Schlüssel]]></value></data>
+  <data name="ApiKeys.ConfiguredOn" xml:space="preserve"><value><![CDATA[konfiguriert am {0}]]></value><comment>{0} = the date it was configured or last rotated</comment></data>
+  <data name="ApiKeys.NotConfigured" xml:space="preserve"><value><![CDATA[nicht konfiguriert]]></value></data>
+  <data name="ApiKeys.ClaudeDescription" xml:space="preserve"><value><![CDATA[Wird für die KI-Kategorisierung importierter Transaktionen verwendet. Ohne Schlüssel bleiben unkategorisierte Transaktionen einfach in der Prüfung.]]></value></data>
+  <data name="ApiKeys.RotateKeyPlaceholder" xml:space="preserve"><value><![CDATA[Neuen Schlüssel zum Rotieren eingeben]]></value></data>
+  <data name="ApiKeys.ClaudeKeySavedMessage" xml:space="preserve"><value><![CDATA[Claude-API-Schlüssel verschlüsselt gespeichert.]]></value></data>
+
+  <!-- Categories.razor -->
+  <data name="Categories.NewSubcategoryPlaceholder" xml:space="preserve"><value><![CDATA[Neue Unterkategorie]]></value></data>
+  <data name="Categories.NewGroupPlaceholder" xml:space="preserve"><value><![CDATA[Neue Gruppe]]></value></data>
+  <data name="Categories.AddGroup" xml:space="preserve"><value><![CDATA[Gruppe hinzufügen]]></value></data>
+  <data name="Categories.RenameFailedTitle" xml:space="preserve"><value><![CDATA[Umbenennen fehlgeschlagen]]></value></data>
+  <data name="Categories.CreatingFailedTitle" xml:space="preserve"><value><![CDATA[Erstellen fehlgeschlagen]]></value></data>
+  <data name="Categories.DeleteRefusedTitle" xml:space="preserve"><value><![CDATA[Löschen abgelehnt]]></value></data>
 </root>
