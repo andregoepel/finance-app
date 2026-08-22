@@ -7,22 +7,21 @@
 @inject IRecurringService RecurringService
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
+@inject IStringLocalizer<Strings> L
 
-<AppPageTitle Title="Recurring" />
+<AppPageTitle Title="@L["Nav.Recurring"]" />
 
 <PageBody>
 
-    <PageHeader Title="Recurring"
-                Subtitle="Detected subscriptions and other regular payments or income, based on repeating counterparties with a consistent interval and amount." />
+    <PageHeader Title="@L["Nav.Recurring"]" Subtitle="@L["Recurring.Subtitle"]" />
 
     @if (series is null)
     {
-        <RadzenText>Loading…</RadzenText>
+        <RadzenText>@L["Common.Loading"]</RadzenText>
     }
     else if (series.Count == 0)
     {
-        <EmptyState Icon="@("🔁")" Title="No recurring payments detected yet"
-                    Text="This needs a few months of transactions before patterns emerge." />
+        <EmptyState Icon="@("🔁")" Title="@L["Recurring.EmptyTitle"]" Text="@L["Recurring.EmptyText"]" />
     }
     else
     {
@@ -30,24 +29,26 @@
             <RadzenDataGrid TItem="RecurringSeries" Data=@series Density="Density.Compact"
                             AllowSorting="true" AllowPaging="true" PageSize="20">
                 <Columns>
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Counterparty" Title="Counterparty" />
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Interval" Title="Interval" Width="110px" />
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="TypicalAmount" Title="Typical amount" Width="140px" TextAlign="TextAlign.Right">
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Counterparty" Title="@L["Common.Counterparty"]" />
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Interval" Title="@L["Recurring.ColInterval"]" Width="110px">
+                        <Template Context="row">@L[$"Enum.RecurrenceInterval.{row.Interval}"]</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="TypicalAmount" Title="@L["Recurring.ColTypicalAmount"]" Width="140px" TextAlign="TextAlign.Right">
                         <Template Context="row">
                             <AmountText Amount="row.TypicalAmount" />
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Occurrences" Title="Seen" Width="70px" TextAlign="TextAlign.Right" />
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="LastSeen" Title="Last" Width="120px">
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Occurrences" Title="@L["Recurring.ColSeen"]" Width="70px" TextAlign="TextAlign.Right" />
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="LastSeen" Title="@L["Recurring.ColLast"]" Width="120px">
                         <Template Context="row">@Dates.Short(row.LastSeen)</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="Next expected" Width="130px">
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="@L["Recurring.ColNextExpected"]" Width="130px">
                         <Template Context="row">@Dates.Short(row.NextExpected)</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
-                                <RadzenButton Text="Add as planned" Icon="event_note" Size="ButtonSize.ExtraSmall"
+                                <RadzenButton Text="@L["Recurring.AddAsPlanned"]" Icon="event_note" Size="ButtonSize.ExtraSmall"
                                               ButtonStyle="ButtonStyle.Secondary" Click=@(() => AddAsPlannedAsync(row)) />
                             </RowActions>
                         </Template>
@@ -92,12 +93,12 @@
 
         if (result.IsFailure)
         {
-            NotificationService.Error("Could not add", result.Error);
+            NotificationService.Error(L["Recurring.CouldNotAddTitle"], result.Error);
             return;
         }
         NotificationService.Success(
-            "Added to planning",
-            $"“{s.Counterparty}” — adjust it on the Planning page."
+            L["Recurring.AddedToPlanningTitle"],
+            L["Recurring.AddedToPlanningMessage", s.Counterparty]
         );
     }
 }

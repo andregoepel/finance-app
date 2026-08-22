@@ -6,49 +6,49 @@
 @inject IAccountSyncService SyncService
 @inject ISyncScheduleService ScheduleService
 @inject NotificationService NotificationService
+@inject IStringLocalizer<Strings> L
 
-<AppPageTitle Title="Sync" />
+<AppPageTitle Title="@L["Nav.Sync"]" />
 
 <PageBody>
 
-    <PageHeader Title="Sync">
+    <PageHeader Title="@L["Nav.Sync"]">
         <Actions>
-            <RadzenButton Text="Sync all now" Icon="sync" ButtonStyle="ButtonStyle.Primary"
-                          Disabled=@(isSyncing || accounts.Count == 0) IsBusy=@isSyncing BusyText="Syncing..."
+            <RadzenButton Text="@L["Sync.SyncAllNow"]" Icon="sync" ButtonStyle="ButtonStyle.Primary"
+                          Disabled=@(isSyncing || accounts.Count == 0) IsBusy=@isSyncing BusyText="@L["Sync.SyncingBusyText"]"
                           Click=@SyncAllAsync />
         </Actions>
     </PageHeader>
 
     <RadzenText TextStyle="TextStyle.Body1" Style="color: var(--rz-text-secondary-color);">
-        API-backed accounts sync automatically on the schedule below; trigger a manual sync
-        any time here. Configure credentials and bank consents under
-        <RadzenLink Path="settings/connections" Text="Settings → Connections" />.
+        @L["Sync.Intro"]
+        <RadzenLink Path="settings/connections" Text="@L["Sync.SettingsConnectionsLink"]" />.
     </RadzenText>
 
     @if (expiringConnections.Count > 0)
     {
         <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
-            Consent attention needed:
-            @string.Join(", ", expiringConnections.Select(c => $"{c.Label} ({(c.ConsentExpired ? "expired" : "expires " + Dates.Short(c.ConsentExpiresAt?.ToLocalTime()))})")).
+            @L["Sync.ConsentAttentionNeeded"]
+            @string.Join(", ", expiringConnections.Select(c => $"{c.Label} ({(c.ConsentExpired ? L["Sync.ConsentExpired"] : L["Sync.ConsentExpiresOn", Dates.Short(c.ConsentExpiresAt!.Value.ToLocalTime())])})")).
         </RadzenAlert>
     }
 
     @* ---------- Automatic schedule ---------- *@
-    <SectionCard Title="Automatic schedule">
+    <SectionCard Title="@L["Sync.AutomaticScheduleTitle"]">
         <Actions>
             <RadzenSwitch @bind-Value=@scheduleEnabled />
-            <RadzenLabel Text="@(scheduleEnabled ? "Enabled" : "Disabled")" />
+            <RadzenLabel Text="@(scheduleEnabled ? L["Common.Enabled"] : L["Common.Disabled"])" />
         </Actions>
         <ChildContent>
             <RadzenStack Gap="1rem">
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                    <FormField Label="Cron expression (Quartz)" For="Cron">
+                    <FormField Label="@L["Sync.CronLabel"]" For="Cron">
                         <RadzenTextBox @bind-Value=@cronInput Name="Cron" Disabled=@(!scheduleEnabled) Style="min-width: 16rem; font-family: monospace;" />
                     </FormField>
-                    <RadzenButton Text="Save schedule" Icon="save" ButtonStyle="ButtonStyle.Primary" Click=@SaveScheduleAsync />
+                    <RadzenButton Text="@L["Sync.SaveScheduleButton"]" Icon="save" ButtonStyle="ButtonStyle.Primary" Click=@SaveScheduleAsync />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
-                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">Presets:</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@L["Sync.PresetsLabel"]</RadzenText>
                     @foreach (var preset in CronPresets)
                     {
                         <RadzenButton Text="@preset.Label" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
@@ -58,15 +58,15 @@
                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
                     @if (!scheduleEnabled)
                     {
-                        <span>Automatic sync is off — use “Sync all now” to run manually.</span>
+                        <span>@L["Sync.OffPrompt", L["Sync.SyncAllNow"]]</span>
                     }
                     else if (ScheduleService.NextRun(cronInput) is DateTimeOffset next)
                     {
-                        <span>Next run: @Dates.Long(next.ToLocalTime())</span>
+                        <span>@L["Sync.NextRun", Dates.Long(next.ToLocalTime())]</span>
                     }
                     else
                     {
-                        <span style="color: var(--rz-danger);">Not a valid cron expression.</span>
+                        <span style="color: var(--rz-danger);">@L["Sync.InvalidCronExpression"]</span>
                     }
                 </RadzenText>
             </RadzenStack>
@@ -75,27 +75,26 @@
 
     @if (accounts.Count == 0)
     {
-        <EmptyState Icon="@("🔄")" Title="No API-backed accounts yet"
-                    Text="Set an account's sync method to API under Accounts to sync it here." />
+        <EmptyState Icon="@("🔄")" Title="@L["Sync.EmptyTitle"]" Text="@L["Sync.EmptyText", L["Nav.Accounts"]]" />
     }
     else
     {
         <DataCard>
             <RadzenDataGrid TItem="AccountRow" Data=@accounts Density="Density.Compact">
                 <Columns>
-                    <RadzenDataGridColumn TItem="AccountRow" Title="Account" Property="Name" />
-                    <RadzenDataGridColumn TItem="AccountRow" Title="Provider" Width="120px">
+                    <RadzenDataGridColumn TItem="AccountRow" Title="@L["Common.Account"]" Property="Name" />
+                    <RadzenDataGridColumn TItem="AccountRow" Title="@L["Common.Provider"]" Width="120px">
                         <Template Context="row">@row.Provider</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="AccountRow" Title="Last sync" Width="200px">
+                    <RadzenDataGridColumn TItem="AccountRow" Title="@L["Sync.ColLastSync"]" Width="200px">
                         <Template Context="row">
-                            @(row.LastSync is null ? "never" : Dates.ShortTime(row.LastSync.Value.ToLocalTime()))
+                            @(row.LastSync is null ? L["Sync.NeverSynced"] : Dates.ShortTime(row.LastSync.Value.ToLocalTime()))
                         </Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="AccountRow" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
-                                <RadzenButton Text="Sync now" Icon="sync" Size="ButtonSize.Small"
+                                <RadzenButton Text="@L["Sync.SyncNowButton"]" Icon="sync" Size="ButtonSize.Small"
                                               ButtonStyle="ButtonStyle.Secondary" Disabled=@isSyncing
                                               Click=@(() => SyncOneAsync(row.Id)) />
                             </RowActions>
@@ -121,12 +120,13 @@
     private string cronInput = "0 0 3 * * ?";
     private bool scheduleEnabled = true;
 
-    private static readonly (string Label, string Cron)[] CronPresets =
+    // Instance property (not static) since the labels are localized via the injected L.
+    private (string Label, string Cron)[] CronPresets =>
     [
-        ("Daily 03:00", "0 0 3 * * ?"),
-        ("Daily 06:00", "0 0 6 * * ?"),
-        ("Every 6 hours", "0 0 0/6 * * ?"),
-        ("Hourly", "0 0 * * * ?"),
+        (L["Sync.PresetDaily3am"], "0 0 3 * * ?"),
+        (L["Sync.PresetDaily6am"], "0 0 6 * * ?"),
+        (L["Sync.PresetEvery6Hours"], "0 0 0/6 * * ?"),
+        (L["Sync.PresetHourly"], "0 0 * * * ?"),
     ];
 
     protected override async Task OnInitializedAsync()
@@ -142,11 +142,13 @@
         var result = await ScheduleService.UpdateAsync(cronInput, scheduleEnabled);
         if (result.IsFailure)
         {
-            NotificationService.Error("Invalid schedule", result.Error);
+            NotificationService.Error(L["Sync.InvalidScheduleTitle"], result.Error);
             return;
         }
-        NotificationService.Success("Schedule saved",
-            scheduleEnabled ? "Automatic sync rescheduled." : "Automatic sync disabled.");
+        NotificationService.Success(
+            L["Sync.ScheduleSavedTitle"],
+            scheduleEnabled ? L["Sync.RescheduledMessage"] : L["Sync.DisabledMessage"]
+        );
     }
 
     private async Task LoadAsync()
@@ -220,12 +222,17 @@
     {
         if (summary.IsFailure)
         {
-            NotificationService.Warning($"{summary.AccountName} not synced", summary.Error);
+            NotificationService.Warning(
+                L["Sync.AccountNotSyncedTitle", summary.AccountName],
+                summary.Error
+            );
         }
         else
         {
-            NotificationService.Success($"{summary.AccountName} synced",
-                $"{summary.Imported} imported, {summary.Duplicates} duplicates.");
+            NotificationService.Success(
+                L["Sync.AccountSyncedTitle", summary.AccountName],
+                L["Sync.SyncedMessage", summary.Imported, summary.Duplicates]
+            );
         }
     }
 }
