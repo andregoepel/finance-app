@@ -495,4 +495,294 @@ public sealed class StringsResourceTests
         Assert.Equal("3 imported, 1 duplicates.", en);
         Assert.Equal("3 importiert, 1 Duplikate.", de);
     }
+
+    [Theory]
+    [InlineData("en", "Common.Date", "Date")]
+    [InlineData("de", "Common.Date", "Datum")]
+    [InlineData("en", "Common.Description", "Description")]
+    [InlineData("de", "Common.Description", "Beschreibung")]
+    [InlineData("en", "Common.Amount", "Amount")]
+    [InlineData("de", "Common.Amount", "Betrag")]
+    [InlineData("en", "Common.Status", "Status")]
+    [InlineData("de", "Common.Status", "Status")]
+    [InlineData("en", "Common.FailedTitle", "Failed")]
+    [InlineData("de", "Common.FailedTitle", "Fehlgeschlagen")]
+    [InlineData("en", "Common.DoneTitle", "Done")]
+    [InlineData("de", "Common.DoneTitle", "Fertig")]
+    [InlineData("en", "Common.ChooseCategoryPlaceholder", "Choose category")]
+    [InlineData("de", "Common.ChooseCategoryPlaceholder", "Kategorie wählen")]
+    [InlineData("en", "Review.PageTitle", "Review queue")]
+    [InlineData("de", "Review.PageTitle", "Prüfwarteschlange")]
+    [InlineData("en", "Review.AcceptSuggestions", "Accept suggestions")]
+    [InlineData("de", "Review.AcceptSuggestions", "Vorschläge übernehmen")]
+    [InlineData("en", "Review.DismissSuggestions", "Dismiss suggestions")]
+    [InlineData("de", "Review.DismissSuggestions", "Vorschläge verwerfen")]
+    [InlineData("en", "Review.SetCategoryLabel", "Set category for selection")]
+    [InlineData("de", "Review.SetCategoryLabel", "Kategorie für Auswahl festlegen")]
+    [InlineData("en", "Review.ApplyToSelection", "Apply to selection")]
+    [InlineData("de", "Review.ApplyToSelection", "Auf Auswahl anwenden")]
+    [InlineData("en", "Review.ColAiSuggestion", "AI suggestion")]
+    [InlineData("de", "Review.ColAiSuggestion", "KI-Vorschlag")]
+    [InlineData("en", "Review.AcceptSuggestionTooltip", "Accept suggestion")]
+    [InlineData("de", "Review.AcceptSuggestionTooltip", "Vorschlag übernehmen")]
+    [InlineData("en", "Review.SuggestionAcceptedMessage", "Suggestion accepted.")]
+    [InlineData("de", "Review.SuggestionAcceptedMessage", "Vorschlag übernommen.")]
+    [InlineData("en", "Review.SuggestionsAcceptedMessage", "Suggestions accepted.")]
+    [InlineData("de", "Review.SuggestionsAcceptedMessage", "Vorschläge übernommen.")]
+    [InlineData("en", "Review.SuggestionsDismissedMessage", "Suggestions dismissed.")]
+    [InlineData("de", "Review.SuggestionsDismissedMessage", "Vorschläge verworfen.")]
+    public void GetString_B4Key_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Fact]
+    public void GetString_ReviewSubtitle_PinsBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Review.Subtitle"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Review.Subtitle"];
+        }
+
+        // Assert
+        Assert.Equal(
+            "Uncategorized transactions and low-confidence AI suggestions. High-confidence suggestions are applied automatically and flagged \"Ai\" in the transactions grid.",
+            en
+        );
+        Assert.Equal(
+            "Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Transaktionsübersicht mit „KI“ markiert.",
+            de
+        );
+    }
+
+    [Theory]
+    [InlineData("en", "Import.SelectAccountPlaceholder", "Select account")]
+    [InlineData("de", "Import.SelectAccountPlaceholder", "Konto auswählen")]
+    [InlineData("en", "Import.ColRow", "Row")]
+    [InlineData("de", "Import.ColRow", "Zeile")]
+    [InlineData("en", "Import.DuplicateBadge", "Duplicate")]
+    [InlineData("de", "Import.DuplicateBadge", "Duplikat")]
+    [InlineData("en", "Import.NewBadge", "New")]
+    [InlineData("de", "Import.NewBadge", "Neu")]
+    [InlineData("en", "Import.ProblemRowsHeading", "Problem rows (not imported)")]
+    [InlineData("de", "Import.ProblemRowsHeading", "Fehlerhafte Zeilen (nicht importiert)")]
+    [InlineData("en", "Import.ColProblem", "Problem")]
+    [InlineData("de", "Import.ColProblem", "Problem")]
+    [InlineData("en", "Import.ColRawLine", "Raw line")]
+    [InlineData("de", "Import.ColRawLine", "Rohzeile")]
+    [InlineData("en", "Import.ImportingBusyText", "Importing...")]
+    [InlineData("de", "Import.ImportingBusyText", "Importiere...")]
+    [InlineData("en", "Import.HistoryTitle", "Import history")]
+    [InlineData("de", "Import.HistoryTitle", "Import-Verlauf")]
+    [InlineData("en", "Import.ColWhen", "When")]
+    [InlineData("de", "Import.ColWhen", "Wann")]
+    [InlineData("en", "Import.ColFile", "File")]
+    [InlineData("de", "Import.ColFile", "Datei")]
+    [InlineData("en", "Import.ColFormat", "Format")]
+    [InlineData("de", "Import.ColFormat", "Format")]
+    [InlineData("en", "Import.ColImported", "Imported")]
+    [InlineData("de", "Import.ColImported", "Importiert")]
+    [InlineData("en", "Import.ColDuplicates", "Duplicates")]
+    [InlineData("de", "Import.ColDuplicates", "Duplikate")]
+    [InlineData("en", "Import.ColErrors", "Errors")]
+    [InlineData("de", "Import.ColErrors", "Fehler")]
+    [InlineData("en", "Import.ColImportedBy", "By")]
+    [InlineData("de", "Import.ColImportedBy", "Von")]
+    [InlineData("en", "Import.ImportFailedTitle", "Import failed")]
+    [InlineData("de", "Import.ImportFailedTitle", "Import fehlgeschlagen")]
+    [InlineData("en", "Import.ImportCompleteTitle", "Import complete")]
+    [InlineData("de", "Import.ImportCompleteTitle", "Import abgeschlossen")]
+    public void GetString_ImportKey_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Fact]
+    public void GetString_ImportProviderCaption_FormatsTheProviderIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.ProviderCaption", "DKB"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Import.ProviderCaption", "DKB"];
+        }
+
+        // Assert
+        Assert.StartsWith("Provider: DKB", en);
+        Assert.StartsWith("Anbieter: DKB", de);
+    }
+
+    [Fact]
+    public void GetString_ImportPreviewTitle_FormatsFileAndParserIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.PreviewTitle", "statement.csv", "DKB"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Import.PreviewTitle", "statement.csv", "DKB"];
+        }
+
+        // Assert
+        Assert.Equal("Preview — statement.csv (DKB)", en);
+        Assert.Equal("Vorschau — statement.csv (DKB)", de);
+    }
+
+    [Fact]
+    public void GetString_ImportNewCount_FormatsZeroExactlyForE2E()
+    {
+        // Arrange / Act — the E2E suite asserts on the exact rendered text "0 new".
+        string en;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.NewCount", 0];
+        }
+
+        // Assert
+        Assert.Equal("0 new", en);
+    }
+
+    [Fact]
+    public void GetString_ImportDuplicatesCount_FormatsBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.DuplicatesCount", 2];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Import.DuplicatesCount", 2];
+        }
+
+        // Assert
+        Assert.Equal("2 duplicates", en);
+        Assert.Equal("2 Duplikate", de);
+    }
+
+    [Fact]
+    public void GetString_ImportProblemRowsCount_FormatsBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.ProblemRowsCount", 1];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Import.ProblemRowsCount", 1];
+        }
+
+        // Assert
+        Assert.Equal("1 problem rows", en);
+        Assert.Equal("1 fehlerhafte Zeilen", de);
+    }
+
+    [Fact]
+    public void GetString_ImportButton_ContainsImportForE2EAndFormatsGermanNaturally()
+    {
+        // Arrange / Act — the E2E suite clicks a button matching "Import" (non-exact), so the
+        // English rendering must keep containing that word.
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.ImportButton", 3];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Import.ImportButton", 3];
+        }
+
+        // Assert
+        Assert.Contains("Import", en);
+        Assert.Equal("Import 3 transactions", en);
+        Assert.Equal("3 Transaktionen importieren", de);
+    }
+
+    [Fact]
+    public void GetString_ImportCouldNotReadFile_FormatsTheExceptionMessageIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.CouldNotReadFile", "disk full"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Import.CouldNotReadFile", "disk full"];
+        }
+
+        // Assert
+        Assert.Equal("Could not read the file: disk full", en);
+        Assert.Equal("Datei konnte nicht gelesen werden: disk full", de);
+    }
+
+    [Fact]
+    public void GetString_ImportCompleteMessage_FormatsTheCountsIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Import.ImportCompleteMessage", 5, 2];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Import.ImportCompleteMessage", 5, 2];
+        }
+
+        // Assert
+        Assert.Equal("5 imported, 2 duplicates skipped.", en);
+        Assert.Equal("5 importiert, 2 Duplikate übersprungen.", de);
+    }
 }
