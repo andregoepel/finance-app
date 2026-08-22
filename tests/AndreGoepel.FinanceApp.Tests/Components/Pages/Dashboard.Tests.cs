@@ -61,6 +61,30 @@ public sealed class DashboardTests : LocalizedTestContext
         Assert.Contains("Budgets", cut.Markup);
     }
 
+    /// <summary>
+    /// The counterpart to the English render above: the same page under the German culture. This is
+    /// the first end-to-end proof that the whole chain — request culture, the injected
+    /// <c>IStringLocalizer&lt;Strings&gt;</c>, and the embedded <c>.de.resx</c> — actually swaps the
+    /// rendered copy, rather than each key merely resolving correctly in isolation.
+    /// </summary>
+    [Fact]
+    public void Render_UnderGermanCulture_ShowsGermanHeadingTotalsAndSectionCards()
+    {
+        // Arrange
+        using var culture = UseCulture("de");
+        RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
+
+        // Act
+        var cut = Render<Dashboard>();
+
+        // Assert
+        Assert.Contains("Übersicht", cut.Markup);
+        Assert.Contains("Einnahmen", cut.Markup);
+        Assert.Contains("Ausgaben nach Kategorie", cut.Markup);
+        Assert.Contains("Vermögen", cut.Markup);
+        Assert.DoesNotContain("Spending by category", cut.Markup);
+    }
+
     [Fact]
     public void Render_WithBudget_ShowsBudgetProgress()
     {
