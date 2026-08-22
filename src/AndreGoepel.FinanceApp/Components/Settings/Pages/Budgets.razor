@@ -7,50 +7,49 @@
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject IStringLocalizer<Strings> L
 
-<AppPageTitle Title="Budgets" Breadcrumb="Settings / Budgets" />
+<AppPageTitle Title="@L["Nav.Budgets"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Budgets"]]" />
 
 <PageBody>
 
-    <PageHeader Title="Budgets"
-                Subtitle="Set a monthly EUR limit per category. A limit on a parent category counts spending in that category and all of its subcategories. Progress shows on the dashboard." />
+    <PageHeader Title="@L["Nav.Budgets"]" Subtitle="@L["Budgets.Subtitle"]" />
 
-    <SectionCard Title="Set a budget">
+    <SectionCard Title="@L["Budgets.SetBudgetTitle"]">
         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-            <FormField Label="Category" For="Category">
+            <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
                 <RadzenDropDown TValue="Guid?" @bind-Value=@selectedCategoryId Name="Category"
                                 Data=@categoryOptions ValueProperty="Id" TextProperty="Path"
-                                AllowClear="true" AllowFiltering="true" Placeholder="Select category"
+                                AllowClear="true" AllowFiltering="true" Placeholder="@L["Common.SelectCategoryPlaceholder"]"
                                 Style="min-width: 18rem;" />
             </FormField>
-            <FormField Label="Monthly limit (€)" For="Limit">
+            <FormField Label="@L["Budgets.MonthlyLimitLabel"]" For="Limit">
                 <RadzenNumeric TValue="decimal" @bind-Value=@limitInput Name="Limit" Min="0" Style="width: 9rem;" />
             </FormField>
-            <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary"
+            <RadzenButton Text="@L["Common.Save"]" Icon="save" ButtonStyle="ButtonStyle.Primary"
                           Disabled=@(selectedCategoryId is null || limitInput <= 0) Click=@SaveAsync />
         </RadzenStack>
     </SectionCard>
 
-    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">Current budgets</RadzenText>
+    <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@L["Budgets.CurrentBudgetsHeading"]</RadzenText>
     @if (budgetRows.Count == 0)
     {
-        <EmptyState Icon="@("💶")" Title="No budgets set yet"
-                    Text="Set a monthly limit for a category above to start tracking it." />
+        <EmptyState Icon="@("💶")" Title="@L["Budgets.EmptyTitle"]" Text="@L["Budgets.EmptyText"]" />
     }
     else
     {
         <DataCard>
             <RadzenDataGrid TItem="BudgetRow" Data=@budgetRows Density="Density.Compact" AllowPaging="false">
                 <Columns>
-                    <RadzenDataGridColumn TItem="BudgetRow" Property="Path" Title="Category" />
-                    <RadzenDataGridColumn TItem="BudgetRow" Property="Limit" Title="Monthly limit" Width="150px" TextAlign="TextAlign.Right">
-                        <Template Context="row">@($"{row.Limit:N2} €")</Template>
+                    <RadzenDataGridColumn TItem="BudgetRow" Property="Path" Title="@L["Dashboard.ColCategory"]" />
+                    <RadzenDataGridColumn TItem="BudgetRow" Property="Limit" Title="@L["Budgets.ColMonthlyLimit"]" Width="150px" TextAlign="TextAlign.Right">
+                        <Template Context="row">@Money.Eur(row.Limit)</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="BudgetRow" Title="" Width="110px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
-                                <IconButton Icon="edit" Title="Edit" Click=@(_ => StartEdit(row)) />
-                                <IconButton Icon="delete" Title="Delete" Danger="true" Click=@(_ => DeleteAsync(row)) />
+                                <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => StartEdit(row)) />
+                                <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true" Click=@(_ => DeleteAsync(row)) />
                             </RowActions>
                         </Template>
                     </RadzenDataGridColumn>
@@ -99,7 +98,7 @@
         budgetRows = budgets
             .Select(b => new BudgetRow(
                 b.Id,
-                pathById.TryGetValue(b.Id, out var path) ? path : "(deleted category)",
+                pathById.TryGetValue(b.Id, out var path) ? path : L["Budgets.DeletedCategory"],
                 b.MonthlyLimit))
             .OrderBy(r => r.Path)
             .ToList();
@@ -121,28 +120,31 @@
             new SetBudgetCommand(categoryId, limitInput));
         if (result.IsFailure)
         {
-            NotificationService.Error("Saving failed", result.Error);
+            NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
             return;
         }
         selectedCategoryId = null;
         limitInput = 0;
         await LoadAsync();
-        NotificationService.Success("Budget saved");
+        NotificationService.Success(L["Budgets.SavedTitle"]);
     }
 
     private async Task DeleteAsync(BudgetRow row)
     {
-        if (!await ConfirmService.ConfirmDeleteAsync($"the budget for “{row.Path}”"))
+        // Parameterized rather than interpolated: the shared confirm template wraps this in
+        // "Delete {0}? …" / "{0} löschen? …", so an English article baked into the argument
+        // would read as broken German (see the localization plan's per-batch checklist).
+        if (!await ConfirmService.ConfirmDeleteAsync(L["Budgets.DeleteConfirmSubject", row.Path]))
         {
             return;
         }
         var result = await MessageBus.InvokeAsync<Result>(new DeleteBudgetCommand(row.CategoryId));
         if (result.IsFailure)
         {
-            NotificationService.Error("Delete failed", result.Error);
+            NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);
             return;
         }
         await LoadAsync();
-        NotificationService.Success("Budget removed");
+        NotificationService.Success(L["Budgets.RemovedTitle"]);
     }
 }

@@ -915,4 +915,158 @@ public sealed class StringsResourceTests
         Assert.Equal("Prices from 20.08.2026 — refresh on the", en);
         Assert.Equal("Kurse vom 20.08.2026 — aktualisieren auf der", de);
     }
+
+    [Theory]
+    [InlineData("en", "Common.Add", "Add")]
+    [InlineData("de", "Common.Add", "Hinzufügen")]
+    [InlineData("en", "Common.Edit", "Edit")]
+    [InlineData("de", "Common.Edit", "Bearbeiten")]
+    [InlineData("en", "Common.Apply", "Apply")]
+    [InlineData("de", "Common.Apply", "Anwenden")]
+    [InlineData("en", "Common.No", "No")]
+    [InlineData("de", "Common.No", "Nein")]
+    [InlineData("en", "Common.Owner", "Owner")]
+    [InlineData("de", "Common.Owner", "Inhaber")]
+    [InlineData("en", "Common.Search", "Search")]
+    [InlineData("de", "Common.Search", "Suche")]
+    [InlineData("en", "Common.From", "From")]
+    [InlineData("de", "Common.From", "Von")]
+    [InlineData("en", "Common.To", "To")]
+    [InlineData("de", "Common.To", "Bis")]
+    [InlineData("en", "Common.AllPlaceholder", "All")]
+    [InlineData("de", "Common.AllPlaceholder", "Alle")]
+    [InlineData("en", "Common.SelectCategoryPlaceholder", "Select category")]
+    [InlineData("de", "Common.SelectCategoryPlaceholder", "Kategorie auswählen")]
+    [InlineData("en", "Common.DeleteFailedTitle", "Delete failed")]
+    [InlineData("de", "Common.DeleteFailedTitle", "Löschen fehlgeschlagen")]
+    [InlineData("en", "Transactions.CreateRule", "Create rule")]
+    [InlineData("de", "Transactions.CreateRule", "Regel erstellen")]
+    [InlineData("en", "Transactions.SearchPlaceholder", "Description or counterparty")]
+    [InlineData("de", "Transactions.SearchPlaceholder", "Beschreibung oder Gegenpartei")]
+    [InlineData("en", "Transactions.LinkAsTransfer", "Link as transfer")]
+    [InlineData("de", "Transactions.LinkAsTransfer", "Als Umbuchung verknüpfen")]
+    [InlineData("en", "Transactions.UncategorizedPlaceholder", "Uncategorized")]
+    [InlineData("de", "Transactions.UncategorizedPlaceholder", "Unkategorisiert")]
+    [InlineData("en", "Transactions.TransferBadge", "Transfer")]
+    [InlineData("de", "Transactions.TransferBadge", "Umbuchung")]
+    [InlineData("en", "Transactions.UnlinkTransfer", "Unlink transfer")]
+    [InlineData("de", "Transactions.UnlinkTransfer", "Umbuchung trennen")]
+    [InlineData("en", "Transactions.LinkedMessage", "Transactions linked as transfer.")]
+    [InlineData("de", "Transactions.LinkedMessage", "Transaktionen als Umbuchung verknüpft.")]
+    [InlineData("en", "Rules.PageTitle", "Categorization rules")]
+    [InlineData("de", "Rules.PageTitle", "Kategorisierungsregeln")]
+    [InlineData("en", "Rules.EmptyTitle", "No rules yet")]
+    [InlineData("de", "Rules.EmptyTitle", "Noch keine Regeln")]
+    [InlineData("en", "Rules.ColCounterpartyContains", "Counterparty contains")]
+    [InlineData("de", "Rules.ColCounterpartyContains", "Gegenpartei enthält")]
+    [InlineData("en", "Rules.ColSource", "Source")]
+    [InlineData("de", "Rules.ColSource", "Quelle")]
+    [InlineData("en", "Rules.AddRuleTitle", "Add rule")]
+    [InlineData("de", "Rules.AddRuleTitle", "Regel hinzufügen")]
+    [InlineData("en", "Rules.MissingCategoryMessage", "Pick a category first.")]
+    [InlineData("de", "Rules.MissingCategoryMessage", "Zuerst eine Kategorie auswählen.")]
+    [InlineData("en", "Budgets.SetBudgetTitle", "Set a budget")]
+    [InlineData("de", "Budgets.SetBudgetTitle", "Budget festlegen")]
+    [InlineData("en", "Budgets.CurrentBudgetsHeading", "Current budgets")]
+    [InlineData("de", "Budgets.CurrentBudgetsHeading", "Aktuelle Budgets")]
+    [InlineData("en", "Budgets.EmptyTitle", "No budgets set yet")]
+    [InlineData("de", "Budgets.EmptyTitle", "Noch keine Budgets festgelegt")]
+    [InlineData("en", "Budgets.ColMonthlyLimit", "Monthly limit")]
+    [InlineData("de", "Budgets.ColMonthlyLimit", "Monatliches Limit")]
+    [InlineData("en", "Budgets.DeletedCategory", "(deleted category)")]
+    [InlineData("de", "Budgets.DeletedCategory", "(gelöschte Kategorie)")]
+    [InlineData("en", "Budgets.SavedTitle", "Budget saved")]
+    [InlineData("de", "Budgets.SavedTitle", "Budget gespeichert")]
+    [InlineData("en", "Budgets.RemovedTitle", "Budget removed")]
+    [InlineData("de", "Budgets.RemovedTitle", "Budget entfernt")]
+    public void GetString_B6Key_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    /// <summary>
+    /// Every enum member rendered as UI text needs its own key, since the fallback would be the
+    /// bare C# identifier. A missing member surfaces only when that value happens to appear in a
+    /// grid, so pin the whole set.
+    /// </summary>
+    [Theory]
+    [InlineData("en", "Enum.CategorySource.Provider", "Provider")]
+    [InlineData("de", "Enum.CategorySource.Provider", "Anbieter")]
+    [InlineData("en", "Enum.CategorySource.Rule", "Rule")]
+    [InlineData("de", "Enum.CategorySource.Rule", "Regel")]
+    [InlineData("en", "Enum.CategorySource.Ai", "Ai")]
+    [InlineData("de", "Enum.CategorySource.Ai", "KI")]
+    [InlineData("en", "Enum.CategorySource.Manual", "Manual")]
+    [InlineData("de", "Enum.CategorySource.Manual", "Manuell")]
+    [InlineData("en", "Enum.CategoryRuleSource.Manual", "Manual")]
+    [InlineData("de", "Enum.CategoryRuleSource.Manual", "Manuell")]
+    [InlineData("en", "Enum.CategoryRuleSource.LearnedFromCorrection", "Learned from correction")]
+    [InlineData("de", "Enum.CategoryRuleSource.LearnedFromCorrection", "Aus Korrektur gelernt")]
+    public void GetString_EnumDisplayKey_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    /// <summary>
+    /// Guards the plan's "baked English article" trap: these subjects are substituted into the
+    /// design system's shared "Delete {0}? …" / "{0} löschen? …" template, so the German value has
+    /// to be a grammatical object on its own, not a translation of an English fragment.
+    /// </summary>
+    [Fact]
+    public void GetString_DeleteConfirmSubjects_ComposeGrammaticallyInBothCultures()
+    {
+        // Arrange / Act
+        string enBudget;
+        string deBudget;
+        string enRule;
+        string deRule;
+        using (CultureScope.UiOnly("en"))
+        {
+            enBudget = FinanceLocalizer.Create()[
+                "Budgets.DeleteConfirmSubject",
+                "Food › Groceries"
+            ];
+            enRule = FinanceLocalizer.Create()["Rules.DeleteConfirmSubject"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            deBudget = FinanceLocalizer.Create()[
+                "Budgets.DeleteConfirmSubject",
+                "Food › Groceries"
+            ];
+            deRule = FinanceLocalizer.Create()["Rules.DeleteConfirmSubject"];
+        }
+
+        // Assert — German uses its own quotation marks and article, not a literal translation.
+        Assert.Equal("the budget for “Food › Groceries”", enBudget);
+        Assert.Equal("das Budget für „Food › Groceries“", deBudget);
+        Assert.Equal("this rule", enRule);
+        Assert.Equal("diese Regel", deRule);
+    }
 }

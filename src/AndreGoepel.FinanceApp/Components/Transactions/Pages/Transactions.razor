@@ -7,70 +7,71 @@
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject UserManager<User> UserManager
+@inject IStringLocalizer<Strings> L
 @implements IDisposable
 
-<AppPageTitle Title="Transactions" />
+<AppPageTitle Title="@L["Nav.Transactions"]" />
 
 <PageBody>
 
-    <PageHeader Title="Transactions" />
+    <PageHeader Title="@L["Nav.Transactions"]" />
 
     @if (ruleOffer is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="true" Close=@(() => ruleOffer = null)>
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
                 <span>
-                    Always categorize <strong>@ruleOffer.Counterparty</strong> as
-                    <strong>@ruleOffer.CategoryLabel</strong>?
+                    @L["Transactions.RuleOfferPrefix"] <strong>@ruleOffer.Counterparty</strong>
+                    @L["Transactions.RuleOfferInfix"] <strong>@ruleOffer.CategoryLabel</strong>@L["Transactions.RuleOfferSuffix"]
                 </span>
-                <RadzenButton Text="Create rule" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Click=@CreateRuleFromOfferAsync />
-                <RadzenButton Text="No" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click=@(() => ruleOffer = null) />
+                <RadzenButton Text="@L["Transactions.CreateRule"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Click=@CreateRuleFromOfferAsync />
+                <RadzenButton Text="@L["Common.No"]" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click=@(() => ruleOffer = null) />
             </RadzenStack>
         </RadzenAlert>
     }
 
-    <FilterBar OnApply="ReloadAsync" ApplyText="Apply" ApplyStyle="ButtonStyle.Secondary">
+    <FilterBar OnApply="ReloadAsync" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Secondary">
         <ChildContent>
-            <FormField Label="Account" For="Account">
+            <FormField Label="@L["Common.Account"]" For="Account">
                 <RadzenDropDown TValue="Guid?"
                                 @bind-Value=@accountFilter Name="Account"
                                 Data=@accounts
                                 TextProperty="Name"
                                 ValueProperty="Id"
                                 AllowClear="true"
-                                Placeholder="All"
+                                Placeholder="@L["Common.AllPlaceholder"]"
                                 Style="min-width: 12rem;"
                                 Change=@(_ => ReloadAsync()) />
             </FormField>
-            <FormField Label="Owner" For="Owner">
+            <FormField Label="@L["Common.Owner"]" For="Owner">
                 <RadzenDropDown TValue="Guid?"
                                 @bind-Value=@ownerFilter Name="Owner"
                                 Data=@users
                                 ValueProperty="StreamId"
                                 TextProperty="UserName"
                                 AllowClear="true"
-                                Placeholder="All"
+                                Placeholder="@L["Common.AllPlaceholder"]"
                                 Style="min-width: 12rem;"
                                 Change=@(_ => ReloadAsync()) />
             </FormField>
-            <FormField Label="Category" For="Category">
+            <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
                 <CategoryPicker Options="@categoryOptions" Name="Category"
                                 Value="@categoryFilter"
                                 ValueChanged="@(v => { categoryFilter = v; return ReloadAsync(); })"
-                                Placeholder="All" Style="min-width: 13rem;" />
+                                Placeholder="@L["Common.AllPlaceholder"]" Style="min-width: 13rem;" />
             </FormField>
-            <FormField Label="From" For="From">
+            <FormField Label="@L["Common.From"]" For="From">
                 <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
             </FormField>
-            <FormField Label="To" For="To">
+            <FormField Label="@L["Common.To"]" For="To">
                 <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
             </FormField>
-            <FormField Label="Search" For="Search">
-                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="Description or counterparty" Style="min-width: 14rem;" />
+            <FormField Label="@L["Common.Search"]" For="Search">
+                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;" />
             </FormField>
         </ChildContent>
         <Actions>
-            <RadzenButton Text="Link as transfer"
+            <RadzenButton Text="@L["Transactions.LinkAsTransfer"]"
                           Icon="sync_alt"
                           ButtonStyle="ButtonStyle.Light"
                           Disabled=@(selected.Count != 2)
@@ -87,15 +88,15 @@
                     @bind-Value=@selected
                     Density="Density.Compact">
         <Columns>
-            <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="110px">
+            <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="@L["Common.Date"]" Width="110px">
                 <Template Context="transaction">@Dates.Short(transaction.BookingDate)</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="TransactionView" Title="Account" Width="140px" Sortable="false">
+            <RadzenDataGridColumn TItem="TransactionView" Title="@L["Common.Account"]" Width="140px" Sortable="false">
                 <Template Context="transaction">@AccountName(transaction.AccountId)</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="Counterparty" Width="180px" />
-            <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="Description" />
-            <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="Amount" Width="130px" TextAlign="TextAlign.Right">
+            <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="180px" />
+            <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]" />
+            <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="@L["Common.Amount"]" Width="130px" TextAlign="TextAlign.Right">
                 <Template Context="transaction">
                     <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
                     @if (transaction.OriginalAmount is not null)
@@ -106,13 +107,13 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="TransactionView" Title="Category" Width="220px" Sortable="false">
+            <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="220px" Sortable="false">
                 <Template Context="transaction">
                     <CategoryPicker Options="@categoryOptions"
                                     Value="@transaction.CategoryId"
                                     ValueChanged="@(v => CategorizeAsync(transaction, v))"
                                     AllowClear="false"
-                                    Placeholder="Uncategorized" />
+                                    Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="TransactionView" Title="" Width="110px" Sortable="false">
@@ -120,14 +121,14 @@
                     @if (transaction.IsTransfer)
                     {
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" AlignItems="AlignItems.Center">
-                            <StatusBadge Variant="BadgeVariant.Info" Text="Transfer" />
-                            <IconButton Icon="link_off" Title="Unlink transfer"
+                            <StatusBadge Variant="BadgeVariant.Info" Text="@L["Transactions.TransferBadge"]" />
+                            <IconButton Icon="link_off" Title="@L["Transactions.UnlinkTransfer"]"
                                         Click=@(_ => UnlinkTransferAsync(transaction)) />
                         </RadzenStack>
                     }
                     else if (transaction.CategorySource is not null)
                     {
-                        <StatusBadge Variant="BadgeVariant.Neutral" Text="@transaction.CategorySource.ToString()" />
+                        <StatusBadge Variant="BadgeVariant.Neutral" Text="@L[$"Enum.CategorySource.{transaction.CategorySource}"]" />
                     }
                 </Template>
             </RadzenDataGridColumn>
@@ -230,7 +231,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Error("Categorization failed", result.Error);
+            NotificationService.Error(L["Transactions.CategorizationFailedTitle"], result.Error);
             return;
         }
 
@@ -265,12 +266,12 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Error("Rule creation failed", result.Error);
+            NotificationService.Error(L["Transactions.RuleCreationFailedTitle"], result.Error);
         }
         else
         {
             NotificationService.Success(
-                "Rule created",
+                L["Transactions.RuleCreatedTitle"],
                 $"'{ruleOffer.Counterparty}' → {ruleOffer.CategoryLabel}"
             );
         }
@@ -290,10 +291,10 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Error("Linking failed", result.Error);
+            NotificationService.Error(L["Transactions.LinkingFailedTitle"], result.Error);
             return;
         }
-        NotificationService.Success("Linked", "Transactions linked as transfer.");
+        NotificationService.Success(L["Transactions.LinkedTitle"], L["Transactions.LinkedMessage"]);
         await ReloadAsync();
     }
 
@@ -305,7 +306,7 @@
         );
         if (result.IsFailure)
         {
-            NotificationService.Error("Unlinking failed", result.Error);
+            NotificationService.Error(L["Transactions.UnlinkingFailedTitle"], result.Error);
             return;
         }
         await ReloadAsync();
