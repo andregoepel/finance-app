@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup Label="AndreGoepel Testing">
+    <PackageVersion Include="AndreGoepel.Testing.Bunit" Version="1.2.0" />
     <PackageVersion Include="AndreGoepel.Testing.E2E" Version="1.1.0" />
   </ItemGroup>
 

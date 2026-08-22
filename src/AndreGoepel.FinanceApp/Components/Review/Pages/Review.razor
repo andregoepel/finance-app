@@ -46,7 +46,7 @@
                     Density="Density.Compact">
         <Columns>
             <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="110px">
-                <Template Context="transaction">@transaction.BookingDate.ToString("dd.MM.yyyy")</Template>
+                <Template Context="transaction">@Dates.Short(transaction.BookingDate)</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="TransactionView" Title="Account" Width="140px" Sortable="false">
                 <Template Context="transaction">@AccountName(transaction.AccountId)</Template>

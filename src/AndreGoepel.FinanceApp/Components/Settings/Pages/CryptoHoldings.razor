@@ -103,7 +103,7 @@
                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
                     @if (overview.OldestPriceAt is DateTimeOffset asOf)
                     {
-                        <text>Prices as of @asOf.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</text>
+                        <text>Prices as of @Dates.ShortTime(asOf.LocalDateTime)</text>
                     }
                 </RadzenText>
                 <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">

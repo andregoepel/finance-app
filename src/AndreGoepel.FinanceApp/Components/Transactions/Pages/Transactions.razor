@@ -60,10 +60,10 @@
                                 Placeholder="All" Style="min-width: 13rem;" />
             </FormField>
             <FormField Label="From" For="From">
-                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
             </FormField>
             <FormField Label="To" For="To">
-                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="dd.MM.yyyy" Change=@(_ => ReloadAsync()) />
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
             </FormField>
             <FormField Label="Search" For="Search">
                 <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="Description or counterparty" Style="min-width: 14rem;" />
@@ -88,7 +88,7 @@
                     Density="Density.Compact">
         <Columns>
             <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="Date" Width="110px">
-                <Template Context="transaction">@transaction.BookingDate.ToString("dd.MM.yyyy")</Template>
+                <Template Context="transaction">@Dates.Short(transaction.BookingDate)</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="TransactionView" Title="Account" Width="140px" Sortable="false">
                 <Template Context="transaction">@AccountName(transaction.AccountId)</Template>
