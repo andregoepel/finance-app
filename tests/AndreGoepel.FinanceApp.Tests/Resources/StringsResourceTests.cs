@@ -785,4 +785,134 @@ public sealed class StringsResourceTests
         Assert.Equal("5 imported, 2 duplicates skipped.", en);
         Assert.Equal("5 importiert, 2 Duplikate übersprungen.", de);
     }
+
+    [Theory]
+    [InlineData("en", "Dashboard.Title", "Dashboard")]
+    [InlineData("de", "Dashboard.Title", "Übersicht")]
+    [InlineData("en", "Dashboard.Income", "Income")]
+    [InlineData("de", "Dashboard.Income", "Einnahmen")]
+    [InlineData("en", "Dashboard.Expenses", "Expenses")]
+    [InlineData("de", "Dashboard.Expenses", "Ausgaben")]
+    [InlineData("en", "Dashboard.Net", "Net")]
+    [InlineData("de", "Dashboard.Net", "Saldo")]
+    [InlineData("en", "Dashboard.SpendingByCategory", "Spending by category")]
+    [InlineData("de", "Dashboard.SpendingByCategory", "Ausgaben nach Kategorie")]
+    [InlineData("en", "Dashboard.NoExpensesThisMonth", "No expenses recorded for this month.")]
+    [InlineData("de", "Dashboard.NoExpensesThisMonth", "Keine Ausgaben für diesen Monat erfasst.")]
+    [InlineData("en", "Dashboard.ColCategory", "Category")]
+    [InlineData("de", "Dashboard.ColCategory", "Kategorie")]
+    [InlineData("en", "Dashboard.ReviewThemLink", "review them")]
+    [InlineData("de", "Dashboard.ReviewThemLink", "jetzt prüfen")]
+    [InlineData("en", "Dashboard.NetWorth", "Net worth")]
+    [InlineData("de", "Dashboard.NetWorth", "Vermögen")]
+    [InlineData("en", "Dashboard.SetOneLink", "set one")]
+    [InlineData("de", "Dashboard.SetOneLink", "jetzt festlegen")]
+    [InlineData("en", "Dashboard.ToIncludeThem", "to include them.")]
+    [InlineData("de", "Dashboard.ToIncludeThem", ", um sie einzubeziehen.")]
+    [InlineData("en", "Dashboard.NoBudgetsSet", "No budgets set —")]
+    [InlineData("de", "Dashboard.NoBudgetsSet", "Keine Budgets festgelegt —")]
+    [InlineData("en", "Dashboard.AddOneLink", "add one")]
+    [InlineData("de", "Dashboard.AddOneLink", "eines hinzufügen")]
+    [InlineData("en", "Dashboard.HoldingsLink", "Holdings")]
+    [InlineData("de", "Dashboard.HoldingsLink", "Bestände")]
+    [InlineData("en", "Dashboard.NoPriceYet", "no price yet")]
+    [InlineData("de", "Dashboard.NoPriceYet", "noch kein Kurs")]
+    [InlineData("en", "Dashboard.HoldingsPageLink", "holdings page")]
+    [InlineData("de", "Dashboard.HoldingsPageLink", "Bestandsseite")]
+    [InlineData("en", "Dashboard.UpcomingOverdue", "Upcoming & overdue")]
+    [InlineData("de", "Dashboard.UpcomingOverdue", "Anstehend & überfällig")]
+    [InlineData("en", "Dashboard.NothingUpcoming", "Nothing upcoming —")]
+    [InlineData("de", "Dashboard.NothingUpcoming", "Nichts anstehend —")]
+    [InlineData("en", "Dashboard.AddPlannedItemsLink", "add planned items")]
+    [InlineData("de", "Dashboard.AddPlannedItemsLink", "geplante Posten hinzufügen")]
+    public void GetString_DashboardKey_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Fact]
+    public void GetString_DashboardCountedNouns_KeepThePluralHedgeInBothCultures()
+    {
+        // Arrange / Act — .resx has no plural support, so counted nouns carry an explicit
+        // "(s)" / "(en)" hedge rather than silently reading wrong at count == 1.
+        string enAwaiting;
+        string deAwaiting;
+        string enUncategorized;
+        string deUncategorized;
+        using (CultureScope.UiOnly("en"))
+        {
+            enAwaiting = FinanceLocalizer.Create()["Dashboard.AwaitingConversion", 3];
+            enUncategorized = FinanceLocalizer.Create()["Dashboard.UncategorizedCount", 7];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            deAwaiting = FinanceLocalizer.Create()["Dashboard.AwaitingConversion", 3];
+            deUncategorized = FinanceLocalizer.Create()["Dashboard.UncategorizedCount", 7];
+        }
+
+        // Assert
+        Assert.Equal(
+            "3 transaction(s) this month are awaiting EUR conversion and are not yet included in the totals.",
+            enAwaiting
+        );
+        Assert.Equal(
+            "3 Transaktion(en) in diesem Monat warten auf die EUR-Umrechnung und sind noch nicht in den Summen enthalten.",
+            deAwaiting
+        );
+        Assert.Equal("7 transaction(s) are uncategorized —", enUncategorized);
+        Assert.Equal("7 Transaktion(en) sind unkategorisiert —", deUncategorized);
+    }
+
+    [Fact]
+    public void GetString_DashboardAccountsWithoutBalance_FormatsTheCountIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Dashboard.AccountsWithoutBalance", 2];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Dashboard.AccountsWithoutBalance", 2];
+        }
+
+        // Assert
+        Assert.Equal("2 account(s) have no balance set —", en);
+        Assert.Equal("Für 2 Konto/Konten ist kein Kontostand hinterlegt —", de);
+    }
+
+    [Fact]
+    public void GetString_DashboardPricesFrom_FormatsTheDateIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Dashboard.PricesFrom", "20.08.2026"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Dashboard.PricesFrom", "20.08.2026"];
+        }
+
+        // Assert
+        Assert.Equal("Prices from 20.08.2026 — refresh on the", en);
+        Assert.Equal("Kurse vom 20.08.2026 — aktualisieren auf der", de);
+    }
 }

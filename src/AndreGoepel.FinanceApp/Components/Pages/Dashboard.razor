@@ -8,13 +8,14 @@
 @inject INetWorthService NetWorthService
 @inject IPlanningService PlanningService
 @inject ICryptoService CryptoService
+@inject IStringLocalizer<Strings> L
 @implements IDisposable
 
-<AppPageTitle Title="Dashboard" />
+<AppPageTitle Title="@L["Dashboard.Title"]" />
 
 <PageBody>
 
-    <PageHeader Title="Dashboard">
+    <PageHeader Title="@L["Dashboard.Title"]">
         <Actions>
             <MonthNavigator Month="MonthStart" DisableNext="IsCurrentMonth" MonthChanged="OnMonthChangedAsync" />
         </Actions>
@@ -22,39 +23,38 @@
 
     @if (overview is null)
     {
-        <RadzenText>Loading…</RadzenText>
+        <RadzenText>@L["Common.Loading"]</RadzenText>
     }
     else
     {
         @if (overview.UnconvertedCount > 0)
         {
             <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                @overview.UnconvertedCount transaction(s) this month are awaiting EUR conversion and
-                are not yet included in the totals.
+                @L["Dashboard.AwaitingConversion", overview.UnconvertedCount]
             </RadzenAlert>
         }
 
         @* ---------- Month totals ---------- *@
         <RadzenRow Gap="1rem">
             <RadzenColumn Size="12" SizeMd="4">
-                <StatTile Label="Income" Value="@Money.Eur(overview.Income)" Variant="BadgeVariant.Success" />
+                <StatTile Label="@L["Dashboard.Income"]" Value="@Money.Eur(overview.Income)" Variant="BadgeVariant.Success" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMd="4">
-                <StatTile Label="Expenses" Value="@Money.Eur(overview.Expenses)" Variant="BadgeVariant.Danger" />
+                <StatTile Label="@L["Dashboard.Expenses"]" Value="@Money.Eur(overview.Expenses)" Variant="BadgeVariant.Danger" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMd="4">
-                <StatTile Label="Net" Value="@Money.Eur(overview.Net)"
+                <StatTile Label="@L["Dashboard.Net"]" Value="@Money.Eur(overview.Net)"
                           Variant="@(overview.Net >= 0 ? BadgeVariant.Success : BadgeVariant.Danger)" />
             </RadzenColumn>
         </RadzenRow>
 
         @* ---------- Spending by category ---------- *@
-        <SectionCard Title="Spending by category">
+        <SectionCard Title="@L["Dashboard.SpendingByCategory"]">
             <RadzenStack Gap="1rem">
                 @if (overview.SpendingByCategory.Count == 0)
                 {
                     <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                        No expenses recorded for this month.
+                        @L["Dashboard.NoExpensesThisMonth"]
                     </RadzenText>
                 }
                 else
@@ -65,7 +65,7 @@
                                 <RadzenDonutSeries Data="@overview.SpendingByCategory" CategoryProperty="Category" ValueProperty="Amount">
                                     <TitleTemplate>
                                         <div class="rz-donut-content">
-                                            <RadzenText TextStyle="TextStyle.Caption">Expenses</RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Caption">@L["Dashboard.Expenses"]</RadzenText>
                                         </div>
                                     </TitleTemplate>
                                 </RadzenDonutSeries>
@@ -75,8 +75,8 @@
                         <RadzenColumn Size="12" SizeMd="6">
                             <RadzenDataGrid TItem="CategorySpend" Data="@overview.SpendingByCategory" Density="Density.Compact" AllowPaging="false">
                                 <Columns>
-                                    <RadzenDataGridColumn TItem="CategorySpend" Property="Category" Title="Category" />
-                                    <RadzenDataGridColumn TItem="CategorySpend" Property="Amount" Title="Amount" TextAlign="TextAlign.Right" Width="120px">
+                                    <RadzenDataGridColumn TItem="CategorySpend" Property="Category" Title="@L["Dashboard.ColCategory"]" />
+                                    <RadzenDataGridColumn TItem="CategorySpend" Property="Amount" Title="@L["Common.Amount"]" TextAlign="TextAlign.Right" Width="120px">
                                         <Template Context="row">@Money.Eur(row.Amount)</Template>
                                     </RadzenDataGridColumn>
                                 </Columns>
@@ -87,8 +87,8 @@
                 @if (overview.UncategorizedCount > 0)
                 {
                     <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                        @overview.UncategorizedCount transaction(s) are uncategorized —
-                        <RadzenLink Path="review" Text="review them" />.
+                        @L["Dashboard.UncategorizedCount", overview.UncategorizedCount]
+                        <RadzenLink Path="review" Text="@L["Dashboard.ReviewThemLink"]" />.
                     </RadzenText>
                 }
             </RadzenStack>
@@ -97,11 +97,11 @@
         @* ---------- Placeholders for later Phase 4 slices ---------- *@
         <RadzenRow Gap="1rem">
             <RadzenColumn Size="12" SizeMd="6">
-                <SectionCard Title="Net worth" FullHeight="true">
+                <SectionCard Title="@L["Dashboard.NetWorth"]" FullHeight="true">
                     <RadzenStack Gap="0.5rem">
                         @if (netWorth is null)
                         {
-                            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">Loading…</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">@L["Common.Loading"]</RadzenText>
                         }
                         else
                         {
@@ -116,8 +116,8 @@
                             @if (netWorth.AccountsWithoutBalance > 0)
                             {
                                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                                    @netWorth.AccountsWithoutBalance account(s) have no balance set —
-                                    <RadzenLink Path="settings/accounts" Text="set one" /> to include them.
+                                    @L["Dashboard.AccountsWithoutBalance", netWorth.AccountsWithoutBalance]
+                                    <RadzenLink Path="settings/accounts" Text="@L["Dashboard.SetOneLink"]" /> @L["Dashboard.ToIncludeThem"]
                                 </RadzenText>
                             }
                         }
@@ -125,12 +125,12 @@
                 </SectionCard>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMd="6">
-                <SectionCard Title="Budgets" FullHeight="true">
+                <SectionCard Title="@L["Nav.Budgets"]" FullHeight="true">
                     <RadzenStack Gap="0.75rem">
                         @if (overview.Budgets.Count == 0)
                         {
                             <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                                No budgets set — <RadzenLink Path="settings/budgets" Text="add one" />.
+                                @L["Dashboard.NoBudgetsSet"] <RadzenLink Path="settings/budgets" Text="@L["Dashboard.AddOneLink"]" />.
                             </RadzenText>
                         }
                         else
@@ -160,9 +160,9 @@
         {
             <RadzenRow Gap="1rem">
                 <RadzenColumn Size="12" SizeMd="6">
-                    <SectionCard Title="Crypto">
+                    <SectionCard Title="@L["Nav.Crypto"]">
                         <Actions>
-                            <RadzenLink Path="settings/crypto" Text="Holdings" />
+                            <RadzenLink Path="settings/crypto" Text="@L["Dashboard.HoldingsLink"]" />
                         </Actions>
                         <ChildContent>
                             <RadzenStack Gap="0.5rem">
@@ -174,7 +174,7 @@
                                             @position.Symbol · @position.Quantity.ToString("0.########")
                                         </RadzenText>
                                         <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">
-                                            @(position.EurValue is decimal value ? Money.Eur(value) : "no price yet")
+                                            @(position.EurValue is decimal value ? Money.Eur(value) : L["Dashboard.NoPriceYet"])
                                         </RadzenText>
                                     </RadzenStack>
                                 }
@@ -182,8 +182,8 @@
                                     && DateTimeOffset.UtcNow - pricesAsOf > TimeSpan.FromHours(48))
                                 {
                                     <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                                        Prices from @Dates.Short(pricesAsOf.LocalDateTime) — refresh on the
-                                        <RadzenLink Path="settings/crypto" Text="holdings page" />.
+                                        @L["Dashboard.PricesFrom", Dates.Short(pricesAsOf.LocalDateTime)]
+                                        <RadzenLink Path="settings/crypto" Text="@L["Dashboard.HoldingsPageLink"]" />.
                                     </RadzenText>
                                 }
                             </RadzenStack>
@@ -194,16 +194,16 @@
         }
 
         @* ---------- Upcoming & overdue planned items ---------- *@
-        <SectionCard Title="Upcoming &amp; overdue">
+        <SectionCard Title="@L["Dashboard.UpcomingOverdue"]">
             <Actions>
-                <RadzenLink Path="planning" Text="Planning" />
+                <RadzenLink Path="planning" Text="@L["Nav.Planning"]" />
             </Actions>
             <ChildContent>
                 <RadzenStack Gap="0.75rem">
                     @if (upcoming.Count == 0)
                     {
                         <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                            Nothing upcoming — <RadzenLink Path="planning" Text="add planned items" />.
+                            @L["Dashboard.NothingUpcoming"] <RadzenLink Path="planning" Text="@L["Dashboard.AddPlannedItemsLink"]" />.
                         </RadzenText>
                     }
                     else
@@ -212,7 +212,7 @@
                         {
                             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
                                 <StatusBadge Variant="@(o.Status == PlannedOccurrenceStatus.Overdue ? BadgeVariant.Danger : BadgeVariant.Info)"
-                                             Text="@o.DueDate.ToString("dd.MM")" />
+                                             Text="@Dates.DayMonth(o.DueDate)" />
                                 <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; flex: 1;">@o.Description</RadzenText>
                                 <AmountText Amount="o.Amount" />
                             </RadzenStack>

@@ -213,4 +213,30 @@
   <data name="Import.ImportFailedTitle" xml:space="preserve"><value><![CDATA[Import fehlgeschlagen]]></value></data>
   <data name="Import.ImportCompleteTitle" xml:space="preserve"><value><![CDATA[Import abgeschlossen]]></value></data>
   <data name="Import.ImportCompleteMessage" xml:space="preserve"><value><![CDATA[{0} importiert, {1} Duplikate übersprungen.]]></value><comment>{0} = imported count, {1} = duplicate count</comment></data>
+
+  <!-- Dashboard.razor. Counted nouns keep the "(en)" hedge, mirroring the English "(s)" —
+       .resx/IStringLocalizer has no plural support, and the app's counts are rarely exactly one. -->
+  <data name="Dashboard.Title" xml:space="preserve"><value><![CDATA[Übersicht]]></value></data>
+  <data name="Dashboard.AwaitingConversion" xml:space="preserve"><value><![CDATA[{0} Transaktion(en) in diesem Monat warten auf die EUR-Umrechnung und sind noch nicht in den Summen enthalten.]]></value><comment>{0} = count of unconverted transactions</comment></data>
+  <data name="Dashboard.Income" xml:space="preserve"><value><![CDATA[Einnahmen]]></value></data>
+  <data name="Dashboard.Expenses" xml:space="preserve"><value><![CDATA[Ausgaben]]></value></data>
+  <data name="Dashboard.Net" xml:space="preserve"><value><![CDATA[Saldo]]></value></data>
+  <data name="Dashboard.SpendingByCategory" xml:space="preserve"><value><![CDATA[Ausgaben nach Kategorie]]></value></data>
+  <data name="Dashboard.NoExpensesThisMonth" xml:space="preserve"><value><![CDATA[Keine Ausgaben für diesen Monat erfasst.]]></value></data>
+  <data name="Dashboard.ColCategory" xml:space="preserve"><value><![CDATA[Kategorie]]></value></data>
+  <data name="Dashboard.UncategorizedCount" xml:space="preserve"><value><![CDATA[{0} Transaktion(en) sind unkategorisiert —]]></value><comment>{0} = count; a "review them" link follows</comment></data>
+  <data name="Dashboard.ReviewThemLink" xml:space="preserve"><value><![CDATA[jetzt prüfen]]></value></data>
+  <data name="Dashboard.NetWorth" xml:space="preserve"><value><![CDATA[Vermögen]]></value></data>
+  <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[Für {0} Konto/Konten ist kein Kontostand hinterlegt —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
+  <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[jetzt festlegen]]></value></data>
+  <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[, um sie einzubeziehen.]]></value><comment>Trails the "set one" link</comment></data>
+  <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[Keine Budgets festgelegt —]]></value><comment>An "add one" link follows</comment></data>
+  <data name="Dashboard.AddOneLink" xml:space="preserve"><value><![CDATA[eines hinzufügen]]></value></data>
+  <data name="Dashboard.HoldingsLink" xml:space="preserve"><value><![CDATA[Bestände]]></value></data>
+  <data name="Dashboard.NoPriceYet" xml:space="preserve"><value><![CDATA[noch kein Kurs]]></value></data>
+  <data name="Dashboard.PricesFrom" xml:space="preserve"><value><![CDATA[Kurse vom {0} — aktualisieren auf der]]></value><comment>{0} = the price date; a "holdings page" link follows</comment></data>
+  <data name="Dashboard.HoldingsPageLink" xml:space="preserve"><value><![CDATA[Bestandsseite]]></value></data>
+  <data name="Dashboard.UpcomingOverdue" xml:space="preserve"><value><![CDATA[Anstehend & überfällig]]></value></data>
+  <data name="Dashboard.NothingUpcoming" xml:space="preserve"><value><![CDATA[Nichts anstehend —]]></value><comment>An "add planned items" link follows</comment></data>
+  <data name="Dashboard.AddPlannedItemsLink" xml:space="preserve"><value><![CDATA[geplante Posten hinzufügen]]></value></data>
 </root>
