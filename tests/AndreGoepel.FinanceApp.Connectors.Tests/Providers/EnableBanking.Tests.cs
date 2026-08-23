@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
+using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -158,9 +159,7 @@ public sealed class EnableBankingConnectorFetchTests
                 Arg.Any<DateOnly>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(
-                Result.Ok<IReadOnlyList<EnableBankingTransaction>>([Transaction(status, "ref1")])
-            );
+            .Returns(Result.Ok(new EnableBankingFetch([Transaction(status, "ref1")], [])));
 
         // Act
         var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
@@ -180,9 +179,7 @@ public sealed class EnableBankingConnectorFetchTests
                 Arg.Any<DateOnly>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(
-                Result.Ok<IReadOnlyList<EnableBankingTransaction>>([Transaction("PDNG", "ref1")])
-            );
+            .Returns(Result.Ok(new EnableBankingFetch([Transaction("PDNG", "ref1")], [])));
 
         // Act
         var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
@@ -203,11 +200,16 @@ public sealed class EnableBankingConnectorFetchTests
                 Arg.Any<CancellationToken>()
             )
             .Returns(
-                Result.Ok<IReadOnlyList<EnableBankingTransaction>>([
-                    Transaction("BOOK", "ref1"),
-                    Transaction("PDNG", "ref2"),
-                    Transaction("BOOK", "ref3"),
-                ])
+                Result.Ok(
+                    new EnableBankingFetch(
+                        [
+                            Transaction("BOOK", "ref1"),
+                            Transaction("PDNG", "ref2"),
+                            Transaction("BOOK", "ref3"),
+                        ],
+                        []
+                    )
+                )
             );
 
         // Act
@@ -216,5 +218,39 @@ public sealed class EnableBankingConnectorFetchTests
         // Assert
         Assert.Equal(2, result.Value!.Rows.Count);
         Assert.Equal(["ref1", "ref3"], result.Value.Rows.Select(row => row.ExternalId));
+    }
+
+    [Fact]
+    public async Task FetchAsync_UnparseableEntries_AreReportedNotDropped()
+    {
+        // Arrange — the client could not read two entries. IProviderConnector's own contract is
+        // that a row is never dropped silently, so these must reach the caller as problem rows
+        // rather than dying in a log line.
+        client
+            .GetTransactionsAsync(
+                Arg.Any<string>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok(
+                    new EnableBankingFetch(
+                        [Transaction("BOOK", "ref1")],
+                        [
+                            new ImportRowError(3, "booking_date was missing.", "{}"),
+                            new ImportRowError(7, "amount was unreadable.", "{}"),
+                        ]
+                    )
+                )
+            );
+
+        // Act
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert — the good row still imports, and the bad ones travel with it.
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value!.Rows);
+        Assert.Equal(2, result.Value.Errors.Count);
+        Assert.Equal([3, 7], result.Value.Errors.Select(e => e.RowNumber));
     }
 }

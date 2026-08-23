@@ -1,4 +1,6 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Imports;
+using AndreGoepel.FinanceApp.Domain.Providers;
 
 namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 
@@ -25,12 +27,26 @@ public interface IEnableBankingClient
     );
 
     /// <summary>All transactions for one session account since a date (pages until exhausted).</summary>
-    Task<Result<IReadOnlyList<EnableBankingTransaction>>> GetTransactionsAsync(
+    Task<Result<EnableBankingFetch>> GetTransactionsAsync(
         string accountUid,
         DateOnly from,
         CancellationToken cancellationToken = default
     );
 }
+
+/// <summary>
+/// One fetch's result: the entries that parsed, and the ones that did not.
+/// <para>
+/// Unparseable entries are carried rather than discarded because
+/// <see cref="IProviderConnector"/> promises never to drop a row silently — before this they
+/// vanished between the JSON and the import with nothing but a log line to show for it. They
+/// end up as <see cref="ImportRowError"/> on the batch, which is what the import UI renders.
+/// </para>
+/// </summary>
+public sealed record EnableBankingFetch(
+    IReadOnlyList<EnableBankingTransaction> Transactions,
+    IReadOnlyList<ImportRowError> Errors
+);
 
 /// <summary>Inputs for starting a consent: which bank, where to return, and the CSRF state.</summary>
 public sealed record EnableBankingAuthRequest(

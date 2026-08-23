@@ -514,4 +514,6 @@
   <data name="Sync.ImportOnlyAccount" xml:space="preserve"><value><![CDATA[Account is import-only (no API sync).]]></value></data>
   <data name="Sync.AccountNotLinked" xml:space="preserve"><value><![CDATA[Account is not linked to a connection (Settings → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
   <data name="Sync.ConnectionGone" xml:space="preserve"><value><![CDATA[The account's connection no longer exists — re-link it (Settings → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
+  <data name="Sync.ConsentExpiredOn" xml:space="preserve"><value><![CDATA[The {0} consent expired on {1} — reconnect it under Settings → {2}.]]></value><comment>{0} = provider, {1} = expiry date, {2} = Nav.Connections</comment></data>
+  <data name="Sync.ConsentNotAuthorized" xml:space="preserve"><value><![CDATA[The {0} consent is not authorized — connect it under Settings → {1}.]]></value><comment>{0} = provider, {1} = Nav.Connections</comment></data>
 </root>

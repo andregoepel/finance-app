@@ -50,6 +50,16 @@ public interface IProviderConnectionService
     );
 
     /// <summary>Completes a consent from the callback code + state (CSRF-checked).</summary>
+    /// <summary>
+    /// Clears the pending authorization state for one consent attempt that did not complete.
+    /// <para>
+    /// Without this, a denied or abandoned consent leaves <c>PendingState</c> set forever, and
+    /// <see cref="CompleteConsentAsync"/> matches on it across <em>all</em> connections — so a
+    /// stale value stays replayable indefinitely.
+    /// </para>
+    /// </summary>
+    Task AbandonConsentAsync(string state, CancellationToken cancellationToken = default);
+
     Task<Result<ProviderConnection>> CompleteConsentAsync(
         string code,
         string state,
