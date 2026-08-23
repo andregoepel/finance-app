@@ -454,4 +454,53 @@
   <data name="Enum.AccountType.MultiCurrency" xml:space="preserve"><value><![CDATA[Multiwährung]]></value></data>
   <data name="Enum.SyncMethod.CsvUpload" xml:space="preserve"><value><![CDATA[CSV-Upload]]></value></data>
   <data name="Enum.SyncMethod.Api" xml:space="preserve"><value><![CDATA[API]]></value></data>
+
+  <!-- Connections.razor -->
+  <data name="Connections.Subtitle" xml:space="preserve"><value><![CDATA[Eine Verbindung ist ein Zugang bei einem Anbieter — ein Wise-Profil oder eine Bank-Einwilligung — der einem Haushaltsbenutzer gehört. Eine Verbindung versorgt mehrere Konten, und jeder kann eigene haben. Geheimnisse werden verschlüsselt gespeichert und nach dem Speichern nie wieder angezeigt.]]></value></data>
+  <data name="Connections.EbAppTitle" xml:space="preserve"><value><![CDATA[Enable-Banking-Anwendung]]></value></data>
+  <data name="Connections.EbAppIntro" xml:space="preserve"><value><![CDATA[Eine registrierte Anwendung für die gesamte App (von jeder DKB-/Revolut-Verbindung gemeinsam genutzt). Ihre Redirect-URI auf diesen Wert setzen:]]></value><comment>The callback URL follows in a code element</comment></data>
+  <data name="Connections.ApplicationIdLabel" xml:space="preserve"><value><![CDATA[Anwendungs-ID]]></value></data>
+  <data name="Connections.ApplicationIdPlaceholder" xml:space="preserve"><value><![CDATA[Anwendungs-ID (UUID)]]></value></data>
+  <data name="Connections.RotateIdPlaceholder" xml:space="preserve"><value><![CDATA[Neue ID eingeben, um sie zu ersetzen]]></value></data>
+  <data name="Connections.PrivateKeyLabel" xml:space="preserve"><value><![CDATA[Privater Schlüssel (PEM)]]></value></data>
+  <data name="Connections.SaveKey" xml:space="preserve"><value><![CDATA[Schlüssel speichern]]></value></data>
+  <data name="Connections.AddTitle" xml:space="preserve"><value><![CDATA[Verbindung hinzufügen]]></value></data>
+  <data name="Connections.LabelLabel" xml:space="preserve"><value><![CDATA[Bezeichnung]]></value></data>
+  <data name="Connections.LabelPlaceholder" xml:space="preserve"><value><![CDATA[z. B. André – Wise]]></value></data>
+  <data name="Connections.EnvironmentLabel" xml:space="preserve"><value><![CDATA[Umgebung]]></value></data>
+  <data name="Connections.AspspLabel" xml:space="preserve"><value><![CDATA[ASPSP (Bank)]]></value></data>
+  <data name="Connections.CountryLabel" xml:space="preserve"><value><![CDATA[Land]]></value></data>
+  <data name="Connections.SandboxHint" xml:space="preserve"><value><![CDATA[Die Enable-Banking-Sandbox nutzt Mock ASPSP (Land DE); für den Produktivbetrieb den echten Banknamen verwenden (z. B. DKB).]]></value></data>
+  <data name="Connections.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Verbindungen]]></value></data>
+  <data name="Connections.EmptyText" xml:space="preserve"><value><![CDATA[Oben eine hinzufügen und anschließend unter „{0}“ Konten damit verknüpfen.]]></value><comment>{0} = the "Accounts" nav label</comment></data>
+  <data name="Connections.DeleteTooltip" xml:space="preserve"><value><![CDATA[Verbindung löschen]]></value></data>
+  <data name="Connections.UnknownUser" xml:space="preserve"><value><![CDATA[unbekannter Benutzer]]></value></data>
+  <data name="Connections.NoOwner" xml:space="preserve"><value><![CDATA[kein Inhaber]]></value></data>
+  <data name="Connections.WiseTokenPlaceholder" xml:space="preserve"><value><![CDATA[Wise-API-Token]]></value></data>
+  <data name="Connections.RotateTokenPlaceholder" xml:space="preserve"><value><![CDATA[Neues Token eingeben, um es zu ersetzen]]></value></data>
+  <data name="Connections.SaveToken" xml:space="preserve"><value><![CDATA[Token speichern]]></value></data>
+  <data name="Connections.SyncBalances" xml:space="preserve"><value><![CDATA[Guthaben abgleichen]]></value></data>
+  <data name="Connections.BalanceEntry" xml:space="preserve"><value><![CDATA[{0} {1} (ID {2})]]></value><comment>{0} = formatted amount, {1} = currency code, {2} = Wise balance id</comment></data>
+  <data name="Connections.LinkedAccountsCount" xml:space="preserve"><value><![CDATA[{0} verknüpfte(s) Konto/Konten]]></value><comment>{0} = count</comment></data>
+  <data name="Connections.Connect" xml:space="preserve"><value><![CDATA[Verbinden]]></value></data>
+  <data name="Connections.Reconnect" xml:space="preserve"><value><![CDATA[Neu verbinden]]></value></data>
+  <data name="Connections.ConsentPending" xml:space="preserve"><value><![CDATA[ausstehend]]></value></data>
+  <data name="Connections.ConsentActiveUntil" xml:space="preserve"><value><![CDATA[aktiv bis {0}]]></value><comment>{0} = formatted expiry date</comment></data>
+  <data name="Connections.ConsentNotConnected" xml:space="preserve"><value><![CDATA[nicht verbunden]]></value></data>
+  <data name="Connections.StoredEncrypted" xml:space="preserve"><value><![CDATA[Verschlüsselt gespeichert.]]></value></data>
+  <data name="Connections.WiseTokenStored" xml:space="preserve"><value><![CDATA[Wise-Token verschlüsselt gespeichert.]]></value></data>
+  <data name="Connections.CouldNotAddTitle" xml:space="preserve"><value><![CDATA[Verbindung konnte nicht hinzugefügt werden]]></value></data>
+  <data name="Connections.AddedTitle" xml:space="preserve"><value><![CDATA[Verbindung hinzugefügt]]></value></data>
+  <data name="Connections.CouldNotChangeEnvTitle" xml:space="preserve"><value><![CDATA[Umgebung konnte nicht geändert werden]]></value></data>
+  <data name="Connections.BalanceSyncFailedTitle" xml:space="preserve"><value><![CDATA[Guthabenabgleich fehlgeschlagen]]></value></data>
+  <data name="Connections.DeletedTitle" xml:space="preserve"><value><![CDATA[Verbindung gelöscht]]></value></data>
+  <data name="Connections.CannotConnectTitle" xml:space="preserve"><value><![CDATA[Verbinden nicht möglich]]></value></data>
+  <data name="Connections.ConsentOkTitle" xml:space="preserve"><value><![CDATA[Einwilligung erteilt]]></value></data>
+  <data name="Connections.ConsentOkMessage" xml:space="preserve"><value><![CDATA[Bankkonten verknüpft.]]></value></data>
+  <data name="Connections.ConsentFailedTitle" xml:space="preserve"><value><![CDATA[Einwilligung nicht abgeschlossen]]></value></data>
+  <data name="Connections.ConsentInvalidTitle" xml:space="preserve"><value><![CDATA[Einwilligungs-Rückruf ungültig]]></value></data>
+  <data name="Connections.ConsentInvalidMessage" xml:space="preserve"><value><![CDATA[Code oder State fehlt.]]></value></data>
+  <data name="Connections.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[die Verbindung „{0}“]]></value><comment>{0} = connection label; substituted into the shared "Delete {0}? …" confirm template</comment></data>
+  <data name="Enum.ProviderEnvironment.Production" xml:space="preserve"><value><![CDATA[Produktiv]]></value></data>
+  <data name="Enum.ProviderEnvironment.Sandbox" xml:space="preserve"><value><![CDATA[Sandbox]]></value></data>
 </root>
