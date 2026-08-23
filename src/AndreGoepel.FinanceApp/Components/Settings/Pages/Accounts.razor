@@ -10,55 +10,60 @@
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
 @inject UserManager<User> UserManager
+@inject IStringLocalizer<Strings> L
 @implements IDisposable
 
-<AppPageTitle Title="Accounts" Breadcrumb="Settings / Accounts" />
+<AppPageTitle Title="@L["Nav.Accounts"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Accounts"]]" />
 
 <PageBody>
 
-    <PageHeader Title="Accounts">
+    <PageHeader Title="@L["Nav.Accounts"]">
         <Actions>
             <RadzenSwitch @bind-Value=@showDeactivated />
-            <RadzenLabel Text="Show deactivated" />
+            <RadzenLabel Text="@L["Accounts.ShowDeactivated"]" />
         </Actions>
     </PageHeader>
 
     <DataCard>
         <RadzenDataGrid TItem="Account" Data=@DisplayedAccounts Density="Density.Compact">
             <Columns>
-                <RadzenDataGridColumn TItem="Account" Property="Name" Title="Name" />
-                <RadzenDataGridColumn TItem="Account" Property="Provider" Title="Provider" Width="100px" />
-                <RadzenDataGridColumn TItem="Account" Property="Type" Title="Type" Width="110px" />
-                <RadzenDataGridColumn TItem="Account" Property="Currency" Title="Currency" Width="80px" />
-                <RadzenDataGridColumn TItem="Account" Title="Owner" Width="180px" Sortable="false">
+                <RadzenDataGridColumn TItem="Account" Property="Name" Title="@L["Accounts.ColName"]" />
+                <RadzenDataGridColumn TItem="Account" Property="Provider" Title="@L["Common.Provider"]" Width="100px" />
+                <RadzenDataGridColumn TItem="Account" Property="Type" Title="@L["Accounts.ColType"]" Width="110px">
+                    <Template Context="account">@L[$"Enum.AccountType.{account.Type}"]</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Account" Property="Currency" Title="@L["Accounts.ColCurrency"]" Width="80px" />
+                <RadzenDataGridColumn TItem="Account" Title="@L["Common.Owner"]" Width="180px" Sortable="false">
                     <Template Context="account">@OwnerLabel(account)</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="Sync" Width="100px" />
-                <RadzenDataGridColumn TItem="Account" Title="Status" Width="110px" Sortable="false">
+                <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="@L["Accounts.ColSync"]" Width="110px">
+                    <Template Context="account">@L[$"Enum.SyncMethod.{account.SyncMethod}"]</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Account" Title="@L["Common.Status"]" Width="110px" Sortable="false">
                     <Template Context="account">
-                        <StatusBadge Text="@(account.IsActive ? "Active" : "Deactivated")"
+                        <StatusBadge Text="@(account.IsActive ? L["Accounts.StatusActive"] : L["Accounts.StatusDeactivated"])"
                                      Variant="@(account.IsActive ? BadgeVariant.Success : BadgeVariant.Neutral)" />
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="Account" Title="" Width="170px" Sortable="false" TextAlign="TextAlign.End">
                     <Template Context="account">
                         <RowActions>
-                            <IconButton Icon="edit" Title="Edit" Click=@(_ => StartEdit(account)) />
+                            <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => StartEdit(account)) />
                             @if (account.IsActive)
                             {
                                 <RadzenButton Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"
-                                              class="ag-icon-btn" title="Deactivate" aria-label="Deactivate"
+                                              class="ag-icon-btn" title="@L["Accounts.Deactivate"]" aria-label="@L["Accounts.Deactivate"]"
                                               Click=@(() => DeactivateAsync(account)) />
                             }
                             else
                             {
                                 <RadzenButton Icon="restart_alt" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
-                                              class="ag-icon-btn" title="Reactivate" aria-label="Reactivate"
+                                              class="ag-icon-btn" title="@L["Accounts.Reactivate"]" aria-label="@L["Accounts.Reactivate"]"
                                               Click=@(() => ReactivateAsync(account)) />
                             }
-                            <IconButton Icon="delete" Title="Delete" Danger="true"
+                            <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true"
                                         Click=@(_ => DeleteAsync(account)) />
-                            <IconButton Icon="delete_forever" Title="Delete permanently…" Danger="true"
+                            <IconButton Icon="delete_forever" Title="@L["Accounts.DeletePermanentlyTooltip"]" Danger="true"
                                         Click=@(_ => HardDeleteAsync(account)) />
                         </RowActions>
                     </Template>
@@ -71,84 +76,88 @@
               Data="form"
               Submit="SaveAsync"
               Cancel="ResetForm"
-              Title="@(editingAccountId is null ? "Add account" : "Edit account")"
-              SubmitText="@(editingAccountId is null ? "Add" : "Save")"
-              CancelText="Cancel"
+              Title="@(editingAccountId is null ? L["Accounts.AddTitle"] : L["Accounts.EditTitle"])"
+              SubmitText="@(editingAccountId is null ? L["Common.Add"] : L["Common.Save"])"
+              CancelText="@L["Common.Cancel"]"
               IsBusy="isSaving"
-              BusyText="Saving…">
+              BusyText="@L["Accounts.SavingBusyText"]">
         <div class="ag-form-grid">
-            <FormField Label="Name" For="Name">
+            <FormField Label="@L["Accounts.ColName"]" For="Name">
                 <RadzenTextBox @bind-Value=@form.Name Name="Name" Disabled=@isSaving Style="width: 100%;" />
             </FormField>
-            <FormField Label="Provider" For="Provider">
+            <FormField Label="@L["Common.Provider"]" For="Provider">
                 <RadzenDropDown @bind-Value=@form.Provider Name="Provider" Data=@ProviderChoices
                                 Disabled=@(editingAccountId is not null || isSaving) Style="width: 100%;" />
             </FormField>
-            <FormField Label="Type" For="Type">
-                <RadzenDropDown @bind-Value=@form.Type Name="Type" Data=@TypeChoices Disabled=@isSaving Style="width: 100%;" />
+            <FormField Label="@L["Accounts.ColType"]" For="Type">
+                <RadzenDropDown @bind-Value=@form.Type Name="Type" Data=@TypeChoices Disabled=@isSaving Style="width: 100%;">
+                    <Template>@L[$"Enum.AccountType.{context}"]</Template>
+                </RadzenDropDown>
             </FormField>
-            <FormField Label="Currency" For="Currency">
+            <FormField Label="@L["Accounts.ColCurrency"]" For="Currency">
                 <RadzenTextBox @bind-Value=@form.Currency Name="Currency" Disabled=@isSaving MaxLength="3" Style="width: 100%;" />
             </FormField>
         </div>
 
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
             <RadzenSwitch @bind-Value=@form.IsShared Name="IsShared" Disabled=@isSaving Change=@OnSharedChanged />
-            <RadzenLabel Text="Shared" Component="IsShared" />
+            <RadzenLabel Text="@L["Accounts.SharedLabel"]" Component="IsShared" />
         </RadzenStack>
 
         @if (form.IsShared)
         {
-            <FormField Label="Owners" For="Owners">
+            <FormField Label="@L["Accounts.OwnersLabel"]" For="Owners">
                 <RadzenDropDown TValue="IEnumerable<Guid>"
                                 @bind-Value=@form.OwnerUserIds Name="Owners"
                                 Data=@users ValueProperty="StreamId" TextProperty="UserName"
                                 Multiple="true" AllowClear="true" Chips="true"
-                                Disabled=@isSaving Placeholder="Select users" Style="width: 100%;" />
+                                Disabled=@isSaving Placeholder="@L["Accounts.SelectUsersPlaceholder"]" Style="width: 100%;" />
             </FormField>
         }
         else
         {
-            <FormField Label="Owner" For="Owner">
+            <FormField Label="@L["Common.Owner"]" For="Owner">
                 <RadzenDropDown TValue="Guid?"
                                 @bind-Value=@SingleOwner Name="Owner"
                                 Data=@users ValueProperty="StreamId" TextProperty="UserName"
-                                AllowClear="true" Disabled=@isSaving Placeholder="Select user" Style="width: 100%;" />
+                                AllowClear="true" Disabled=@isSaving Placeholder="@L["Accounts.SelectUserPlaceholder"]" Style="width: 100%;" />
             </FormField>
         }
 
         <div class="ag-form-grid">
-            <FormField Label="Sync" For="Sync">
-                <RadzenDropDown @bind-Value=@form.SyncMethod Name="Sync" Data=@SyncChoices Disabled=@isSaving Style="width: 100%;" />
+            <FormField Label="@L["Accounts.ColSync"]" For="Sync">
+                <RadzenDropDown @bind-Value=@form.SyncMethod Name="Sync" Data=@SyncChoices Disabled=@isSaving Style="width: 100%;">
+                    <Template>@L[$"Enum.SyncMethod.{context}"]</Template>
+                </RadzenDropDown>
             </FormField>
             @if (form.SyncMethod == SyncMethod.Api)
             {
-                <FormField Label="Connection" For="Connection">
+                <FormField Label="@L["Accounts.ConnectionLabel"]" For="Connection">
                     <RadzenDropDown TValue="Guid?"
                                     @bind-Value=@form.ConnectionId Name="Connection"
                                     Data=@ProviderConnections ValueProperty="Id" TextProperty="Label"
                                     AllowClear="true" Disabled=@isSaving
-                                    Placeholder="@(ProviderConnections.Any() ? "Select connection" : "No " + form.Provider + " connection")"
+                                    Placeholder="@(ProviderConnections.Any() ? L["Accounts.SelectConnectionPlaceholder"] : L["Accounts.NoConnectionPlaceholder", form.Provider])"
                                     Style="width: 100%;" />
                 </FormField>
                 @if (form.Provider == ProviderKind.Wise)
                 {
-                    <FormField Label="Wise balance id" For="ExternalId">
+                    <FormField Label="@L["Accounts.WiseBalanceIdLabel"]" For="ExternalId">
                         <RadzenTextBox @bind-Value=@form.ExternalId Name="ExternalId" Disabled=@isSaving
-                                       Placeholder="e.g. 306149" Style="width: 100%;" />
+                                       Placeholder="@L["Accounts.WiseBalanceIdPlaceholder"]" Style="width: 100%;" />
                     </FormField>
                 }
                 else
                 {
-                    <FormField Label="Bank account" For="IdentificationHash">
+                    <FormField Label="@L["Accounts.BankAccountLabel"]" For="IdentificationHash">
                         <RadzenDropDown TValue="string"
                                         @bind-Value=@form.IdentificationHash Name="IdentificationHash"
                                         Data=@LinkedAccounts ValueProperty="IdentificationHash"
                                         AllowClear="true" Disabled=@isSaving
-                                        Placeholder="@(LinkedAccounts.Any() ? "Select account" : "Connect the consent first")"
+                                        Placeholder="@(LinkedAccounts.Any() ? L["Import.SelectAccountPlaceholder"] : L["Accounts.ConnectConsentFirstPlaceholder"])"
                                         Style="width: 100%;">
                             <Template Context="linked">
-                                @(((EnableBankingLinkedAccount)linked).Name ?? "account") — @(((EnableBankingLinkedAccount)linked).Currency)
+                                @(((EnableBankingLinkedAccount)linked).Name ?? L["Accounts.UnnamedAccount"]) — @(((EnableBankingLinkedAccount)linked).Currency)
                             </Template>
                         </RadzenDropDown>
                     </FormField>
@@ -157,12 +166,12 @@
         </div>
 
         <div class="ag-form-grid">
-            <FormField Label="IBAN (optional)" For="Iban">
+            <FormField Label="@L["Accounts.IbanLabel"]" For="Iban">
                 <RadzenTextBox @bind-Value=@form.Iban Name="Iban" Disabled=@isSaving Style="width: 100%;" />
             </FormField>
-            <FormField Label="@($"Current balance ({(string.IsNullOrWhiteSpace(form.Currency) ? "EUR" : form.Currency)})")" For="CurrentBalance">
+            <FormField Label="@L["Accounts.CurrentBalanceLabel", string.IsNullOrWhiteSpace(form.Currency) ? "EUR" : form.Currency]" For="CurrentBalance">
                 <RadzenNumeric TValue="decimal?" @bind-Value=@form.CurrentBalance Name="CurrentBalance"
-                               Disabled=@isSaving Placeholder="for net worth" Style="width: 100%;" />
+                               Disabled=@isSaving Placeholder="@L["Accounts.BalancePlaceholder"]" Style="width: 100%;" />
             </FormField>
         </div>
     </CardForm>
@@ -225,7 +234,7 @@
     private string OwnerLabel(Account account)
     {
         var names = account
-            .OwnerUserIds.Select(id => users.FirstOrDefault(u => u.StreamId == id)?.UserName ?? "?")
+            .OwnerUserIds.Select(id => users.FirstOrDefault(u => u.StreamId == id)?.UserName ?? L["Accounts.UnknownUser"])
             .ToList();
         var joined = names.Count == 0 ? "—" : string.Join(", ", names);
         return account.IsShared ? $"{joined} (shared)" : joined;
@@ -327,7 +336,7 @@
 
             if (result.IsFailure)
             {
-                NotificationService.Error("Saving failed", result.Error);
+                NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
                 return;
             }
 
@@ -365,8 +374,8 @@
             else
             {
                 NotificationService.Warning(
-                    "Balance saved without EUR value",
-                    "The exchange rate was unavailable, so this account is left out of net worth for now."
+                    L["Accounts.BalanceNoEurTitle"],
+                    L["Accounts.BalanceNoEurMessage"]
                 );
             }
         }
@@ -382,7 +391,7 @@
             new DeactivateAccountCommand(account.Id),
             _cts.Token
         );
-        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account deactivated");
+        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, L["Accounts.DeactivatedMessage"]);
     }
 
     private async Task ReactivateAsync(Account account)
@@ -391,18 +400,18 @@
             new ReactivateAccountCommand(account.Id),
             _cts.Token
         );
-        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account reactivated");
+        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, L["Accounts.ReactivatedMessage"]);
     }
 
     private async Task DeleteAsync(Account account)
     {
-        if (!await ConfirmService.ConfirmDeleteAsync(account.Name, "Delete account"))
+        if (!await ConfirmService.ConfirmDeleteAsync(account.Name, L["Accounts.DeleteTitle"]))
         {
             return;
         }
 
         var result = await MessageBus.InvokeAsync<Result>(new DeleteAccountCommand(account.Id), _cts.Token);
-        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, "Account deleted");
+        await AfterLifecycleAsync(result.IsFailure ? result.Error : null, L["Accounts.DeletedMessage"]);
     }
 
     // The blast radius is computed first and spelled out in the dialog: there is no
@@ -412,14 +421,18 @@
         var preview = await AccountDeletionPreview.ForAccountAsync(QuerySession, account.Id);
         if (preview.IsFailure)
         {
-            NotificationService.Error("Action failed", preview.Error);
+            NotificationService.Error(L["Accounts.ActionFailedTitle"], preview.Error);
             return;
         }
 
         var confirmed = await ConfirmService.ConfirmAsync(
-            $"Permanently delete '{account.Name}'? {preview.Value!.Describe()} This cannot be undone.",
-            title: "Delete account permanently",
-            okText: "Delete permanently"
+            L[
+                "Accounts.HardDeleteConfirm",
+                account.Name,
+                AccountDeletionDescription.Build(preview.Value!, L)
+            ],
+            title: L["Accounts.HardDeleteTitle"],
+            okText: L["Accounts.HardDeleteAction"]
         );
         if (!confirmed)
         {
@@ -431,7 +444,7 @@
         );
         await AfterLifecycleAsync(
             result.IsFailure ? result.Error : null,
-            "Account permanently deleted"
+            L["Accounts.PermanentlyDeletedMessage"]
         );
     }
 
@@ -439,7 +452,7 @@
     {
         if (error is not null)
         {
-            NotificationService.Error("Action failed", error);
+            NotificationService.Error(L["Accounts.ActionFailedTitle"], error);
             return;
         }
 

@@ -384,4 +384,74 @@
   <data name="Crypto.ValuesRefreshedTitle" xml:space="preserve"><value><![CDATA[Values refreshed]]></value></data>
   <data name="Crypto.ValuesRefreshedMessage" xml:space="preserve"><value><![CDATA[{0} account(s) updated.]]></value><comment>{0} = count of updated accounts</comment></data>
   <data name="Crypto.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[the {0} holding]]></value><comment>{0} = asset symbol; substituted into the shared "Delete {0}? …" confirm template — note German reorders the noun</comment></data>
+
+  <!-- AccountDeletionDescription — the hard-delete confirmation sentence. Real singular/plural
+       (.One/.Many) rather than the "(s)" hedge used elsewhere: the count is known at call time. -->
+  <data name="Common.ListAnd" xml:space="preserve"><value><![CDATA[{0} and {1}]]></value><comment>{0} = all but the last phrase, comma-joined; {1} = the last phrase</comment></data>
+  <data name="AccountDelete.AccountOnly" xml:space="preserve"><value><![CDATA[Deletes the account. It has no transactions or history.]]></value></data>
+  <data name="AccountDelete.DeletesAccount" xml:space="preserve"><value><![CDATA[Deletes the account.]]></value></data>
+  <data name="AccountDelete.DeletesAccountPlus" xml:space="preserve"><value><![CDATA[Deletes the account plus {0}.]]></value><comment>{0} = joined list of what is deleted</comment></data>
+  <data name="AccountDelete.Unlinks" xml:space="preserve"><value><![CDATA[Unlinks {0}.]]></value><comment>{0} = joined list of what is unlinked but kept</comment></data>
+  <data name="AccountDelete.TransactionsOne" xml:space="preserve"><value><![CDATA[{0} transaction]]></value></data>
+  <data name="AccountDelete.TransactionsMany" xml:space="preserve"><value><![CDATA[{0} transactions]]></value></data>
+  <data name="AccountDelete.ImportBatchesOne" xml:space="preserve"><value><![CDATA[{0} import batch]]></value></data>
+  <data name="AccountDelete.ImportBatchesMany" xml:space="preserve"><value><![CDATA[{0} import batches]]></value></data>
+  <data name="AccountDelete.CryptoHoldingsOne" xml:space="preserve"><value><![CDATA[{0} crypto holding]]></value></data>
+  <data name="AccountDelete.CryptoHoldingsMany" xml:space="preserve"><value><![CDATA[{0} crypto holdings]]></value></data>
+  <data name="AccountDelete.ReviewEntriesOne" xml:space="preserve"><value><![CDATA[{0} review-queue entry]]></value></data>
+  <data name="AccountDelete.ReviewEntriesMany" xml:space="preserve"><value><![CDATA[{0} review-queue entries]]></value></data>
+  <data name="AccountDelete.TransfersOne" xml:space="preserve"><value><![CDATA[{0} transfer on another account]]></value></data>
+  <data name="AccountDelete.TransfersMany" xml:space="preserve"><value><![CDATA[{0} transfers on other accounts]]></value></data>
+  <data name="AccountDelete.PlannedMatchesOne" xml:space="preserve"><value><![CDATA[{0} planned match]]></value></data>
+  <data name="AccountDelete.PlannedMatchesMany" xml:space="preserve"><value><![CDATA[{0} planned matches]]></value></data>
+  <data name="AccountDelete.PlannedItemsOne" xml:space="preserve"><value><![CDATA[{0} planned item]]></value></data>
+  <data name="AccountDelete.PlannedItemsMany" xml:space="preserve"><value><![CDATA[{0} planned items]]></value></data>
+
+  <!-- Accounts.razor -->
+  <data name="Accounts.ShowDeactivated" xml:space="preserve"><value><![CDATA[Show deactivated]]></value></data>
+  <data name="Accounts.ColName" xml:space="preserve"><value><![CDATA[Name]]></value></data>
+  <data name="Accounts.ColType" xml:space="preserve"><value><![CDATA[Type]]></value></data>
+  <data name="Accounts.ColCurrency" xml:space="preserve"><value><![CDATA[Currency]]></value></data>
+  <data name="Accounts.ColSync" xml:space="preserve"><value><![CDATA[Sync]]></value></data>
+  <data name="Accounts.StatusActive" xml:space="preserve"><value><![CDATA[Active]]></value></data>
+  <data name="Accounts.StatusDeactivated" xml:space="preserve"><value><![CDATA[Deactivated]]></value></data>
+  <data name="Accounts.Deactivate" xml:space="preserve"><value><![CDATA[Deactivate]]></value></data>
+  <data name="Accounts.Reactivate" xml:space="preserve"><value><![CDATA[Reactivate]]></value></data>
+  <data name="Accounts.DeletePermanentlyTooltip" xml:space="preserve"><value><![CDATA[Delete permanently…]]></value></data>
+  <data name="Accounts.AddTitle" xml:space="preserve"><value><![CDATA[Add account]]></value></data>
+  <data name="Accounts.EditTitle" xml:space="preserve"><value><![CDATA[Edit account]]></value></data>
+  <data name="Accounts.SavingBusyText" xml:space="preserve"><value><![CDATA[Saving…]]></value></data>
+  <data name="Accounts.SharedLabel" xml:space="preserve"><value><![CDATA[Shared]]></value></data>
+  <data name="Accounts.OwnersLabel" xml:space="preserve"><value><![CDATA[Owners]]></value></data>
+  <data name="Accounts.SelectUsersPlaceholder" xml:space="preserve"><value><![CDATA[Select users]]></value></data>
+  <data name="Accounts.SelectUserPlaceholder" xml:space="preserve"><value><![CDATA[Select user]]></value></data>
+  <data name="Accounts.ConnectionLabel" xml:space="preserve"><value><![CDATA[Connection]]></value></data>
+  <data name="Accounts.SelectConnectionPlaceholder" xml:space="preserve"><value><![CDATA[Select connection]]></value></data>
+  <data name="Accounts.NoConnectionPlaceholder" xml:space="preserve"><value><![CDATA[No {0} connection]]></value><comment>{0} = provider name (proper noun, untranslated)</comment></data>
+  <data name="Accounts.WiseBalanceIdLabel" xml:space="preserve"><value><![CDATA[Wise balance id]]></value></data>
+  <data name="Accounts.WiseBalanceIdPlaceholder" xml:space="preserve"><value><![CDATA[e.g. 306149]]></value></data>
+  <data name="Accounts.BankAccountLabel" xml:space="preserve"><value><![CDATA[Bank account]]></value></data>
+  <data name="Accounts.ConnectConsentFirstPlaceholder" xml:space="preserve"><value><![CDATA[Connect the consent first]]></value></data>
+  <data name="Accounts.UnnamedAccount" xml:space="preserve"><value><![CDATA[account]]></value><comment>Fallback when a linked bank account reports no name</comment></data>
+  <data name="Accounts.IbanLabel" xml:space="preserve"><value><![CDATA[IBAN (optional)]]></value></data>
+  <data name="Accounts.CurrentBalanceLabel" xml:space="preserve"><value><![CDATA[Current balance ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Accounts.BalancePlaceholder" xml:space="preserve"><value><![CDATA[for net worth]]></value></data>
+  <data name="Accounts.UnknownUser" xml:space="preserve"><value><![CDATA[?]]></value><comment>Fallback when an owner id matches no known user</comment></data>
+  <data name="Accounts.BalanceNoEurTitle" xml:space="preserve"><value><![CDATA[Balance saved without EUR value]]></value></data>
+  <data name="Accounts.BalanceNoEurMessage" xml:space="preserve"><value><![CDATA[The exchange rate was unavailable, so this account is left out of net worth for now.]]></value></data>
+  <data name="Accounts.ActionFailedTitle" xml:space="preserve"><value><![CDATA[Action failed]]></value></data>
+  <data name="Accounts.DeactivatedMessage" xml:space="preserve"><value><![CDATA[Account deactivated]]></value></data>
+  <data name="Accounts.ReactivatedMessage" xml:space="preserve"><value><![CDATA[Account reactivated]]></value></data>
+  <data name="Accounts.DeletedMessage" xml:space="preserve"><value><![CDATA[Account deleted]]></value></data>
+  <data name="Accounts.PermanentlyDeletedMessage" xml:space="preserve"><value><![CDATA[Account permanently deleted]]></value></data>
+  <data name="Accounts.DeleteTitle" xml:space="preserve"><value><![CDATA[Delete account]]></value></data>
+  <data name="Accounts.HardDeleteTitle" xml:space="preserve"><value><![CDATA[Delete account permanently]]></value></data>
+  <data name="Accounts.HardDeleteAction" xml:space="preserve"><value><![CDATA[Delete permanently]]></value></data>
+  <data name="Accounts.HardDeleteConfirm" xml:space="preserve"><value><![CDATA[Permanently delete '{0}'? {1} This cannot be undone.]]></value><comment>{0} = account name, {1} = the deletion-impact sentence</comment></data>
+  <data name="Enum.AccountType.Checking" xml:space="preserve"><value><![CDATA[Checking]]></value></data>
+  <data name="Enum.AccountType.CreditCard" xml:space="preserve"><value><![CDATA[Credit card]]></value></data>
+  <data name="Enum.AccountType.Crypto" xml:space="preserve"><value><![CDATA[Crypto]]></value></data>
+  <data name="Enum.AccountType.MultiCurrency" xml:space="preserve"><value><![CDATA[Multi-currency]]></value></data>
+  <data name="Enum.SyncMethod.CsvUpload" xml:space="preserve"><value><![CDATA[CSV upload]]></value></data>
+  <data name="Enum.SyncMethod.Api" xml:space="preserve"><value><![CDATA[API]]></value></data>
 </root>
