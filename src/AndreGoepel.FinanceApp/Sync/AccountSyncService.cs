@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Exchange;
@@ -19,7 +20,8 @@ internal sealed class AccountSyncService(
     IQuerySession querySession,
     IProviderConnectorRegistry connectorRegistry,
     IMessageBus messageBus,
-    IStringLocalizer<Strings> localizer
+    IStringLocalizer<Strings> localizer,
+    ILogger<AccountSyncService> logger
 ) : IAccountSyncService
 {
     // Restricted-mode PSD2 history is ~90 days; default the first window to that.
@@ -34,6 +36,7 @@ internal sealed class AccountSyncService(
         CancellationToken cancellationToken = default
     )
     {
+        var started = Stopwatch.GetTimestamp();
         var account = await querySession.LoadAsync<Account>(accountId, cancellationToken);
         if (account is null)
         {
@@ -111,6 +114,14 @@ internal sealed class AccountSyncService(
             await messageBus.PublishAsync(new MatchPlannedTransactionsCommand());
         }
 
+        logger.LogInformation(
+            "Synced {Account}: {Imported} imported, {Duplicates} duplicates, in {ElapsedMs}ms.",
+            account.Name,
+            import.Value.ImportedCount,
+            import.Value.DuplicateCount,
+            (int)Stopwatch.GetElapsedTime(started).TotalMilliseconds
+        );
+
         return new AccountSyncSummary(
             account.Id,
             account.Name,
@@ -167,6 +178,19 @@ internal sealed class AccountSyncService(
                 )
                 ?.Uid
             : null;
+
+        // The three inputs that decide what a sync actually pulls. Worth a log line because two
+        // of them fail quietly: a window that never widens past the overlap, and a linked-account
+        // lookup that returns null after a re-consent changed the hash.
+        logger.LogInformation(
+            "Sync request for {Account}: since {Since} ({Window}), provider reference {Linked}.",
+            account.Name,
+            since,
+            lastBatch is null
+                ? $"first sync, {DefaultWindowDays}d backfill"
+                : $"{OverlapDays}d overlap on last batch",
+            providerAccountReference is null ? "unresolved" : "resolved"
+        );
 
         return new ProviderSyncRequest(
             account.Id,
