@@ -815,8 +815,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Dashboard.AddOneLink", "eines hinzufügen")]
     [InlineData("en", "Dashboard.HoldingsLink", "Holdings")]
     [InlineData("de", "Dashboard.HoldingsLink", "Bestände")]
-    [InlineData("en", "Dashboard.NoPriceYet", "no price yet")]
-    [InlineData("de", "Dashboard.NoPriceYet", "noch kein Kurs")]
+    [InlineData("en", "Common.NoPriceYet", "no price yet")]
+    [InlineData("de", "Common.NoPriceYet", "noch kein Kurs")]
     [InlineData("en", "Dashboard.HoldingsPageLink", "holdings page")]
     [InlineData("de", "Dashboard.HoldingsPageLink", "Bestandsseite")]
     [InlineData("en", "Dashboard.UpcomingOverdue", "Upcoming & overdue")]
@@ -1068,5 +1068,177 @@ public sealed class StringsResourceTests
         Assert.Equal("das Budget für „Food › Groceries“", deBudget);
         Assert.Equal("this rule", enRule);
         Assert.Equal("diese Regel", deRule);
+    }
+
+    [Theory]
+    [InlineData("en", "Common.Cancel", "Cancel")]
+    [InlineData("de", "Common.Cancel", "Abbrechen")]
+    [InlineData("en", "Common.Yes", "yes")]
+    [InlineData("de", "Common.Yes", "ja")]
+    [InlineData("en", "Planning.MatchNow", "Match now")]
+    [InlineData("de", "Planning.MatchNow", "Jetzt zuordnen")]
+    [InlineData("en", "Planning.ThisMonthsPlan", "This month's plan")]
+    [InlineData("de", "Planning.ThisMonthsPlan", "Plan für diesen Monat")]
+    [InlineData("en", "Planning.ColDue", "Due")]
+    [InlineData("de", "Planning.ColDue", "Fällig")]
+    [InlineData("en", "Planning.ColSchedule", "Schedule")]
+    [InlineData("de", "Planning.ColSchedule", "Zeitplan")]
+    [InlineData("en", "Planning.Match", "Match")]
+    [InlineData("de", "Planning.Match", "Zuordnen")]
+    [InlineData("en", "Planning.Unmatch", "Unmatch")]
+    [InlineData("de", "Planning.Unmatch", "Zuordnung lösen")]
+    [InlineData("en", "Planning.AddItemTitle", "Add planned item")]
+    [InlineData("de", "Planning.AddItemTitle", "Geplanten Posten hinzufügen")]
+    [InlineData("en", "Planning.EditItemTitle", "Edit planned item")]
+    [InlineData("de", "Planning.EditItemTitle", "Geplanten Posten bearbeiten")]
+    [InlineData("en", "Planning.TypeExpense", "Expense")]
+    [InlineData("de", "Planning.TypeExpense", "Ausgabe")]
+    [InlineData("en", "Planning.TypeIncome", "Income")]
+    [InlineData("de", "Planning.TypeIncome", "Einnahme")]
+    [InlineData("en", "Planning.ActiveLabel", "Active")]
+    [InlineData("de", "Planning.ActiveLabel", "Aktiv")]
+    [InlineData("en", "Planning.MatchedTitle", "Matched")]
+    [InlineData("de", "Planning.MatchedTitle", "Zugeordnet")]
+    [InlineData("en", "Planning.ItemSavedTitle", "Planned item saved")]
+    [InlineData("de", "Planning.ItemSavedTitle", "Geplanter Posten gespeichert")]
+    [InlineData("en", "Enum.PlannedFrequency.OneTime", "One-time")]
+    [InlineData("de", "Enum.PlannedFrequency.OneTime", "Einmalig")]
+    [InlineData("en", "Enum.PlannedFrequency.Monthly", "Monthly")]
+    [InlineData("de", "Enum.PlannedFrequency.Monthly", "Monatlich")]
+    [InlineData("en", "Enum.PlannedFrequency.Quarterly", "Quarterly")]
+    [InlineData("de", "Enum.PlannedFrequency.Quarterly", "Vierteljährlich")]
+    [InlineData("en", "Enum.PlannedFrequency.Yearly", "Yearly")]
+    [InlineData("de", "Enum.PlannedFrequency.Yearly", "Jährlich")]
+    [InlineData("en", "Enum.PlannedOccurrenceStatus.Pending", "Pending")]
+    [InlineData("de", "Enum.PlannedOccurrenceStatus.Pending", "Ausstehend")]
+    [InlineData("en", "Enum.PlannedOccurrenceStatus.Matched", "Matched")]
+    [InlineData("de", "Enum.PlannedOccurrenceStatus.Matched", "Zugeordnet")]
+    [InlineData("en", "Enum.PlannedOccurrenceStatus.Overdue", "Overdue")]
+    [InlineData("de", "Enum.PlannedOccurrenceStatus.Overdue", "Überfällig")]
+    [InlineData("en", "Enum.PlannedOccurrenceStatus.Skipped", "Skipped")]
+    [InlineData("de", "Enum.PlannedOccurrenceStatus.Skipped", "Übersprungen")]
+    [InlineData("en", "Crypto.PageTitle", "Crypto holdings")]
+    [InlineData("de", "Crypto.PageTitle", "Krypto-Bestände")]
+    [InlineData("en", "Crypto.RefreshValues", "Refresh values")]
+    [InlineData("de", "Crypto.RefreshValues", "Werte aktualisieren")]
+    [InlineData("en", "Crypto.SetHoldingTitle", "Set a holding")]
+    [InlineData("de", "Crypto.SetHoldingTitle", "Bestand festlegen")]
+    [InlineData("en", "Crypto.CoinGeckoIdLabel", "CoinGecko id")]
+    [InlineData("de", "Crypto.CoinGeckoIdLabel", "CoinGecko-ID")]
+    [InlineData("en", "Crypto.QuantityLabel", "Quantity")]
+    [InlineData("de", "Crypto.QuantityLabel", "Menge")]
+    [InlineData("en", "Crypto.CurrentHoldingsHeading", "Current holdings")]
+    [InlineData("de", "Crypto.CurrentHoldingsHeading", "Aktuelle Bestände")]
+    [InlineData("en", "Crypto.EmptyTitle", "No holdings yet")]
+    [InlineData("de", "Crypto.EmptyTitle", "Noch keine Bestände")]
+    [InlineData("en", "Crypto.ColPrice", "Price")]
+    [InlineData("de", "Crypto.ColPrice", "Kurs")]
+    [InlineData("en", "Crypto.ColValue", "Value")]
+    [InlineData("de", "Crypto.ColValue", "Wert")]
+    [InlineData("en", "Crypto.HoldingSavedTitle", "Holding saved")]
+    [InlineData("de", "Crypto.HoldingSavedTitle", "Bestand gespeichert")]
+    [InlineData("en", "Crypto.PricesUnavailableTitle", "Prices unavailable")]
+    [InlineData("de", "Crypto.PricesUnavailableTitle", "Kurse nicht verfügbar")]
+    [InlineData(
+        "en",
+        "Crypto.PricesUnavailableMessage",
+        "CoinGecko could not be reached — cached prices were used."
+    )]
+    [InlineData(
+        "de",
+        "Crypto.PricesUnavailableMessage",
+        "CoinGecko war nicht erreichbar — zwischengespeicherte Kurse wurden verwendet."
+    )]
+    public void GetString_B7Key_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    /// <summary>
+    /// <c>ScheduleLabel</c> composes a localized frequency into a localized sentence frame around a
+    /// date. Both the frame and the nested frequency have to swap culture together, so pin the
+    /// assembled result rather than the two fragments separately.
+    /// </summary>
+    [Fact]
+    public void GetString_PlanningScheduleLabels_ComposeInBothCultures()
+    {
+        // Arrange / Act
+        string enOnce;
+        string deOnce;
+        string enRecurring;
+        string deRecurring;
+        using (CultureScope.UiOnly("en"))
+        {
+            var l = FinanceLocalizer.Create();
+            enOnce = l["Planning.ScheduleOnce", "24.08.2026"];
+            enRecurring = l[
+                "Planning.ScheduleRecurring",
+                l["Enum.PlannedFrequency.Monthly"],
+                "24.08.2026"
+            ];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            var l = FinanceLocalizer.Create();
+            deOnce = l["Planning.ScheduleOnce", "24.08.2026"];
+            deRecurring = l[
+                "Planning.ScheduleRecurring",
+                l["Enum.PlannedFrequency.Monthly"],
+                "24.08.2026"
+            ];
+        }
+
+        // Assert
+        Assert.Equal("Once, 24.08.2026", enOnce);
+        Assert.Equal("Einmalig, 24.08.2026", deOnce);
+        Assert.Equal("Monthly from 24.08.2026", enRecurring);
+        Assert.Equal("Monatlich ab 24.08.2026", deRecurring);
+    }
+
+    /// <summary>
+    /// Both of this batch's delete-confirm subjects feed the shared "Delete {0}? …" /
+    /// "{0} löschen? …" template. The crypto one is the harder case: English puts the noun after
+    /// the symbol ("the BTC holding"), so a literal translation would strand it — German has to
+    /// reorder.
+    /// </summary>
+    [Fact]
+    public void GetString_B7DeleteConfirmSubjects_ComposeGrammaticallyInBothCultures()
+    {
+        // Arrange / Act
+        string enPlanning;
+        string dePlanning;
+        string enCrypto;
+        string deCrypto;
+        using (CultureScope.UiOnly("en"))
+        {
+            var l = FinanceLocalizer.Create();
+            enPlanning = l["Planning.DeleteConfirmSubject", "Rent"];
+            enCrypto = l["Crypto.DeleteConfirmSubject", "BTC"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            var l = FinanceLocalizer.Create();
+            dePlanning = l["Planning.DeleteConfirmSubject", "Miete"];
+            deCrypto = l["Crypto.DeleteConfirmSubject", "BTC"];
+        }
+
+        // Assert
+        Assert.Equal("the planned item “Rent”", enPlanning);
+        Assert.Equal("den geplanten Posten „Miete“", dePlanning);
+        Assert.Equal("the BTC holding", enCrypto);
+        Assert.Equal("den BTC-Bestand", deCrypto);
     }
 }

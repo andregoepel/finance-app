@@ -174,7 +174,7 @@
                                             @position.Symbol · @position.Quantity.ToString("0.########")
                                         </RadzenText>
                                         <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">
-                                            @(position.EurValue is decimal value ? Money.Eur(value) : L["Dashboard.NoPriceYet"])
+                                            @(position.EurValue is decimal value ? Money.Eur(value) : L["Common.NoPriceYet"])
                                         </RadzenText>
                                     </RadzenStack>
                                 }
