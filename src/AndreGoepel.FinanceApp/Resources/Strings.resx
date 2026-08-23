@@ -229,7 +229,7 @@
   <data name="Dashboard.NetWorth" xml:space="preserve"><value><![CDATA[Net worth]]></value></data>
   <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[{0} account(s) have no balance set —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
   <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[set one]]></value></data>
-  <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[to include them.]]></value><comment>Trails the "set one" link</comment></data>
+  <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[ to include them.]]></value><comment>Leading space is deliberate: the Razor puts none before this fragment so German can attach its own separator</comment></data>
   <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[No budgets set —]]></value><comment>An "add one" link follows</comment></data>
   <data name="Dashboard.AddOneLink" xml:space="preserve"><value><![CDATA[add one]]></value></data>
   <data name="Dashboard.HoldingsLink" xml:space="preserve"><value><![CDATA[Holdings]]></value></data>

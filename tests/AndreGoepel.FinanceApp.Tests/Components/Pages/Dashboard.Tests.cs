@@ -81,7 +81,7 @@ public sealed class DashboardTests : LocalizedTestContext
         Assert.Contains("Übersicht", cut.Markup);
         Assert.Contains("Einnahmen", cut.Markup);
         Assert.Contains("Ausgaben nach Kategorie", cut.Markup);
-        Assert.Contains("Vermögen", cut.Markup);
+        Assert.Contains("Nettovermögen", cut.Markup);
         Assert.DoesNotContain("Spending by category", cut.Markup);
     }
 

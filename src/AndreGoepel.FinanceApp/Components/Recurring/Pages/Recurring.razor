@@ -30,7 +30,7 @@
                             AllowSorting="true" AllowPaging="true" PageSize="20">
                 <Columns>
                     <RadzenDataGridColumn TItem="RecurringSeries" Property="Counterparty" Title="@L["Common.Counterparty"]" />
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Interval" Title="@L["Recurring.ColInterval"]" Width="110px">
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Interval" Title="@L["Recurring.ColInterval"]" Width="150px">
                         <Template Context="row">@L[$"Enum.RecurrenceInterval.{row.Interval}"]</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="RecurringSeries" Property="TypicalAmount" Title="@L["Recurring.ColTypicalAmount"]" Width="140px" TextAlign="TextAlign.Right">
@@ -38,11 +38,11 @@
                             <AmountText Amount="row.TypicalAmount" />
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Occurrences" Title="@L["Recurring.ColSeen"]" Width="70px" TextAlign="TextAlign.Right" />
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="Occurrences" Title="@L["Recurring.ColSeen"]" Width="110px" TextAlign="TextAlign.Right" />
                     <RadzenDataGridColumn TItem="RecurringSeries" Property="LastSeen" Title="@L["Recurring.ColLast"]" Width="120px">
                         <Template Context="row">@Dates.Short(row.LastSeen)</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="@L["Recurring.ColNextExpected"]" Width="130px">
+                    <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="@L["Recurring.ColNextExpected"]" Width="150px">
                         <Template Context="row">@Dates.Short(row.NextExpected)</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
