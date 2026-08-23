@@ -134,7 +134,7 @@
 
   <!-- Sync.razor -->
   <data name="Sync.SyncAllNow" xml:space="preserve"><value><![CDATA[Sync all now]]></value></data>
-  <data name="Sync.SyncingBusyText" xml:space="preserve"><value><![CDATA[Syncing...]]></value></data>
+  <data name="Sync.SyncingBusyText" xml:space="preserve"><value><![CDATA[Syncing…]]></value></data>
   <data name="Sync.Intro" xml:space="preserve"><value><![CDATA[API-backed accounts sync automatically on the schedule below; trigger a manual sync any time here. Configure credentials and bank consents under]]></value></data>
   <data name="Sync.SettingsConnectionsLink" xml:space="preserve"><value><![CDATA[Settings → Connections]]></value></data>
   <data name="Sync.ConsentAttentionNeeded" xml:space="preserve"><value><![CDATA[Consent attention needed:]]></value></data>
@@ -200,7 +200,7 @@
   <data name="Import.ColProblem" xml:space="preserve"><value><![CDATA[Problem]]></value></data>
   <data name="Import.ColRawLine" xml:space="preserve"><value><![CDATA[Raw line]]></value></data>
   <data name="Import.ImportButton" xml:space="preserve"><value><![CDATA[Import {0} transactions]]></value><comment>{0} = count of new transactions</comment></data>
-  <data name="Import.ImportingBusyText" xml:space="preserve"><value><![CDATA[Importing...]]></value></data>
+  <data name="Import.ImportingBusyText" xml:space="preserve"><value><![CDATA[Importing…]]></value></data>
   <data name="Import.HistoryTitle" xml:space="preserve"><value><![CDATA[Import history]]></value></data>
   <data name="Import.ColWhen" xml:space="preserve"><value><![CDATA[When]]></value></data>
   <data name="Import.ColFile" xml:space="preserve"><value><![CDATA[File]]></value></data>
@@ -336,7 +336,7 @@
   <data name="Planning.EndDateLabel" xml:space="preserve"><value><![CDATA[End date (optional)]]></value></data>
   <data name="Planning.ExpectedAccountLabel" xml:space="preserve"><value><![CDATA[Expected account]]></value></data>
   <data name="Planning.AnyPlaceholder" xml:space="preserve"><value><![CDATA[(any)]]></value></data>
-  <data name="Planning.MatchHintPlaceholder" xml:space="preserve"><value><![CDATA[match hint]]></value></data>
+  <data name="Planning.MatchHintPlaceholder" xml:space="preserve"><value><![CDATA[Match hint]]></value></data>
   <data name="Planning.ToleranceLabel" xml:space="preserve"><value><![CDATA[Tolerance (%)]]></value></data>
   <data name="Planning.DateWindowLabel" xml:space="preserve"><value><![CDATA[Date window (± days)]]></value></data>
   <data name="Planning.ActiveLabel" xml:space="preserve"><value><![CDATA[Active]]></value></data>

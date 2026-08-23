@@ -67,7 +67,7 @@
   <!-- FinanceNavMenu.razor -->
   <data name="Nav.SectionFinance" xml:space="preserve"><value><![CDATA[FINANZEN]]></value></data>
   <data name="Nav.SectionFinanceSettings" xml:space="preserve"><value><![CDATA[FINANZ-EINSTELLUNGEN]]></value></data>
-  <data name="Nav.Transactions" xml:space="preserve"><value><![CDATA[Umsätze]]></value></data>
+  <data name="Nav.Transactions" xml:space="preserve"><value><![CDATA[Transaktionen]]></value></data>
   <data name="Nav.Review" xml:space="preserve"><value><![CDATA[Zu prüfen]]></value></data>
   <data name="Nav.Recurring" xml:space="preserve"><value><![CDATA[Wiederkehrend]]></value></data>
   <data name="Nav.Planning" xml:space="preserve"><value><![CDATA[Planung]]></value></data>
@@ -89,7 +89,7 @@
   <data name="Common.Delete" xml:space="preserve"><value><![CDATA[Löschen]]></value></data>
 
   <!-- Credentials.razor ("API Keys" page) -->
-  <data name="ApiKeys.SecretsIntro" xml:space="preserve"><value><![CDATA[Geheimnisse werden verschlüsselt in der Datenbank gespeichert (DataProtection) und nach dem Speichern nie wieder angezeigt. Wise- und Enable-Banking-Zugangsdaten befinden sich unter]]></value></data>
+  <data name="ApiKeys.SecretsIntro" xml:space="preserve"><value><![CDATA[Secrets werden verschlüsselt in der Datenbank gespeichert (DataProtection) und nach dem Speichern nie wieder angezeigt. Wise- und Enable-Banking-Zugangsdaten befinden sich unter]]></value></data>
   <data name="ApiKeys.ClaudeSectionTitle" xml:space="preserve"><value><![CDATA[Claude-API-Schlüssel]]></value></data>
   <data name="ApiKeys.ConfiguredOn" xml:space="preserve"><value><![CDATA[konfiguriert am {0}]]></value><comment>{0} = the date it was configured or last rotated</comment></data>
   <data name="ApiKeys.NotConfigured" xml:space="preserve"><value><![CDATA[nicht konfiguriert]]></value></data>
@@ -114,7 +114,7 @@
   <data name="Common.Disabled" xml:space="preserve"><value><![CDATA[Deaktiviert]]></value></data>
 
   <!-- Recurring.razor -->
-  <data name="Recurring.Subtitle" xml:space="preserve"><value><![CDATA[Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Zahlungen an denselben Zahlungspartner mit gleichbleibendem Intervall und Betrag.]]></value></data>
+  <data name="Recurring.Subtitle" xml:space="preserve"><value><![CDATA[Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Zahlungspartnern mit gleichbleibendem Intervall und Betrag.]]></value></data>
   <data name="Recurring.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine wiederkehrenden Zahlungen erkannt]]></value></data>
   <data name="Recurring.EmptyText" xml:space="preserve"><value><![CDATA[Dafür braucht es erst einige Monate an Transaktionen, bevor sich Muster abzeichnen.]]></value></data>
   <data name="Recurring.ColInterval" xml:space="preserve"><value><![CDATA[Intervall]]></value></data>
@@ -175,7 +175,7 @@
 
   <!-- Review.razor -->
   <data name="Review.PageTitle" xml:space="preserve"><value><![CDATA[Zu prüfen]]></value></data>
-  <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Umsatzübersicht mit „KI“ markiert.]]></value></data>
+  <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Transaktionsübersicht mit „KI“ markiert.]]></value></data>
   <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge übernehmen]]></value></data>
   <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge verwerfen]]></value></data>
   <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Kategorie für die Auswahl festlegen]]></value></data>
@@ -360,18 +360,18 @@
 
   <!-- CryptoHoldings.razor -->
   <data name="Crypto.PageTitle" xml:space="preserve"><value><![CDATA[Krypto-Bestände]]></value></data>
-  <data name="Crypto.Subtitle" xml:space="preserve"><value><![CDATA[Erfassen, wie viel ein Krypto-Konto von jedem Wert hält. Die Bewertung erfolgt in EUR über CoinGecko (täglich und bei Aktualisierung) und bildet die Grundlage des Kontostands für das Vermögen. Die Währung des Krypto-Kontos auf EUR setzen — sein Kontostand ist die EUR-Summe seiner Bestände.]]></value></data>
+  <data name="Crypto.Subtitle" xml:space="preserve"><value><![CDATA[Erfassen, wie viel ein Krypto-Konto von jedem Coin hält. Die Bewertung erfolgt in EUR über CoinGecko (täglich und bei Aktualisierung) und bildet die Grundlage des Kontostands für das Nettovermögen. Die Währung des Krypto-Kontos auf EUR setzen — sein Kontostand ist die EUR-Summe seiner Bestände.]]></value></data>
   <data name="Crypto.RefreshValues" xml:space="preserve"><value><![CDATA[Werte aktualisieren]]></value></data>
   <data name="Crypto.NoAccountPrefix" xml:space="preserve"><value><![CDATA[Noch kein aktives Krypto-Konto — zuerst eines unter]]></value><comment>An "Accounts" link and Crypto.NoAccountSuffix follow</comment></data>
-  <data name="Crypto.NoAccountSuffix" xml:space="preserve"><value><![CDATA[mit dem Typ „Crypto“ anlegen.]]></value><comment>Trails the "Accounts" link</comment></data>
+  <data name="Crypto.NoAccountSuffix" xml:space="preserve"><value><![CDATA[mit dem Typ „Krypto“ anlegen.]]></value><comment>Trails the "Accounts" link</comment></data>
   <data name="Crypto.SetHoldingTitle" xml:space="preserve"><value><![CDATA[Bestand festlegen]]></value></data>
   <data name="Crypto.SymbolLabel" xml:space="preserve"><value><![CDATA[Symbol]]></value></data>
   <data name="Crypto.CoinGeckoIdLabel" xml:space="preserve"><value><![CDATA[CoinGecko-ID]]></value></data>
   <data name="Crypto.QuantityLabel" xml:space="preserve"><value><![CDATA[Menge]]></value></data>
-  <data name="Crypto.CoinGeckoIdHint" xml:space="preserve"><value><![CDATA[Die CoinGecko-ID ist der letzte Teil der coingecko.com-URL der Münze, z. B. „bitcoin“ oder „ethereum“. Eine unbekannte ID erhält keinen Kurs.]]></value></data>
+  <data name="Crypto.CoinGeckoIdHint" xml:space="preserve"><value><![CDATA[Die CoinGecko-ID ist der letzte Teil der coingecko.com-URL des Coins, z. B. „bitcoin“ oder „ethereum“. Eine unbekannte ID erhält keinen Kurs.]]></value></data>
   <data name="Crypto.CurrentHoldingsHeading" xml:space="preserve"><value><![CDATA[Aktuelle Bestände]]></value></data>
   <data name="Crypto.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Bestände]]></value></data>
-  <data name="Crypto.EmptyText" xml:space="preserve"><value><![CDATA[Oben einen Bestand hinzufügen, um Menge und EUR-Wert eines Werts zu verfolgen.]]></value></data>
+  <data name="Crypto.EmptyText" xml:space="preserve"><value><![CDATA[Oben einen Bestand hinzufügen, um Menge und EUR-Wert eines Coins zu verfolgen.]]></value></data>
   <data name="Crypto.ColPrice" xml:space="preserve"><value><![CDATA[Kurs]]></value></data>
   <data name="Crypto.ColValue" xml:space="preserve"><value><![CDATA[Wert]]></value></data>
   <data name="Crypto.PricesAsOf" xml:space="preserve"><value><![CDATA[Kurse vom {0}]]></value><comment>{0} = formatted date and time</comment></data>
@@ -435,7 +435,7 @@
   <data name="Accounts.UnnamedAccount" xml:space="preserve"><value><![CDATA[Konto]]></value><comment>Fallback when a linked bank account reports no name</comment></data>
   <data name="Accounts.IbanLabel" xml:space="preserve"><value><![CDATA[IBAN (optional)]]></value></data>
   <data name="Accounts.CurrentBalanceLabel" xml:space="preserve"><value><![CDATA[Aktueller Kontostand ({0})]]></value><comment>{0} = currency code</comment></data>
-  <data name="Accounts.BalancePlaceholder" xml:space="preserve"><value><![CDATA[für das Vermögen]]></value></data>
+  <data name="Accounts.BalancePlaceholder" xml:space="preserve"><value><![CDATA[für das Nettovermögen]]></value></data>
   <data name="Accounts.UnknownUser" xml:space="preserve"><value><![CDATA[?]]></value><comment>Fallback when an owner id matches no known user</comment></data>
   <data name="Accounts.BalanceNoEurTitle" xml:space="preserve"><value><![CDATA[Kontostand ohne EUR-Wert gespeichert]]></value></data>
   <data name="Accounts.BalanceNoEurMessage" xml:space="preserve"><value><![CDATA[Der Wechselkurs war nicht verfügbar, daher bleibt dieses Konto vorerst beim Nettovermögen unberücksichtigt.]]></value></data>
@@ -456,7 +456,7 @@
   <data name="Enum.SyncMethod.Api" xml:space="preserve"><value><![CDATA[API]]></value></data>
 
   <!-- Connections.razor -->
-  <data name="Connections.Subtitle" xml:space="preserve"><value><![CDATA[Eine Verbindung ist ein Zugang bei einem Anbieter — ein Wise-Profil oder eine Bank-Einwilligung — der einem Haushaltsbenutzer gehört. Eine Verbindung versorgt mehrere Konten, und jeder kann eigene haben. Geheimnisse werden verschlüsselt gespeichert und nach dem Speichern nie wieder angezeigt.]]></value></data>
+  <data name="Connections.Subtitle" xml:space="preserve"><value><![CDATA[Eine Verbindung ist ein Zugang bei einem Anbieter — ein Wise-Profil oder eine Bank-Einwilligung — der einem Haushaltsbenutzer gehört. Eine Verbindung versorgt mehrere Konten, und jeder kann eigene haben. Secrets werden verschlüsselt gespeichert und nach dem Speichern nie wieder angezeigt.]]></value></data>
   <data name="Connections.EbAppTitle" xml:space="preserve"><value><![CDATA[Enable-Banking-Anwendung]]></value></data>
   <data name="Connections.EbAppIntro" xml:space="preserve"><value><![CDATA[Eine registrierte Anwendung für die gesamte App (von jeder DKB-/Revolut-Verbindung gemeinsam genutzt). Ihre Redirect-URI auf diesen Wert setzen:]]></value><comment>The callback URL follows in a code element</comment></data>
   <data name="Connections.ApplicationIdLabel" xml:space="preserve"><value><![CDATA[Anwendungs-ID]]></value></data>

@@ -118,7 +118,7 @@ public sealed class DomainStringsResourceTests
     [InlineData(
         "de",
         "Error.NoPendingSuggestions",
-        "Keine offenen Vorschläge für die ausgewählten Umsätze gefunden."
+        "Keine offenen Vorschläge für die ausgewählten Transaktionen gefunden."
     )]
     public void GetString_ErrorKey_ReturnsTheCultureSpecificValue(
         string culture,
