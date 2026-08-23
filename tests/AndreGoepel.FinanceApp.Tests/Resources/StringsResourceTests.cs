@@ -1414,4 +1414,100 @@ public sealed class StringsResourceTests
             de
         );
     }
+
+    [Theory]
+    [InlineData("en", "Connections.EbAppTitle", "Enable Banking application")]
+    [InlineData("de", "Connections.EbAppTitle", "Enable-Banking-Anwendung")]
+    [InlineData("en", "Connections.ApplicationIdLabel", "Application id")]
+    [InlineData("de", "Connections.ApplicationIdLabel", "Anwendungs-ID")]
+    [InlineData("en", "Connections.PrivateKeyLabel", "Private key (PEM)")]
+    [InlineData("de", "Connections.PrivateKeyLabel", "Privater Schlüssel (PEM)")]
+    [InlineData("en", "Connections.AddTitle", "Add connection")]
+    [InlineData("de", "Connections.AddTitle", "Verbindung hinzufügen")]
+    [InlineData("en", "Connections.LabelLabel", "Label")]
+    [InlineData("de", "Connections.LabelLabel", "Bezeichnung")]
+    [InlineData("en", "Connections.EnvironmentLabel", "Environment")]
+    [InlineData("de", "Connections.EnvironmentLabel", "Umgebung")]
+    [InlineData("en", "Connections.EmptyTitle", "No connections yet")]
+    [InlineData("de", "Connections.EmptyTitle", "Noch keine Verbindungen")]
+    [InlineData("en", "Connections.UnknownUser", "unknown user")]
+    [InlineData("de", "Connections.UnknownUser", "unbekannter Benutzer")]
+    [InlineData("en", "Connections.NoOwner", "no owner")]
+    [InlineData("de", "Connections.NoOwner", "kein Inhaber")]
+    [InlineData("en", "Connections.SyncBalances", "Sync balances")]
+    [InlineData("de", "Connections.SyncBalances", "Guthaben abgleichen")]
+    [InlineData("en", "Connections.Connect", "Connect")]
+    [InlineData("de", "Connections.Connect", "Verbinden")]
+    [InlineData("en", "Connections.Reconnect", "Reconnect")]
+    [InlineData("de", "Connections.Reconnect", "Neu verbinden")]
+    [InlineData("en", "Connections.ConsentPending", "pending")]
+    [InlineData("de", "Connections.ConsentPending", "ausstehend")]
+    [InlineData("en", "Connections.ConsentNotConnected", "not connected")]
+    [InlineData("de", "Connections.ConsentNotConnected", "nicht verbunden")]
+    [InlineData("en", "Connections.CannotConnectTitle", "Cannot connect")]
+    [InlineData("de", "Connections.CannotConnectTitle", "Verbinden nicht möglich")]
+    [InlineData("en", "Connections.ConsentInvalidMessage", "Missing code or state.")]
+    [InlineData("de", "Connections.ConsentInvalidMessage", "Code oder State fehlt.")]
+    [InlineData("en", "Enum.ProviderEnvironment.Production", "Production")]
+    [InlineData("de", "Enum.ProviderEnvironment.Production", "Produktiv")]
+    [InlineData("en", "Enum.ProviderEnvironment.Sandbox", "Sandbox")]
+    [InlineData("de", "Enum.ProviderEnvironment.Sandbox", "Sandbox")]
+    public void GetString_B8ConnectionsKey_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Fact]
+    public void GetString_ConnectionsDeleteConfirmSubject_ComposesGrammaticallyInBothCultures()
+    {
+        // Arrange / Act — feeds the shared "Delete {0}? …" / "{0} löschen? …" template, so the
+        // German value carries its own article and quotation marks.
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Connections.DeleteConfirmSubject", "André – Wise"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Connections.DeleteConfirmSubject", "André – Wise"];
+        }
+
+        // Assert
+        Assert.Equal("the connection “André – Wise”", en);
+        Assert.Equal("die Verbindung „André – Wise“", de);
+    }
+
+    [Fact]
+    public void GetString_ConnectionsConsentActiveUntil_FormatsTheDateIntoBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()["Connections.ConsentActiveUntil", "22.11.2026"];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()["Connections.ConsentActiveUntil", "22.11.2026"];
+        }
+
+        // Assert
+        Assert.Equal("active until 22.11.2026", en);
+        Assert.Equal("aktiv bis 22.11.2026", de);
+    }
 }

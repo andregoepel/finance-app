@@ -13,43 +13,42 @@
 @inject NotificationService NotificationService
 @inject UserManager<User> UserManager
 @inject ConfirmService ConfirmService
+@inject IStringLocalizer<Strings> L
 
-<AppPageTitle Title="Connections" Breadcrumb="Settings / Connections" />
+<AppPageTitle Title="@L["Nav.Connections"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Connections"]]" />
 
 <PageBody>
 
-    <PageHeader Title="Connections"
-                Subtitle="A connection is one login at a provider — a Wise profile or a bank consent — owned by a household user. One connection feeds several accounts, and each of you can have your own. Secrets are stored encrypted and never shown again after saving." />
+    <PageHeader Title="@L["Nav.Connections"]" Subtitle="@L["Connections.Subtitle"]" />
 
     @* ---------- Enable Banking application (global) ---------- *@
-    <SectionCard Title="Enable Banking application">
+    <SectionCard Title="@L["Connections.EbAppTitle"]">
         <RadzenStack Gap="1rem">
             <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                One registered application for the whole app (shared by every DKB/Revolut
-                connection). Set its redirect URI to <code>@CallbackUrl</code>.
+                @L["Connections.EbAppIntro"] <code>@CallbackUrl</code>
             </RadzenText>
 
             <RadzenRow Gap="0.5rem" AlignItems="AlignItems.Center">
-                <RadzenColumn Size="4"><RadzenText>Application id</RadzenText></RadzenColumn>
+                <RadzenColumn Size="4"><RadzenText>@L["Connections.ApplicationIdLabel"]</RadzenText></RadzenColumn>
                 <RadzenColumn Size="8">@StateBadge(ebAppIdInfo)</RadzenColumn>
             </RadzenRow>
             <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
                 <RadzenTextBox @bind-Value=@ebAppIdInput autocomplete="off"
-                               Placeholder="@(ebAppIdInfo is null ? "Application id (UUID)" : "Enter new id to rotate")"
+                               Placeholder="@(ebAppIdInfo is null ? L["Connections.ApplicationIdPlaceholder"] : L["Connections.RotateIdPlaceholder"])"
                                Style="flex: 1;" />
-                <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                <RadzenButton Text="@L["Common.Save"]" Icon="save" ButtonStyle="ButtonStyle.Primary"
                               Disabled=@string.IsNullOrWhiteSpace(ebAppIdInput)
                               Click=@(() => SaveGlobalCredAsync(CredentialKeys.EnableBankingApplicationId, ebAppIdInput, () => ebAppIdInput = "")) />
             </RadzenStack>
 
             <RadzenRow Gap="0.5rem" AlignItems="AlignItems.Center">
-                <RadzenColumn Size="4"><RadzenText>Private key (PEM)</RadzenText></RadzenColumn>
+                <RadzenColumn Size="4"><RadzenText>@L["Connections.PrivateKeyLabel"]</RadzenText></RadzenColumn>
                 <RadzenColumn Size="8">@StateBadge(ebKeyInfo)</RadzenColumn>
             </RadzenRow>
             <RadzenTextArea @bind-Value=@ebKeyInput Rows="4" autocomplete="off"
                             Placeholder="-----BEGIN PRIVATE KEY-----" Style="width: 100%; font-family: monospace;" />
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-                <RadzenButton Text="Save key" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                <RadzenButton Text="@L["Connections.SaveKey"]" Icon="save" ButtonStyle="ButtonStyle.Primary"
                               Disabled=@string.IsNullOrWhiteSpace(ebKeyInput)
                               Click=@(() => SaveGlobalCredAsync(CredentialKeys.EnableBankingPrivateKey, ebKeyInput, () => ebKeyInput = "")) />
             </RadzenStack>
@@ -57,41 +56,42 @@
     </SectionCard>
 
     @* ---------- Add a connection ---------- *@
-    <SectionCard Title="Add connection">
+    <SectionCard Title="@L["Connections.AddTitle"]">
         <RadzenStack Gap="1rem">
             <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.End">
-                <FormField Label="Provider" For="Provider">
+                <FormField Label="@L["Common.Provider"]" For="Provider">
                     <RadzenDropDown @bind-Value=@newProvider Name="Provider" Data=@ConnectionProviders Style="min-width: 9rem;" />
                 </FormField>
-                <FormField Label="Label" For="Label">
-                    <RadzenTextBox @bind-Value=@newLabel Name="Label" Placeholder="e.g. André – Wise" Style="min-width: 14rem;" />
+                <FormField Label="@L["Connections.LabelLabel"]" For="Label">
+                    <RadzenTextBox @bind-Value=@newLabel Name="Label" Placeholder="@L["Connections.LabelPlaceholder"]" Style="min-width: 14rem;" />
                 </FormField>
-                <FormField Label="Owner" For="Owner">
+                <FormField Label="@L["Common.Owner"]" For="Owner">
                     <RadzenDropDown TValue="Guid?" @bind-Value=@newOwnerUserId Name="Owner" Data=@users
                                     ValueProperty="StreamId" TextProperty="UserName"
-                                    AllowClear="true" Placeholder="Select user" Style="min-width: 13rem;" />
+                                    AllowClear="true" Placeholder="@L["Accounts.SelectUserPlaceholder"]" Style="min-width: 13rem;" />
                 </FormField>
                 @if (newProvider == ProviderKind.Wise)
                 {
-                    <FormField Label="Environment" For="Environment">
-                        <RadzenDropDown @bind-Value=@newEnvironment Name="Environment" Data=@Environments Style="min-width: 9rem;" />
+                    <FormField Label="@L["Connections.EnvironmentLabel"]" For="Environment">
+                        <RadzenDropDown @bind-Value=@newEnvironment Name="Environment" Data=@Environments Style="min-width: 9rem;">
+                            <Template>@L[$"Enum.ProviderEnvironment.{context}"]</Template>
+                        </RadzenDropDown>
                     </FormField>
                 }
                 else
                 {
-                    <FormField Label="ASPSP (bank)" For="Aspsp">
+                    <FormField Label="@L["Connections.AspspLabel"]" For="Aspsp">
                         <RadzenTextBox @bind-Value=@newAspspName Name="Aspsp" Placeholder="Mock ASPSP / DKB" Style="min-width: 11rem;" />
                     </FormField>
-                    <FormField Label="Country" For="Country">
+                    <FormField Label="@L["Connections.CountryLabel"]" For="Country">
                         <RadzenTextBox @bind-Value=@newAspspCountry Name="Country" Placeholder="DE" Style="width: 5.5rem;" MaxLength="2" />
                     </FormField>
                 }
-                <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                <RadzenButton Text="@L["Common.Add"]" Icon="add" ButtonStyle="ButtonStyle.Primary"
                               Disabled=@string.IsNullOrWhiteSpace(newLabel) Click=@AddConnectionAsync />
             </RadzenStack>
             <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                Enable Banking sandbox uses <strong>Mock ASPSP</strong> (country DE); for production
-                use the real bank name (e.g. <strong>DKB</strong>).
+                @L["Connections.SandboxHint"]
             </RadzenText>
         </RadzenStack>
     </SectionCard>
@@ -99,8 +99,8 @@
     @* ---------- Existing connections ---------- *@
     @if (connections.Count == 0)
     {
-        <EmptyState Icon="@("🔗")" Title="No connections yet"
-                    Text="Add one above, then link accounts to it under Accounts." />
+        <EmptyState Icon="@("🔗")" Title="@L["Connections.EmptyTitle"]"
+                    Text="@L["Connections.EmptyText", L["Nav.Accounts"]]" />
     }
     else
     {
@@ -112,7 +112,7 @@
                     <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
                         @OwnerName(connection.OwnerUserId)
                     </RadzenText>
-                    <IconButton Icon="delete" Title="Delete connection" Danger="true"
+                    <IconButton Icon="delete" Title="@L["Connections.DeleteTooltip"]" Danger="true"
                                 Click=@(_ => DeleteConnectionAsync(connection)) />
                 </Actions>
                 <ChildContent>
@@ -123,19 +123,21 @@
                             @StateBadge(WiseTokenInfo(connection.Id))
                             <RadzenPassword Value=@WiseInput(connection.Id) ValueChanged=@(v => wiseInputs[connection.Id] = v)
                                             autocomplete="off"
-                                            Placeholder="@(WiseTokenInfo(connection.Id) is null ? "Wise API token" : "Enter new token to rotate")"
+                                            Placeholder="@(WiseTokenInfo(connection.Id) is null ? L["Connections.WiseTokenPlaceholder"] : L["Connections.RotateTokenPlaceholder"])"
                                             Style="flex: 1;" />
-                            <RadzenButton Text="Save token" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                            <RadzenButton Text="@L["Connections.SaveToken"]" Icon="save" ButtonStyle="ButtonStyle.Primary"
                                           Disabled=@string.IsNullOrWhiteSpace(WiseInput(connection.Id))
                                           Click=@(() => SaveWiseTokenAsync(connection.Id)) />
                         </RadzenStack>
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
-                            <RadzenText TextStyle="TextStyle.Caption">Environment</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption">@L["Connections.EnvironmentLabel"]</RadzenText>
                             <RadzenDropDown TValue="ProviderEnvironment" Value=@connection.Environment Data=@Environments
                                             Change=@(args => ChangeEnvironmentAsync(connection.Id, (ProviderEnvironment)args))
-                                            Style="min-width: 9rem;" />
+                                            Style="min-width: 9rem;">
+                                <Template>@L[$"Enum.ProviderEnvironment.{context}"]</Template>
+                            </RadzenDropDown>
                             <div style="flex: 1;"></div>
-                            <RadzenButton Text="Sync balances" Icon="sync" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                            <RadzenButton Text="@L["Connections.SyncBalances"]" Icon="sync" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
                                           Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id)
                                           IsBusy=@(syncingConnectionId == connection.Id)
                                           Click=@(() => SyncBalancesAsync(connection.Id)) />
@@ -143,7 +145,7 @@
                         @if (balanceResults.TryGetValue(connection.Id, out var balances))
                         {
                             <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                                @string.Join(" · ", balances.Select(b => $"{b.Amount:N2} {b.Currency} (id {b.Id})"))
+                                @string.Join(" · ", balances.Select(b => L["Connections.BalanceEntry", $"{b.Amount:N2}", b.Currency, b.Id]))
                             </RadzenText>
                         }
                     }
@@ -153,10 +155,10 @@
                             @ConsentBadge(connection)
                             @if (connection.LinkedAccounts.Count > 0)
                             {
-                                <RadzenText TextStyle="TextStyle.Caption">@connection.LinkedAccounts.Count linked account(s)</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption">@L["Connections.LinkedAccountsCount", connection.LinkedAccounts.Count]</RadzenText>
                             }
                             <div style="flex: 1;"></div>
-                            <RadzenButton Text="@(connection.ConsentStatus == ConsentStatus.Authorized ? "Reconnect" : "Connect")"
+                            <RadzenButton Text="@(connection.ConsentStatus == ConsentStatus.Authorized ? L["Connections.Reconnect"] : L["Connections.Connect"])"
                                           Icon="link" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
                                           Click=@(() => ConnectAsync(connection.Id)) />
                         </RadzenStack>
@@ -220,8 +222,8 @@
 
     private string OwnerName(Guid? ownerUserId) =>
         ownerUserId is Guid id
-            ? users.FirstOrDefault(u => u.StreamId == id)?.UserName ?? "unknown user"
-            : "no owner";
+            ? users.FirstOrDefault(u => u.StreamId == id)?.UserName ?? L["Connections.UnknownUser"]
+            : L["Connections.NoOwner"];
 
     private CredentialInfo? WiseTokenInfo(Guid connectionId) =>
         wiseTokenInfos.TryGetValue(connectionId, out var info) ? info : null;
@@ -239,7 +241,7 @@
         }
         clearInput();
         await LoadAsync();
-        NotificationService.Success("Saved", "Stored encrypted.");
+        NotificationService.Success(L["Common.Saved"], L["Connections.StoredEncrypted"]);
     }
 
     private async Task AddConnectionAsync()
@@ -248,7 +250,7 @@
             newProvider, newLabel, newOwnerUserId, newEnvironment, newAspspName, newAspspCountry);
         if (result.IsFailure)
         {
-            NotificationService.Error("Could not add connection", result.Error);
+            NotificationService.Error(L["Connections.CouldNotAddTitle"], result.Error);
             return;
         }
         newLabel = "";
@@ -257,7 +259,7 @@
         newAspspName = "";
         newAspspCountry = "DE";
         await LoadAsync();
-        NotificationService.Success("Connection added", result.Value!.Label);
+        NotificationService.Success(L["Connections.AddedTitle"], result.Value!.Label);
     }
 
     private async Task ChangeEnvironmentAsync(Guid connectionId, ProviderEnvironment environment)
@@ -265,7 +267,7 @@
         var result = await ConnectionService.SetEnvironmentAsync(connectionId, environment);
         if (result.IsFailure)
         {
-            NotificationService.Error("Could not change environment", result.Error);
+            NotificationService.Error(L["Connections.CouldNotChangeEnvTitle"], result.Error);
             return;
         }
         await LoadAsync();
@@ -279,7 +281,7 @@
             var result = await WiseBalanceService.SyncConnectionAsync(connectionId);
             if (result.IsFailure)
             {
-                NotificationService.Error("Balance sync failed", result.Error);
+                NotificationService.Error(L["Connections.BalanceSyncFailedTitle"], result.Error);
                 return;
             }
             balanceResults[connectionId] = result.Value!.Balances;
@@ -296,18 +298,18 @@
 
     private async Task DeleteConnectionAsync(ProviderConnection connection)
     {
-        if (!await ConfirmService.ConfirmDeleteAsync($"the connection “{connection.Label}”"))
+        if (!await ConfirmService.ConfirmDeleteAsync(L["Connections.DeleteConfirmSubject", connection.Label]))
         {
             return;
         }
         var result = await ConnectionService.DeleteAsync(connection.Id);
         if (result.IsFailure)
         {
-            NotificationService.Error("Delete failed", result.Error);
+            NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);
             return;
         }
         await LoadAsync();
-        NotificationService.Success("Connection deleted", connection.Label);
+        NotificationService.Success(L["Connections.DeletedTitle"], connection.Label);
     }
 
     private async Task SaveWiseTokenAsync(Guid connectionId)
@@ -320,7 +322,7 @@
         }
         wiseInputs[connectionId] = "";
         await LoadAsync();
-        NotificationService.Success("Saved", "Wise token stored encrypted.");
+        NotificationService.Success(L["Common.Saved"], L["Connections.WiseTokenStored"]);
     }
 
     private async Task ConnectAsync(Guid connectionId)
@@ -328,7 +330,7 @@
         var result = await ConnectionService.StartConsentAsync(connectionId, CallbackUrl);
         if (result.IsFailure)
         {
-            NotificationService.Error("Cannot connect", result.Error);
+            NotificationService.Error(L["Connections.CannotConnectTitle"], result.Error);
             return;
         }
         Navigation.NavigateTo(result.Value!, forceLoad: true); // leave for the bank's authorization page
@@ -344,35 +346,55 @@
         switch (consent.ToString())
         {
             case "ok":
-                NotificationService.Success("Consent authorized", "Bank accounts linked.");
+                NotificationService.Success(L["Connections.ConsentOkTitle"], L["Connections.ConsentOkMessage"]);
                 break;
             case "failed":
             case "denied":
-                NotificationService.Error("Consent not completed", query["reason"].ToString());
+                NotificationService.Error(L["Connections.ConsentFailedTitle"], query["reason"].ToString());
                 break;
             case "invalid":
-                NotificationService.Warning("Consent callback invalid", "Missing code or state.");
+                NotificationService.Warning(L["Connections.ConsentInvalidTitle"], L["Connections.ConsentInvalidMessage"]);
                 break;
         }
     }
 
-    private static RenderFragment StateBadge(CredentialInfo? info) => builder =>
+    // Instance (not static) so these can localize: both branches render user-facing text, and the
+    // dates go through Dates rather than an inline format string. These two were the last inline
+    // date formats in the Components tree — they hid from earlier sweeps because they are built
+    // with RenderTreeBuilder rather than markup.
+    private RenderFragment StateBadge(CredentialInfo? info) => builder =>
     {
         builder.OpenComponent<StatusBadge>(0);
         builder.AddAttribute(1, nameof(StatusBadge.Variant), info is null ? BadgeVariant.Warning : BadgeVariant.Success);
-        builder.AddAttribute(2, nameof(StatusBadge.Text),
-            info is null ? "not configured" : $"configured {(info.RotatedAt ?? info.CreatedAt).ToLocalTime():dd.MM.yyyy}");
+        builder.AddAttribute(
+            2,
+            nameof(StatusBadge.Text),
+            info is null
+                ? L["ApiKeys.NotConfigured"].Value
+                : L[
+                    "ApiKeys.ConfiguredOn",
+                    Dates.Short((info.RotatedAt ?? info.CreatedAt).ToLocalTime())
+                ].Value
+        );
         builder.CloseComponent();
     };
 
-    private static RenderFragment ConsentBadge(ProviderConnection connection) => builder =>
+    private RenderFragment ConsentBadge(ProviderConnection connection) => builder =>
     {
         var (variant, text) = connection switch
         {
-            { ConsentStatus: ConsentStatus.Pending } => (BadgeVariant.Info, "pending"),
-            { ConsentExpired: true } => (BadgeVariant.Danger, "expired"),
-            { ConsentStatus: ConsentStatus.Authorized } c => (BadgeVariant.Success, $"active until {c.ConsentExpiresAt?.ToLocalTime():dd.MM.yyyy}"),
-            _ => (BadgeVariant.Neutral, "not connected"),
+            { ConsentStatus: ConsentStatus.Pending } => (BadgeVariant.Info, L["Connections.ConsentPending"].Value),
+            { ConsentExpired: true } => (BadgeVariant.Danger, L["Sync.ConsentExpired"].Value),
+            { ConsentStatus: ConsentStatus.Authorized } c => (
+                BadgeVariant.Success,
+                // ?? "" preserves the original behaviour: an Authorized consent with no recorded
+                // expiry rendered an empty date rather than throwing.
+                L[
+                    "Connections.ConsentActiveUntil",
+                    Dates.Short(c.ConsentExpiresAt?.ToLocalTime()) ?? ""
+                ].Value
+            ),
+            _ => (BadgeVariant.Neutral, L["Connections.ConsentNotConnected"].Value),
         };
         builder.OpenComponent<StatusBadge>(0);
         builder.AddAttribute(1, nameof(StatusBadge.Variant), variant);

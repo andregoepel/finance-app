@@ -79,6 +79,11 @@ internal sealed class AccountSyncService(
         var import = await messageBus.InvokeAsync<Result<ImportBatch>>(
             new ImportStatementCommand(
                 account.Id,
+                // Deliberately English and ISO-formatted, and deliberately NOT localized: this is
+                // persisted into ImportBatch.Source and shown later in the Import history grid.
+                // Localizing at write time would freeze whichever culture was active during the
+                // sync, leaving a permanent mix of languages that no later culture switch could
+                // fix. A stored provenance marker, not display copy.
                 $"API sync {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm} UTC",
                 fetch.Value!.SyncSource,
                 fetch.Value.Rows,
