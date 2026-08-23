@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    German user-facing failure messages produced by the domain layer. Keep in sync with
+    DomainStrings.resx: same keys, same order.
+  -->
+  <!--
+    English (neutral) UI strings for finance-app — the source of truth. Every <value> is
+    wrapped in CDATA so ampersands and inline HTML do not need manual escaping. Keep
+    Strings.de.resx in sync: same keys, same order.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+
+  <!-- Not-found guards, shared across many handlers -->
+  <data name="Error.AccountNotFound" xml:space="preserve"><value><![CDATA[Konto nicht gefunden.]]></value></data>
+  <data name="Error.CategoryNotFound" xml:space="preserve"><value><![CDATA[Kategorie nicht gefunden.]]></value></data>
+  <data name="Error.TransactionNotFound" xml:space="preserve"><value><![CDATA[Transaktion nicht gefunden.]]></value></data>
+  <data name="Error.PlannedItemNotFound" xml:space="preserve"><value><![CDATA[Geplanter Posten nicht gefunden.]]></value></data>
+  <data name="Error.RuleNotFound" xml:space="preserve"><value><![CDATA[Regel nicht gefunden.]]></value></data>
+  <data name="Error.ParentCategoryNotFound" xml:space="preserve"><value><![CDATA[Übergeordnete Kategorie nicht gefunden.]]></value></data>
+
+  <!-- Accounts -->
+  <data name="Error.AccountNameRequired" xml:space="preserve"><value><![CDATA[Ein Kontoname ist erforderlich.]]></value></data>
+  <data name="Error.SelectAtLeastOneOwner" xml:space="preserve"><value><![CDATA[Mindestens einen Inhaber für das Konto auswählen.]]></value></data>
+  <data name="Error.NonSharedSingleOwner" xml:space="preserve"><value><![CDATA[Ein nicht gemeinsames Konto muss genau einen Inhaber haben; „Gemeinsam“ aktivieren, um weitere hinzuzufügen.]]></value></data>
+  <data name="Error.AccountHasTransactions" xml:space="preserve"><value><![CDATA[Dieses Konto hat {0} Transaktion(en); besser deaktivieren statt löschen, damit die Historie erhalten bleibt.]]></value><comment>{0} = transaction count</comment></data>
+
+  <!-- Categories and rules -->
+  <data name="Error.CategoryNameRequired" xml:space="preserve"><value><![CDATA[Ein Kategoriename ist erforderlich.]]></value></data>
+  <data name="Error.CategoryTwoLevelsOnly" xml:space="preserve"><value><![CDATA[Kategorien unterstützen nur zwei Ebenen (Gruppe > Kategorie).]]></value></data>
+  <data name="Error.DeleteSubcategoriesFirst" xml:space="preserve"><value><![CDATA[Zuerst die Unterkategorien löschen oder verschieben.]]></value></data>
+  <data name="Error.CategoryInUse" xml:space="preserve"><value><![CDATA[Die Kategorie wird von vorhandenen Transaktionen verwendet.]]></value></data>
+  <data name="Error.RuleNeedsAPattern" xml:space="preserve"><value><![CDATA[Eine Regel braucht mindestens ein Muster für Zahlungspartner oder Beschreibung.]]></value></data>
+  <data name="Error.MinExceedsMax" xml:space="preserve"><value><![CDATA[Der Mindestbetrag darf den Höchstbetrag nicht überschreiten.]]></value></data>
+
+  <!-- Transactions and transfers -->
+  <data name="Error.CannotLinkToItself" xml:space="preserve"><value><![CDATA[Eine Transaktion kann nicht mit sich selbst verknüpft werden.]]></value></data>
+  <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Eine der Transaktionen ist bereits als Umbuchung verknüpft.]]></value></data>
+  <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Die Transaktion ist nicht als Umbuchung verknüpft.]]></value></data>
+  <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Die beiden Seiten einer Umbuchung müssen zu verschiedenen Konten gehören.]]></value></data>
+
+  <!-- Planning -->
+  <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[Eine Beschreibung ist erforderlich.]]></value></data>
+  <data name="Error.AmountMustNotBeZero" xml:space="preserve"><value><![CDATA[Der Betrag darf nicht null sein (negativ = Ausgabe, positiv = Einnahme).]]></value></data>
+  <data name="Error.EndBeforeStart" xml:space="preserve"><value><![CDATA[Das Enddatum darf nicht vor dem Startdatum liegen.]]></value></data>
+
+  <!-- Budgets -->
+  <data name="Error.BudgetLimitPositive" xml:space="preserve"><value><![CDATA[Ein Budgetlimit muss größer als null sein.]]></value></data>
+
+  <!-- Crypto -->
+  <data name="Error.SymbolRequired" xml:space="preserve"><value><![CDATA[Ein Symbol ist erforderlich.]]></value></data>
+  <data name="Error.CoinGeckoIdRequired" xml:space="preserve"><value><![CDATA[Eine CoinGecko-ID ist erforderlich.]]></value></data>
+  <data name="Error.QuantityPositive" xml:space="preserve"><value><![CDATA[Die Menge muss größer als null sein.]]></value></data>
+  <data name="Error.CryptoAccountsOnly" xml:space="preserve"><value><![CDATA[Bestände können nur zu Krypto-Konten hinzugefügt werden.]]></value></data>
+
+  <!-- Credentials -->
+  <data name="Error.CredentialKeyRequired" xml:space="preserve"><value><![CDATA[Ein Zugangsdaten-Schlüssel ist erforderlich.]]></value></data>
+  <data name="Error.SecretMustNotBeEmpty" xml:space="preserve"><value><![CDATA[Das Secret darf nicht leer sein.]]></value></data>
+</root>

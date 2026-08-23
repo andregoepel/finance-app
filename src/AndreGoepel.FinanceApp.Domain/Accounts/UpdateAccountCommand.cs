@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Accounts;
 
@@ -27,15 +29,16 @@ public static class UpdateAccountCommandHandler
     public static async Task<Result<Account>> Handle(
         UpdateAccountCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         if (string.IsNullOrWhiteSpace(command.Name))
         {
-            return Result.Fail<Account>("Account name is required.");
+            return Result.Fail<Account>(localizer["Error.AccountNameRequired"]);
         }
 
-        var owners = AccountOwners.Validate(command.IsShared, command.OwnerUserIds);
+        var owners = AccountOwners.Validate(command.IsShared, command.OwnerUserIds, localizer);
         if (owners.IsFailure)
         {
             return Result.Fail<Account>(owners.Error);
@@ -44,7 +47,7 @@ public static class UpdateAccountCommandHandler
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
-            return Result.Fail<Account>("Account not found.");
+            return Result.Fail<Account>(localizer["Error.AccountNotFound"]);
         }
 
         account.Name = command.Name.Trim();

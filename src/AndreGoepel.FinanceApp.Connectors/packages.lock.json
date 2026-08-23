@@ -644,6 +644,7 @@
           "Marten": "[9.29.0, )",
           "Microsoft.AspNetCore.DataProtection.Abstractions": "[10.0.11, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.11, )",
+          "Microsoft.Extensions.Localization.Abstractions": "[10.0.11, )",
           "WolverineFx.Marten": "[6.29.2, )"
         }
       },
@@ -677,6 +678,12 @@
         "requested": "[10.0.11, )",
         "resolved": "10.0.11",
         "contentHash": "nqpcXNw0g8nlFep5IQKEGRXyXi596uM8WNydR7VikKlokUkAr1cOZh1qstc6AotdfJg1oWUfFS+lY7wlbW3YnA=="
+      },
+      "Microsoft.Extensions.Localization.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "Sg4JTdLEIbJGlZpDrr5xzkLSR4XQNJgeTqtiQkKW0IWr9aoXjKzB+wpnfFl6d+PTXnXkNB9sEDJ9sP+BRcOnrw=="
       },
       "WolverineFx.Marten": {
         "type": "CentralTransitive",

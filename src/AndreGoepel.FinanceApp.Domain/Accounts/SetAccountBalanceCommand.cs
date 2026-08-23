@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Accounts;
 
@@ -20,13 +22,14 @@ public static class SetAccountBalanceCommandHandler
     public static async Task<Result> Handle(
         SetAccountBalanceCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
-            return Result.Fail("Account not found.");
+            return Result.Fail(localizer["Error.AccountNotFound"]);
         }
 
         account.CurrentBalance = command.Balance;

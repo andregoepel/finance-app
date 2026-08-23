@@ -1,6 +1,8 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Categories;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Transactions;
 
@@ -16,13 +18,14 @@ public static class CategorizeTransactionCommandHandler
     public static async Task<Result> Handle(
         CategorizeTransactionCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var category = await session.LoadAsync<Category>(command.CategoryId, cancellationToken);
         if (category is null)
         {
-            return Result.Fail("Category not found.");
+            return Result.Fail(localizer["Error.CategoryNotFound"]);
         }
 
         var stream = await session.Events.FetchForWriting<TransactionView>(
@@ -31,7 +34,7 @@ public static class CategorizeTransactionCommandHandler
         );
         if (stream.Aggregate is null)
         {
-            return Result.Fail("Transaction not found.");
+            return Result.Fail(localizer["Error.TransactionNotFound"]);
         }
 
         if (stream.Aggregate.CategoryId == command.CategoryId)

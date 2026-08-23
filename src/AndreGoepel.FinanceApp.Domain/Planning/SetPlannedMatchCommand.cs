@@ -1,6 +1,8 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Planning;
 
@@ -16,13 +18,14 @@ public static class SetPlannedMatchCommandHandler
     public static async Task<Result> Handle(
         SetPlannedMatchCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var item = await session.LoadAsync<PlannedItem>(command.PlannedItemId, cancellationToken);
         if (item is null)
         {
-            return Result.Fail("Planned item not found.");
+            return Result.Fail(localizer["Error.PlannedItemNotFound"]);
         }
 
         var key = PlannedMatch.KeyFor(command.PlannedItemId, command.DueDate);
@@ -61,7 +64,7 @@ public static class SetPlannedMatchCommandHandler
         );
         if (stream.Aggregate is null)
         {
-            return Result.Fail("Transaction not found.");
+            return Result.Fail(localizer["Error.TransactionNotFound"]);
         }
         if (stream.Aggregate.PlannedItemId != command.PlannedItemId)
         {

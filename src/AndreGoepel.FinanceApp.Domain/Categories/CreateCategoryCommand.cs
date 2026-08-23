@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Categories;
 
@@ -10,12 +12,13 @@ public static class CreateCategoryCommandHandler
     public static async Task<Result<Category>> Handle(
         CreateCategoryCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         if (string.IsNullOrWhiteSpace(command.Name))
         {
-            return Result.Fail<Category>("Category name is required.");
+            return Result.Fail<Category>(localizer["Error.CategoryNameRequired"]);
         }
 
         if (command.ParentId is Guid parentId)
@@ -23,7 +26,7 @@ public static class CreateCategoryCommandHandler
             var parent = await session.LoadAsync<Category>(parentId, cancellationToken);
             if (parent is null)
             {
-                return Result.Fail<Category>("Parent category not found.");
+                return Result.Fail<Category>(localizer["Error.ParentCategoryNotFound"]);
             }
             if (parent.ParentId is not null)
             {

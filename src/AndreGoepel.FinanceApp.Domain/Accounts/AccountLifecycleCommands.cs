@@ -1,6 +1,8 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Accounts;
 
@@ -25,13 +27,14 @@ public static class DeactivateAccountCommandHandler
     public static async Task<Result<Account>> Handle(
         DeactivateAccountCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
-            return Result.Fail<Account>("Account not found.");
+            return Result.Fail<Account>(localizer["Error.AccountNotFound"]);
         }
 
         account.Status = AccountStatus.Deactivated;
@@ -47,13 +50,14 @@ public static class ReactivateAccountCommandHandler
     public static async Task<Result<Account>> Handle(
         ReactivateAccountCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
-            return Result.Fail<Account>("Account not found.");
+            return Result.Fail<Account>(localizer["Error.AccountNotFound"]);
         }
 
         account.Status = AccountStatus.Active;
@@ -69,13 +73,14 @@ public static class DeleteAccountCommandHandler
     public static async Task<Result> Handle(
         DeleteAccountCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
-            return Result.Fail("Account not found.");
+            return Result.Fail(localizer["Error.AccountNotFound"]);
         }
 
         var transactionCount = await session

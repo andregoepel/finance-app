@@ -3,8 +3,10 @@ using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.Crypto;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Planning;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Accounts;
 
@@ -30,13 +32,14 @@ public static class HardDeleteAccountCommandHandler
     public static async Task<Result<AccountDeletionImpact>> Handle(
         HardDeleteAccountCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
-            return Result.Fail<AccountDeletionImpact>("Account not found.");
+            return Result.Fail<AccountDeletionImpact>(localizer["Error.AccountNotFound"]);
         }
 
         var targets = await AccountPurgeTargets.CollectAsync(

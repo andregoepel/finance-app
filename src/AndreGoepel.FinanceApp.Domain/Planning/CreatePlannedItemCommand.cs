@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Planning;
 
@@ -21,6 +23,7 @@ public static class CreatePlannedItemCommandHandler
     public static async Task<Result<PlannedItem>> Handle(
         CreatePlannedItemCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
@@ -28,7 +31,8 @@ public static class CreatePlannedItemCommandHandler
             command.Description,
             command.Amount,
             command.EndDate,
-            command.StartDate
+            command.StartDate,
+            localizer
         );
         if (validation.IsFailure)
         {
@@ -61,22 +65,21 @@ internal static class PlannedItemValidation
         string description,
         decimal amount,
         DateOnly? endDate,
-        DateOnly startDate
+        DateOnly startDate,
+        IStringLocalizer<DomainStrings> localizer
     )
     {
         if (string.IsNullOrWhiteSpace(description))
         {
-            return Result.Fail("A description is required.");
+            return Result.Fail(localizer["Error.DescriptionRequired"]);
         }
         if (amount == 0)
         {
-            return Result.Fail(
-                "The amount must not be zero (negative = expense, positive = income)."
-            );
+            return Result.Fail(localizer["Error.AmountMustNotBeZero"]);
         }
         if (endDate is DateOnly end && end < startDate)
         {
-            return Result.Fail("The end date must not be before the start date.");
+            return Result.Fail(localizer["Error.EndBeforeStart"]);
         }
         return Result.Ok();
     }

@@ -11,6 +11,7 @@
 @inject ConfirmService ConfirmService
 @inject UserManager<User> UserManager
 @inject IStringLocalizer<Strings> L
+@inject IStringLocalizer<DomainStrings> DomainL
 @implements IDisposable
 
 <AppPageTitle Title="@L["Nav.Accounts"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Accounts"]]" />
@@ -418,7 +419,7 @@
     // confirm button to press until the user has been told exactly what disappears.
     private async Task HardDeleteAsync(Account account)
     {
-        var preview = await AccountDeletionPreview.ForAccountAsync(QuerySession, account.Id);
+        var preview = await AccountDeletionPreview.ForAccountAsync(QuerySession, account.Id, DomainL);
         if (preview.IsFailure)
         {
             NotificationService.Error(L["Accounts.ActionFailedTitle"], preview.Error);

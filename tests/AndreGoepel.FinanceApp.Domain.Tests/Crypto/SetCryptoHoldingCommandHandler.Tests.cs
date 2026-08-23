@@ -22,6 +22,7 @@ public sealed class SetCryptoHoldingCommandHandlerTests
             new SetCryptoHoldingCommand(Guid.NewGuid(), symbol, coinGeckoId, (decimal)quantity),
             session,
             TimeProvider.System,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 
@@ -38,6 +39,7 @@ public sealed class SetCryptoHoldingCommandHandlerTests
             new SetCryptoHoldingCommand(Guid.NewGuid(), "BTC", "bitcoin", 1m),
             session,
             TimeProvider.System,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 
@@ -58,6 +60,7 @@ public sealed class SetCryptoHoldingCommandHandlerTests
             new SetCryptoHoldingCommand(account.Id, "BTC", "bitcoin", 1m),
             session,
             TimeProvider.System,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 
@@ -78,6 +81,7 @@ public sealed class SetCryptoHoldingCommandHandlerTests
             new SetCryptoHoldingCommand(account.Id, " BTC ", " Bitcoin ", 0.25m),
             session,
             TimeProvider.System,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 
@@ -114,6 +118,7 @@ public sealed class SetCryptoHoldingCommandHandlerTests
             new SetCryptoHoldingCommand(account.Id, "BTC", "bitcoin", 0.75m),
             session,
             TimeProvider.System,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 

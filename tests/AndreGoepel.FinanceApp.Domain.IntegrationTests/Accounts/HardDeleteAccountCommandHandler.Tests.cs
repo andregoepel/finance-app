@@ -34,6 +34,7 @@ public sealed class HardDeleteAccountCommandHandlerTests(FinanceMartenFixture fi
         var result = await HardDeleteAccountCommandHandler.Handle(
             new HardDeleteAccountCommand(Guid.NewGuid()),
             session,
+            DomainLocalizer.Instance,
             Ct
         );
 
@@ -70,6 +71,7 @@ public sealed class HardDeleteAccountCommandHandlerTests(FinanceMartenFixture fi
         var result = await DeleteAccountCommandHandler.Handle(
             new DeleteAccountCommand(accountId),
             session,
+            DomainLocalizer.Instance,
             Ct
         );
 
@@ -228,6 +230,7 @@ public sealed class HardDeleteAccountCommandHandlerTests(FinanceMartenFixture fi
         var preview = await AccountDeletionPreview.ForAccountAsync(
             previewSession,
             world.AccountId,
+            DomainLocalizer.Instance,
             Ct
         );
 
@@ -246,7 +249,12 @@ public sealed class HardDeleteAccountCommandHandlerTests(FinanceMartenFixture fi
     {
         // Act
         await using var session = fixture.Store.QuerySession();
-        var result = await AccountDeletionPreview.ForAccountAsync(session, Guid.NewGuid(), Ct);
+        var result = await AccountDeletionPreview.ForAccountAsync(
+            session,
+            Guid.NewGuid(),
+            DomainLocalizer.Instance,
+            Ct
+        );
 
         // Assert
         Assert.True(result.IsFailure);
@@ -260,6 +268,7 @@ public sealed class HardDeleteAccountCommandHandlerTests(FinanceMartenFixture fi
         var result = await HardDeleteAccountCommandHandler.Handle(
             new HardDeleteAccountCommand(accountId),
             session,
+            DomainLocalizer.Instance,
             Ct
         );
         Assert.True(result.IsSuccess, result.Error);
@@ -457,6 +466,7 @@ public sealed class HardDeleteAccountCommandHandlerTests(FinanceMartenFixture fi
         var result = await LinkTransactionsAsTransferCommandHandler.Handle(
             new LinkTransactionsAsTransferCommand(first, second),
             session,
+            DomainLocalizer.Instance,
             Ct
         );
         Assert.True(result.IsSuccess, result.Error);

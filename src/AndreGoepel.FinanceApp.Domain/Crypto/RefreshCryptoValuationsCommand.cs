@@ -1,6 +1,8 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Accounts;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Domain.Crypto;
@@ -28,6 +30,9 @@ public static class RefreshCryptoValuationsCommandHandler
         ICryptoPriceProvider priceProvider,
         TimeProvider timeProvider,
         ILogger<RefreshCryptoValuationsCommand> logger,
+        // Not used for this handler's own messages — passed through to the balance handler below,
+        // which does produce user-facing failures.
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
@@ -63,6 +68,7 @@ public static class RefreshCryptoValuationsCommandHandler
                     valuation.AsOf
                 ),
                 session,
+                localizer,
                 cancellationToken
             );
             if (stored.IsFailure)
