@@ -4,7 +4,7 @@ namespace AndreGoepel.FinanceApp.E2ETests.Tests;
 /// Every finance page is <c>[Authorize]</c>: an authenticated admin can open each one (route exists,
 /// renders its heading), and an anonymous visitor is bounced to the login page.
 /// </summary>
-public sealed class NavigationTests(E2EAppFixture fixture) : E2ETestBase<E2EAppFixture>(fixture)
+public sealed class NavigationTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixture)
 {
     /// <summary>Each routed page paired with the level-1 heading it renders.</summary>
     public static TheoryData<string, string> Pages =>

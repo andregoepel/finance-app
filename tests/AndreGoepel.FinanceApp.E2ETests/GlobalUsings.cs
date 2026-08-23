@@ -1,3 +1,4 @@
+global using AndreGoepel.FinanceApp.E2ETests.Infrastructure;
 global using AndreGoepel.Testing.E2E;
 global using Microsoft.Playwright;
 global using static Microsoft.Playwright.Assertions;

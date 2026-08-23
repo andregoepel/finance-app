@@ -1,7 +1,7 @@
 namespace AndreGoepel.FinanceApp.E2ETests.Tests;
 
 /// <summary>Fast confidence checks that the harness boots the app and the core happy path works.</summary>
-public sealed class SmokeTests(E2EAppFixture fixture) : E2ETestBase<E2EAppFixture>(fixture)
+public sealed class SmokeTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixture)
 {
     [Fact]
     public async Task Setup_ProvisionsAdmin_AndSetupPageIsShownOnlyOnce()
