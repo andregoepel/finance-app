@@ -145,5 +145,6 @@ public sealed class SyncScheduleServiceTests
         Assert.Null(next);
     }
 
-    private SyncScheduleService BuildService() => new(settingsStore, schedulerFactory);
+    private SyncScheduleService BuildService() =>
+        new(settingsStore, schedulerFactory, FinanceLocalizer.Create());
 }

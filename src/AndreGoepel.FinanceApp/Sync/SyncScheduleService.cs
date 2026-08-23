@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Resources;
 using AndreGoepel.Marten.Configuration;
+using Microsoft.Extensions.Localization;
 using Quartz;
 
 namespace AndreGoepel.FinanceApp.Sync;
@@ -10,7 +12,8 @@ namespace AndreGoepel.FinanceApp.Sync;
 /// </summary>
 internal sealed class SyncScheduleService(
     ISettingsStore settingsStore,
-    ISchedulerFactory schedulerFactory
+    ISchedulerFactory schedulerFactory,
+    IStringLocalizer<Strings> localizer
 ) : ISyncScheduleService
 {
     private static readonly JobKey JobKey = new(DailySyncJob.JobName);
@@ -28,7 +31,7 @@ internal sealed class SyncScheduleService(
         var cron = (cronExpression ?? string.Empty).Trim();
         if (enabled && !CronExpression.IsValidExpression(cron))
         {
-            return Result.Fail("That is not a valid Quartz cron expression.");
+            return Result.Fail(localizer["Sync.InvalidCronExpression"]);
         }
 
         await settingsStore.SaveAsync(

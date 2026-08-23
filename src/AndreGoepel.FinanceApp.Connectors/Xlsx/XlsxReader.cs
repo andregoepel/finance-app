@@ -52,6 +52,13 @@ internal static class XlsxReader
 
         if (sheetEntry is null)
         {
+            // Actionable, yet deliberately NOT localized. Parsers hand their failures to the
+            // import pipeline as ImportRowError, which is persisted on the ImportBatch document
+            // and rendered from there long afterwards. Localizing at parse time would freeze
+            // whichever culture was active during the upload, leaving stored rows that no later
+            // culture switch could fix — the same reasoning as the sync provenance label in
+            // AccountSyncService. Reaching a localizer here would also mean threading one through
+            // a pure static XML reader and both parameterless IStatementParser implementations.
             return Result.Fail<List<XlsxRow>>("The workbook contains no worksheet.");
         }
 

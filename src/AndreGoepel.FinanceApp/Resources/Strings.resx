@@ -503,4 +503,15 @@
   <data name="Connections.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[the connection “{0}”]]></value><comment>{0} = connection label; substituted into the shared "Delete {0}? …" confirm template</comment></data>
   <data name="Enum.ProviderEnvironment.Production" xml:space="preserve"><value><![CDATA[Production]]></value></data>
   <data name="Enum.ProviderEnvironment.Sandbox" xml:space="preserve"><value><![CDATA[Sandbox]]></value></data>
+  <!-- Backend service failures (ProviderConnectionService, WiseBalanceService, AccountSyncService).
+       These reach the user as the *body* of a notification whose title is already localized. -->
+  <data name="Connections.LabelRequired" xml:space="preserve"><value><![CDATA[A connection label is required.]]></value></data>
+  <data name="Connections.NotFound" xml:space="preserve"><value><![CDATA[Connection not found.]]></value></data>
+  <data name="Connections.WiseTokenOnly" xml:space="preserve"><value><![CDATA[Only Wise connections use an API token.]]></value></data>
+  <data name="Connections.WiseTokenRequired" xml:space="preserve"><value><![CDATA[The Wise API token must not be empty.]]></value></data>
+  <data name="Connections.BalanceSyncWiseOnly" xml:space="preserve"><value><![CDATA[Balance sync is Wise-only.]]></value></data>
+  <data name="Sync.AccountNotFound" xml:space="preserve"><value><![CDATA[Account not found.]]></value></data>
+  <data name="Sync.ImportOnlyAccount" xml:space="preserve"><value><![CDATA[Account is import-only (no API sync).]]></value></data>
+  <data name="Sync.AccountNotLinked" xml:space="preserve"><value><![CDATA[Account is not linked to a connection (Settings → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
+  <data name="Sync.ConnectionGone" xml:space="preserve"><value><![CDATA[The account's connection no longer exists — re-link it (Settings → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
 </root>
