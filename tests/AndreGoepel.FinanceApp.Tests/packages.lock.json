@@ -66,13 +66,13 @@
       },
       "AndreGoepel.AppFoundation.Core": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "kUFX2uC+mwG+qPSMTwkokwqYZVxz3XRJ6mHmEaczSO2FDlc/+kH63GstnO5WQSqbSDl5qAHvDamhSGG+GhTR4w=="
+        "resolved": "2.1.0",
+        "contentHash": "5jcSv4Y5RLOpXGt0UgeYnjkDACuGKzqdMSmnqrSjNcVd3GnkLDday7+c/uQiXaWYGPQWR99znYc4RIJK5+feGg=="
       },
       "AndreGoepel.AppFoundation.MailService": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "Pk+R5N2MsKNBDwZg07kTSjS/LtzlxuJlbyDOOaoZ4L/YGhppCgd4/HVEJ5DofBPZyKZLNvGotoqKPfKQwvSd+A==",
+        "resolved": "2.1.0",
+        "contentHash": "Ybz/Qt7ULvk3pqug2BMjJMsy+1/ihvDC9qvh+QvP0oEqHzhLE5w9VglmpLne6b1umFS82W09z2hX2gPGHUQJ9A==",
         "dependencies": {
           "AndreGoepel.Core": "1.0.2",
           "AndreGoepel.Marten.Configuration": "1.2.1",
@@ -84,16 +84,16 @@
       },
       "AndreGoepel.AppFoundation.ServiceDefaults": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "wdT0w3FzgGyg3ehwqUnaRQRKElE3U8DHuEK7rfK25tgSW9vEbK+bprmwE1VAO9+Xz+joANUPz9R4T9Who3CVpw==",
+        "resolved": "2.1.0",
+        "contentHash": "ys3dyTuEa6trCrHrABn+Fx6+TRH0ojVE3WEusWcn0oUHXHu3CZw20Pdha2ITuRO+hp8P9HlKisFf4CTpNyseGQ==",
         "dependencies": {
           "Microsoft.Extensions.Http.Resilience": "10.9.0",
           "Microsoft.Extensions.ServiceDiscovery": "10.9.0",
-          "OpenTelemetry.Exporter.OpenTelemetryProtocol": "1.17.0",
-          "OpenTelemetry.Extensions.Hosting": "1.17.0",
-          "OpenTelemetry.Instrumentation.AspNetCore": "1.17.0",
-          "OpenTelemetry.Instrumentation.Http": "1.17.0",
-          "OpenTelemetry.Instrumentation.Runtime": "1.17.0"
+          "OpenTelemetry.Exporter.OpenTelemetryProtocol": "1.18.0",
+          "OpenTelemetry.Extensions.Hosting": "1.18.0",
+          "OpenTelemetry.Instrumentation.AspNetCore": "1.18.0",
+          "OpenTelemetry.Instrumentation.Http": "1.18.0",
+          "OpenTelemetry.Instrumentation.Runtime": "1.18.0"
         }
       },
       "AndreGoepel.Marten.Identity": {
@@ -547,63 +547,63 @@
       },
       "OpenTelemetry": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "rMLOTftlMlTm7+MSrvXDHnJRjVkROFNKXHZrYjOsX+LankaFG7QSflx7qRRGjoqZoirohnxmJQ7GEb9occO4Gg==",
+        "resolved": "1.18.0",
+        "contentHash": "13AKxycK+olOLe061MjliPTNBR/DUkjyRr0b9zwUhKyMjFS8lXS7G31R85rkbM55up2YFmdykWdAw2giBDJpiQ==",
         "dependencies": {
-          "OpenTelemetry.Api.ProviderBuilderExtensions": "1.17.0"
+          "OpenTelemetry.Api.ProviderBuilderExtensions": "1.18.0"
         }
       },
       "OpenTelemetry.Api": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "mSBxzomZgHIJu9CyVNqyDu/n2JHEtqVgfcCD1Br0cV5iLYogjZOMqhlVLt99PEp+0KGBNUR3GXgeOdN2GR3F9g=="
+        "resolved": "1.18.0",
+        "contentHash": "Dhzm5oughIY9EWckt2J1yXcEbXpki5WCL2q7prJoYxzH6C7jdkfGtPMTkUVZZ4AhjJKzQnlC+kLSIlmIVwC4Vw=="
       },
       "OpenTelemetry.Api.ProviderBuilderExtensions": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "Xgc3Qf9B9TFMFpx6exTdGqMWuYIT2miNzkdMPutVvT9YuMFaEovXWke1Gb6z8NxYaQbbGF38vYLuSg1JCeui5Q==",
+        "resolved": "1.18.0",
+        "contentHash": "io6A6PJFp3vIObRGf6oPjdHsdglkinXt/0SpTDJHrVnsLxUtOzwh/QwTsnhBJ43wJ6QcGMkyNzsSSY8XEB1Q5Q==",
         "dependencies": {
-          "OpenTelemetry.Api": "1.17.0"
+          "OpenTelemetry.Api": "1.18.0"
         }
       },
       "OpenTelemetry.Exporter.OpenTelemetryProtocol": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "R1omQOrQpGlS0Cp5UIr/TAiuEA48JrPlgr1NPV5gESiTU7HhWU+ILe2EBSYb1fKdsSavZ7nZkHcUxAzofPqr2A==",
+        "resolved": "1.18.0",
+        "contentHash": "Et3WAviooKGObZjUZN8d6eTsdJs1YM3ZoN+KlWSAHksTmHG1nyGi9XGo2wb0fkFMWK0g80FOPdR1njg52Dm+aw==",
         "dependencies": {
-          "OpenTelemetry": "1.17.0"
+          "OpenTelemetry": "1.18.0"
         }
       },
       "OpenTelemetry.Extensions.Hosting": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "t1OwL/4qgboGMobYVT+UV5zgWnFqCp4Pw8lcsmzh8m2K8PQsTKkyxrC32tqYTMYny3GOW4q5cltE3dTVzLmRew==",
+        "resolved": "1.18.0",
+        "contentHash": "u+JMA82H65MKwMvd2qUpL8C2qE4Jux2nvX9hmy036UK/Apv2YyIRYCttF/vlX6nMPcAKI8BXkscmL4QG3C69fw==",
         "dependencies": {
-          "OpenTelemetry": "1.17.0"
+          "OpenTelemetry": "1.18.0"
         }
       },
       "OpenTelemetry.Instrumentation.AspNetCore": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "rGbmk1vuy1kvgZmE0ps7Vb99YZvDap6AalrrF60FwnNit1uW/PbeFZj1cpb0T8MPkYmjhBrRJ1/JB6QqXkRjHA==",
+        "resolved": "1.18.0",
+        "contentHash": "hBiMXE/CGIAHUOpi0gScNkjHB0L9XbCin5lZObL+dMBl4OmpndnHgxP3JZDnnGtU6qOzdeh8TYUV9f6Jgmmhlw==",
         "dependencies": {
-          "OpenTelemetry.Api.ProviderBuilderExtensions": "[1.17.0, 2.0.0)"
+          "OpenTelemetry.Api.ProviderBuilderExtensions": "[1.18.0, 2.0.0)"
         }
       },
       "OpenTelemetry.Instrumentation.Http": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "uTwVtxIJ/xB96wGYTaDsbkJVeCFdUxTwvrlDUn2YJixy0UuKc8DvQMzwKNJMTzNFiiyYO9c40id6tUHTmWs33A==",
+        "resolved": "1.18.0",
+        "contentHash": "/X57peOOa4a+9V4DSVXbuIWdsAxmU5gsxw8lu+gJU0zuewsYhC9f6qdm8GEW0VvqG9e+gxn0HdVR5G3YHcWDTw==",
         "dependencies": {
-          "OpenTelemetry.Api.ProviderBuilderExtensions": "[1.17.0, 2.0.0)"
+          "OpenTelemetry.Api.ProviderBuilderExtensions": "[1.18.0, 2.0.0)"
         }
       },
       "OpenTelemetry.Instrumentation.Runtime": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "HyYenisDn/xdtyVXdjImsCl+RNC2gq01N0rvSR7tsYAylXR2sxX/YgMsyTajMXA27+r1vB7lNU8cWRhV0fwL+Q==",
+        "resolved": "1.18.0",
+        "contentHash": "McuXGjBJDL/Cown2PxfUQysK98MZG7ZDjO/IKUtaAx8t1m0PB0d+QtJC79RFTVipMhRIwjJiULNOp0OGfZbvwg==",
         "dependencies": {
-          "OpenTelemetry.Api": "[1.17.0, 2.0.0)"
+          "OpenTelemetry.Api": "[1.18.0, 2.0.0)"
         }
       },
       "Polly.Core": {
@@ -857,8 +857,8 @@
       "andregoepel.financeapp": {
         "type": "Project",
         "dependencies": {
-          "AndreGoepel.AppFoundation": "[2.0.0, )",
-          "AndreGoepel.AppFoundation.Hosting": "[2.0.0, )",
+          "AndreGoepel.AppFoundation": "[2.1.0, )",
+          "AndreGoepel.AppFoundation.Hosting": "[2.1.0, )",
           "AndreGoepel.Core": "[1.0.2, )",
           "AndreGoepel.Design.Blazor": "[1.6.4, )",
           "AndreGoepel.FinanceApp.Categorization": "[1.0.0, )",
@@ -900,12 +900,12 @@
       },
       "AndreGoepel.AppFoundation": {
         "type": "CentralTransitive",
-        "requested": "[2.0.0, )",
-        "resolved": "2.0.0",
-        "contentHash": "ynhi170Lir44uTJw8a/XXci7pmTIC6Gonxu0TiDE4RYaCOJwNvBS9Rxi04qKgCFyGzWeUZqUxbYEO74OtMI2tw==",
+        "requested": "[2.1.0, )",
+        "resolved": "2.1.0",
+        "contentHash": "ZbNPPL5lT6a2Q8I1hWUKdMcyeyIE2j/dFasbkaiVTY4Nf/Rk+An+uZX99o6Iz61Yl2l5R7p5jtDFT9Il9SWj3Q==",
         "dependencies": {
-          "AndreGoepel.AppFoundation.Core": "2.0.0",
-          "AndreGoepel.AppFoundation.MailService": "2.0.0",
+          "AndreGoepel.AppFoundation.Core": "2.1.0",
+          "AndreGoepel.AppFoundation.MailService": "2.1.0",
           "AndreGoepel.Design.Blazor": "1.6.4",
           "AndreGoepel.Marten.Identity.Blazor": "2.0.1",
           "Marten": "9.29.0",
@@ -916,14 +916,14 @@
       },
       "AndreGoepel.AppFoundation.Hosting": {
         "type": "CentralTransitive",
-        "requested": "[2.0.0, )",
-        "resolved": "2.0.0",
-        "contentHash": "feH64hTTxp5nB0BVrI8zZqfxY/4cvpBFp0L/uqv7Yzgg9drfbnh5mMrUKNkReTtL0u8CmmTcPNsV+DQ3K53aTA==",
+        "requested": "[2.1.0, )",
+        "resolved": "2.1.0",
+        "contentHash": "6Q1ZXZTJxZwZ+QUQi9i2C9XeqyR8jb7OiYt9B/X37jBDIA7GT9k62DlHbpvZ2+TAHefY7QHiQQoMIOTWXeqZiQ==",
         "dependencies": {
-          "AndreGoepel.AppFoundation": "2.0.0",
-          "AndreGoepel.AppFoundation.Core": "2.0.0",
-          "AndreGoepel.AppFoundation.MailService": "2.0.0",
-          "AndreGoepel.AppFoundation.ServiceDefaults": "2.0.0",
+          "AndreGoepel.AppFoundation": "2.1.0",
+          "AndreGoepel.AppFoundation.Core": "2.1.0",
+          "AndreGoepel.AppFoundation.MailService": "2.1.0",
+          "AndreGoepel.AppFoundation.ServiceDefaults": "2.1.0",
           "AndreGoepel.Marten.Configuration": "1.2.1",
           "AndreGoepel.Marten.Identity.Blazor": "2.0.1",
           "Marten": "9.29.0",

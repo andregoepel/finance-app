@@ -8,13 +8,10 @@ namespace AndreGoepel.FinanceApp.E2ETests.Tests;
 /// <c>Accept-Language: de</c>, the request-localization middleware resolving it, the Blazor circuit
 /// inheriting that culture, and the embedded <c>.de.resx</c> feeding the rendered page.
 /// <para>
-/// Each test logs in <em>before</em> switching culture. That is a workaround, not a preference:
-/// <c>AndreGoepel.Testing.E2E</c>'s account helpers locate the submit control by its English
-/// caption (<c>ClickButtonAsync("Log in")</c>), so they cannot drive the identity package's
-/// German-rendered login page — verified by a real run, where both German tests timed out waiting
-/// for that button. The auth cookie survives the switch, and what these tests assert is the
-/// finance app's own pages rather than the identity package's, so the coverage is unaffected.
-/// Teaching the shared package to log in under any culture is worth its own issue.
+/// The German tests switch culture <em>before</em> logging in, so the login page is itself rendered
+/// in German — the identity package's account pages are part of the chain a German-speaking user
+/// walks through, and driving them proves the culture survives the sign-in redirect rather than
+/// being established afterwards.
 /// </para>
 /// </summary>
 public sealed class LocalizationTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixture)
@@ -22,9 +19,9 @@ public sealed class LocalizationTests(E2EAppFixture fixture) : FinanceE2ETestBas
     [Fact]
     public async Task GermanCulture_Dashboard_RendersGermanChromeAndHeading()
     {
-        // Arrange — log in first (see the note on this class), then switch culture.
-        await LoginAsAdminAsync();
+        // Arrange — switch culture first, so the login page is driven in German too.
         await UseCultureAsync("de");
+        await LoginAsAdminAsync();
 
         // Act
         await Page.GotoAsync("/");
@@ -44,9 +41,9 @@ public sealed class LocalizationTests(E2EAppFixture fixture) : FinanceE2ETestBas
     [Fact]
     public async Task GermanCulture_SettingsPage_RendersGermanBreadcrumbAndEnumLabels()
     {
-        // Arrange — log in first (see the note on this class), then switch culture.
-        await LoginAsAdminAsync();
+        // Arrange — switch culture first, so the login page is driven in German too.
         await UseCultureAsync("de");
+        await LoginAsAdminAsync();
 
         // Act
         await Page.GotoAsync("/settings/accounts");
