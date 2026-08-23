@@ -1,11 +1,15 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using AndreGoepel.FinanceApp.Domain.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Connectors.Parsing;
 
 /// <summary>Implements <see cref="IStatementParserRegistry"/> over the registered parsers.</summary>
-internal sealed class StatementParserRegistry(IEnumerable<IStatementParser> parsers)
-    : IStatementParserRegistry
+internal sealed class StatementParserRegistry(
+    IEnumerable<IStatementParser> parsers,
+    IStringLocalizer<DomainStrings> localizer
+) : IStatementParserRegistry
 {
     public Result<StatementParseResult> Parse(ProviderKind provider, StatementFile file)
     {
@@ -13,7 +17,7 @@ internal sealed class StatementParserRegistry(IEnumerable<IStatementParser> pars
         if (providerParsers.Count == 0)
         {
             return Result.Fail<StatementParseResult>(
-                $"No statement parser is registered for provider {provider}."
+                localizer["Error.NoParserForProvider", provider]
             );
         }
 
@@ -22,8 +26,7 @@ internal sealed class StatementParserRegistry(IEnumerable<IStatementParser> pars
         {
             var known = string.Join(", ", providerParsers.Select(p => p.ParserId));
             return Result.Fail<StatementParseResult>(
-                $"Unrecognized {provider} export format. Supported formats: {known}. "
-                    + "The provider may have changed its export — a new parser version is needed."
+                localizer["Error.UnrecognizedExportFormat", provider, known]
             );
         }
 

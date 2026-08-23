@@ -118,7 +118,11 @@ public sealed class EnableBankingConnectorFetchTests
     private readonly EnableBankingConnector connector;
 
     public EnableBankingConnectorFetchTests() =>
-        connector = new EnableBankingConnector(client, NullLogger<EnableBankingConnector>.Instance);
+        connector = new EnableBankingConnector(
+            client,
+            DomainLocalizer.Instance,
+            NullLogger<EnableBankingConnector>.Instance
+        );
 
     private static EnableBankingTransaction Transaction(string status, string entryReference) =>
         new(

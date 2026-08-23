@@ -7,7 +7,7 @@ namespace AndreGoepel.FinanceApp.Connectors.Tests.Parsing;
 public sealed class StatementParserRegistryTests
 {
     private static StatementParserRegistry BuildRegistry() =>
-        new([new WiseCsvParser(), new RevolutXlsxParser()]);
+        new([new WiseCsvParser(), new RevolutXlsxParser()], DomainLocalizer.Instance);
 
     [Fact]
     public void Parse_MatchingFormat_UsesTheRightParser()

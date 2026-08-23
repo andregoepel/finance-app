@@ -1,6 +1,8 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using AndreGoepel.FinanceApp.Domain.Resources;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
@@ -15,6 +17,7 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 /// </summary>
 public sealed class EnableBankingConnector(
     IEnableBankingClient client,
+    IStringLocalizer<DomainStrings> localizer,
     ILogger<EnableBankingConnector> logger
 ) : IProviderConnector
 {
@@ -31,9 +34,12 @@ public sealed class EnableBankingConnector(
     {
         if (string.IsNullOrWhiteSpace(request.ProviderAccountReference))
         {
+            // Narrower than it used to be: AccountSyncService now catches an expired or
+            // unauthorized consent before the connector is reached, so the only way to arrive
+            // here is a consent that is live but whose linked accounts no longer contain this
+            // account's identification hash — a re-consent that dropped or changed it.
             return Result.Fail<ProviderSyncResult>(
-                $"The account is not linked to an authorized {request.Provider} consent "
-                    + "(Settings → Connections → Connect, then link the account)."
+                localizer["Error.AccountConsentLinkMissing", request.Provider]
             );
         }
 
