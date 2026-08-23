@@ -37,17 +37,17 @@ public sealed class EnableBankingConnector(
             );
         }
 
-        var transactions = await client.GetTransactionsAsync(
+        var fetch = await client.GetTransactionsAsync(
             request.ProviderAccountReference,
             request.Since,
             cancellationToken
         );
-        if (transactions.IsFailure)
+        if (fetch.IsFailure)
         {
-            return Result.Fail<ProviderSyncResult>(transactions.Error!);
+            return Result.Fail<ProviderSyncResult>(fetch.Error!);
         }
 
-        var fetched = transactions.Value!;
+        var fetched = fetch.Value!.Transactions;
 
         // Case-insensitive so an unexpected casing/spelling from the bank drops nothing silently
         // — a mismatch here used to filter out every row and still report a successful sync (#98).
@@ -79,7 +79,9 @@ public sealed class EnableBankingConnector(
 
         var rows = booked.Select(Normalize).ToList();
 
-        return Result.Ok(new ProviderSyncResult(SyncSource, rows, []));
+        // Unparseable entries travel with the result instead of being dropped, so the import
+        // batch records them and the UI shows them as problem rows.
+        return Result.Ok(new ProviderSyncResult(SyncSource, rows, fetch.Value.Errors));
     }
 
     /// <summary>Maps one Enable Banking transaction to the shared import shape.</summary>

@@ -1560,6 +1560,49 @@ public sealed class StringsResourceTests
         Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
     }
 
+    [Fact]
+    public void SyncConsentMessages_NameTheProviderAndTheDate_InBothCultures()
+    {
+        // Arrange / Act — AccountSyncService splits these two apart before reaching the
+        // connector, which cannot tell an expired consent from one that was never authorized.
+        // Telling someone to link an account they already linked is the wrong instruction, so
+        // the distinction is only worth having if both halves actually read correctly.
+        string enExpired;
+        string deExpired;
+        string enUnauthorized;
+        string deUnauthorized;
+        using (CultureScope.UiOnly("en"))
+        {
+            var l = FinanceLocalizer.Create();
+            enExpired = l["Sync.ConsentExpiredOn", "Dkb", "22.08.2026", l["Nav.Connections"]];
+            enUnauthorized = l["Sync.ConsentNotAuthorized", "Dkb", l["Nav.Connections"]];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            var l = FinanceLocalizer.Create();
+            deExpired = l["Sync.ConsentExpiredOn", "Dkb", "22.08.2026", l["Nav.Connections"]];
+            deUnauthorized = l["Sync.ConsentNotAuthorized", "Dkb", l["Nav.Connections"]];
+        }
+
+        // Assert
+        Assert.Equal(
+            "The Dkb consent expired on 22.08.2026 — reconnect it under Settings → Connections.",
+            enExpired
+        );
+        Assert.Equal(
+            "Die Dkb-Einwilligung ist am 22.08.2026 abgelaufen — bitte unter Einstellungen → Verbindungen neu verbinden.",
+            deExpired
+        );
+        Assert.Equal(
+            "The Dkb consent is not authorized — connect it under Settings → Connections.",
+            enUnauthorized
+        );
+        Assert.Equal(
+            "Die Dkb-Einwilligung ist nicht autorisiert — bitte unter Einstellungen → Verbindungen verbinden.",
+            deUnauthorized
+        );
+    }
+
     [Theory]
     [InlineData("Sync.AccountNotLinked")]
     [InlineData("Sync.ConnectionGone")]

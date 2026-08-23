@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Credentials;
+using AndreGoepel.FinanceApp.Domain.Imports;
 using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
@@ -118,17 +119,17 @@ internal sealed class EnableBankingClient(
         return Result.Ok(new AuthorizedSession(sessionId, validUntil, accounts));
     }
 
-    public async Task<Result<IReadOnlyList<EnableBankingTransaction>>> GetTransactionsAsync(
+    public async Task<Result<EnableBankingFetch>> GetTransactionsAsync(
         string accountUid,
         DateOnly from,
         CancellationToken cancellationToken = default
     )
     {
         var transactions = new List<EnableBankingTransaction>();
+        var errors = new List<ImportRowError>();
         string? continuationKey = null;
         var page = 0;
         var rawEntries = 0;
-        var skipped = 0;
 
         do
         {
@@ -143,7 +144,7 @@ internal sealed class EnableBankingClient(
             var response = await SendAsync(HttpMethod.Get, query, body: null, cancellationToken);
             if (response.IsFailure)
             {
-                return Result.Fail<IReadOnlyList<EnableBankingTransaction>>(response.Error!);
+                return Result.Fail<EnableBankingFetch>(response.Error!);
             }
 
             var root = JsonNode.Parse(response.Value!);
@@ -156,15 +157,29 @@ internal sealed class EnableBankingClient(
                 }
                 else
                 {
-                    skipped++;
-                    // Which field was missing, not the row itself: the entry is raw bank data.
+                    var missing =
+                        entry?["booking_date"] is null ? "booking_date"
+                        : entry?["transaction_amount"]?["amount"] is null
+                            ? "transaction_amount.amount"
+                        : "an unparseable transaction_amount.amount";
+
+                    // Reported, not just logged: IProviderConnector promises never to drop a row
+                    // silently, and these surface as problem rows on the import batch. English on
+                    // purpose — ImportRowError is persisted and rendered long afterwards, so
+                    // localizing at write time would freeze whichever culture was active.
+                    errors.Add(
+                        new ImportRowError(
+                            rawEntries,
+                            $"Enable Banking entry skipped: {missing} was missing or unreadable.",
+                            Truncate(entry?.ToJsonString() ?? "")
+                        )
+                    );
                     logger.LogWarning(
                         "Skipped an Enable Banking entry for account {AccountRef} on page {Page}: "
-                            + "booking_date {BookingDate}, transaction_amount.amount {Amount}.",
+                            + "{MissingField}.",
                         Fingerprint(accountUid),
                         page,
-                        entry?["booking_date"] is null ? "missing" : "present",
-                        entry?["transaction_amount"]?["amount"] is null ? "missing" : "unparseable"
+                        missing
                     );
                 }
             }
@@ -191,10 +206,10 @@ internal sealed class EnableBankingClient(
             page,
             rawEntries,
             transactions.Count,
-            skipped
+            errors.Count
         );
 
-        return Result.Ok<IReadOnlyList<EnableBankingTransaction>>(transactions);
+        return Result.Ok(new EnableBankingFetch(transactions, errors));
     }
 
     internal static bool TryParseTransaction(

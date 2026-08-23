@@ -68,6 +68,37 @@ internal sealed class AccountSyncService(
             );
         }
 
+        // Split before reaching the connector, which cannot tell these apart: it only sees a
+        // null provider reference and used to blame "not linked" for both. Telling someone to
+        // link an account they already linked is the wrong instruction for an expired consent.
+        if (connection.ConsentExpired)
+        {
+            return Failed(
+                account.Id,
+                account.Name,
+                localizer[
+                    "Sync.ConsentExpiredOn",
+                    account.Provider,
+                    // Non-null inside this branch: ConsentExpired compares ConsentExpiresAt to
+                    // now, and a lifted comparison against null is false.
+                    Dates.Short(connection.ConsentExpiresAt!.Value.ToLocalTime()),
+                    localizer["Nav.Connections"]
+                ]
+            );
+        }
+        if (connection.ConsentStatus != ConsentStatus.Authorized)
+        {
+            return Failed(
+                account.Id,
+                account.Name,
+                localizer[
+                    "Sync.ConsentNotAuthorized",
+                    account.Provider,
+                    localizer["Nav.Connections"]
+                ]
+            );
+        }
+
         var connectorResult = connectorRegistry.ForProvider(account.Provider);
         if (connectorResult.IsFailure)
         {

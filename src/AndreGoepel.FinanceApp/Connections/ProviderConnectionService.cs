@@ -174,6 +174,30 @@ internal sealed class ProviderConnectionService(
         return Result.Ok(start.Value!.AuthorizationUrl);
     }
 
+    public async Task AbandonConsentAsync(
+        string state,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var connection = await session
+            .Query<ProviderConnection>()
+            .Where(c => c.PendingState == state)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (connection is null)
+        {
+            return;
+        }
+
+        connection.PendingState = null;
+        session.Store(connection);
+        await session.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation(
+            "Consent attempt abandoned for connection {Connection}; pending state cleared.",
+            connection.Label
+        );
+    }
+
     public async Task<Result<ProviderConnection>> CompleteConsentAsync(
         string code,
         string state,

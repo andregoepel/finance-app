@@ -514,4 +514,6 @@
   <data name="Sync.ImportOnlyAccount" xml:space="preserve"><value><![CDATA[Konto ist nur für den Import vorgesehen (keine API-Synchronisierung).]]></value></data>
   <data name="Sync.AccountNotLinked" xml:space="preserve"><value><![CDATA[Konto ist mit keiner Verbindung verknüpft (Einstellungen → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
   <data name="Sync.ConnectionGone" xml:space="preserve"><value><![CDATA[Die Verbindung des Kontos existiert nicht mehr — bitte neu verknüpfen (Einstellungen → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
+  <data name="Sync.ConsentExpiredOn" xml:space="preserve"><value><![CDATA[Die {0}-Einwilligung ist am {1} abgelaufen — bitte unter Einstellungen → {2} neu verbinden.]]></value><comment>{0} = provider, {1} = expiry date, {2} = Nav.Connections</comment></data>
+  <data name="Sync.ConsentNotAuthorized" xml:space="preserve"><value><![CDATA[Die {0}-Einwilligung ist nicht autorisiert — bitte unter Einstellungen → {1} verbinden.]]></value><comment>{0} = provider, {1} = Nav.Connections</comment></data>
 </root>

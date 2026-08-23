@@ -25,14 +25,25 @@ public static class EnableBankingCallbackEndpoint
                 CancellationToken cancellationToken
             ) =>
             {
+                // Clear the pending state on the way out of every failure path. It is matched
+                // across all connections in CompleteConsentAsync, so one left behind by a denied
+                // or abandoned attempt stays replayable indefinitely.
                 if (!string.IsNullOrEmpty(error))
                 {
+                    if (!string.IsNullOrEmpty(state))
+                    {
+                        await connectionService.AbandonConsentAsync(state, cancellationToken);
+                    }
                     return Results.Redirect(
                         $"/settings/connections?consent=denied&reason={Uri.EscapeDataString(error)}"
                     );
                 }
                 if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
                 {
+                    if (!string.IsNullOrEmpty(state))
+                    {
+                        await connectionService.AbandonConsentAsync(state, cancellationToken);
+                    }
                     return Results.Redirect("/settings/connections?consent=invalid");
                 }
 
