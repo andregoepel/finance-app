@@ -109,6 +109,27 @@ public sealed class DomainStringsResourceTests
     // Credentials.
     [InlineData("en", "Error.SecretMustNotBeEmpty", "The secret must not be empty.")]
     [InlineData("de", "Error.SecretMustNotBeEmpty", "Das Secret darf nicht leer sein.")]
+    // Connectors — the parse-time messages a user can act on.
+    [InlineData(
+        "en",
+        "Error.UnrecognizedExportFormat",
+        "Unrecognized {0} export format. Supported formats: {1}. The provider may have changed its export — a new parser version is needed."
+    )]
+    [InlineData(
+        "de",
+        "Error.UnrecognizedExportFormat",
+        "Unbekanntes {0}-Exportformat. Unterstützte Formate: {1}. Möglicherweise hat der Anbieter sein Exportformat geändert — dann wird eine neue Parser-Version benötigt."
+    )]
+    [InlineData(
+        "en",
+        "Error.AccountConsentLinkMissing",
+        "This account is not linked to any account in the current {0} consent. Re-link it under Settings → Connections."
+    )]
+    [InlineData(
+        "de",
+        "Error.AccountConsentLinkMissing",
+        "Dieses Konto ist mit keinem Konto der aktuellen {0}-Einwilligung verknüpft. Bitte unter Einstellungen → Verbindungen neu verknüpfen."
+    )]
     // Categorization — the one message reaching this resx from outside the Domain project.
     [InlineData(
         "en",

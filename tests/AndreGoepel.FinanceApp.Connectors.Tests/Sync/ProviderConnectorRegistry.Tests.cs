@@ -10,6 +10,7 @@ public sealed class ProviderConnectorRegistryTests
 {
     private readonly EnableBankingConnector enableBanking = new(
         Substitute.For<IEnableBankingClient>(),
+        DomainLocalizer.Instance,
         NullLogger<EnableBankingConnector>.Instance
     );
 

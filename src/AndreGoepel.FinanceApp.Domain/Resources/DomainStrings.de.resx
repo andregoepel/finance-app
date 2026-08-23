@@ -116,4 +116,8 @@
   <data name="Error.SecretMustNotBeEmpty" xml:space="preserve"><value><![CDATA[Das Secret darf nicht leer sein.]]></value></data>
   <!-- Categorization -->
   <data name="Error.NoPendingSuggestions" xml:space="preserve"><value><![CDATA[Keine offenen Vorschläge für die ausgewählten Transaktionen gefunden.]]></value></data>
+  <!-- Connectors — the three messages from that layer a user can actually act on. -->
+  <data name="Error.NoParserForProvider" xml:space="preserve"><value><![CDATA[Für {0} ist kein Kontoauszugs-Parser registriert.]]></value><comment>{0} = provider name</comment></data>
+  <data name="Error.UnrecognizedExportFormat" xml:space="preserve"><value><![CDATA[Unbekanntes {0}-Exportformat. Unterstützte Formate: {1}. Möglicherweise hat der Anbieter sein Exportformat geändert — dann wird eine neue Parser-Version benötigt.]]></value><comment>{0} = provider, {1} = comma-separated parser ids</comment></data>
+  <data name="Error.AccountConsentLinkMissing" xml:space="preserve"><value><![CDATA[Dieses Konto ist mit keinem Konto der aktuellen {0}-Einwilligung verknüpft. Bitte unter Einstellungen → Verbindungen neu verknüpfen.]]></value><comment>{0} = provider name</comment></data>
 </root>
