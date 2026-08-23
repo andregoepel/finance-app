@@ -807,6 +807,7 @@
           "Marten": "[9.29.0, )",
           "Microsoft.AspNetCore.DataProtection.Abstractions": "[10.0.11, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.11, )",
+          "Microsoft.Extensions.Localization.Abstractions": "[10.0.11, )",
           "WolverineFx.Marten": "[6.29.2, )"
         }
       },
@@ -871,6 +872,12 @@
           "Microsoft.Extensions.ObjectPool": "10.0.11",
           "Microsoft.Extensions.Resilience": "10.9.0"
         }
+      },
+      "Microsoft.Extensions.Localization.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "Sg4JTdLEIbJGlZpDrr5xzkLSR4XQNJgeTqtiQkKW0IWr9aoXjKzB+wpnfFl6d+PTXnXkNB9sEDJ9sP+BRcOnrw=="
       },
       "WolverineFx.Marten": {
         "type": "CentralTransitive",

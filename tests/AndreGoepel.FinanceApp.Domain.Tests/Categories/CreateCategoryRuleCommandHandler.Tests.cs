@@ -22,6 +22,7 @@ public sealed class CreateCategoryRuleCommandHandlerTests
                 CategoryRuleSource.Manual
             ),
             session,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 
@@ -44,6 +45,7 @@ public sealed class CreateCategoryRuleCommandHandlerTests
                 CategoryRuleSource.Manual
             ),
             session,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 
@@ -65,6 +67,7 @@ public sealed class CreateCategoryRuleCommandHandlerTests
                 CategoryRuleSource.Manual
             ),
             session,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 

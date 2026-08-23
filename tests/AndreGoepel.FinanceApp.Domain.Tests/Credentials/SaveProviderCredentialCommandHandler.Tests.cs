@@ -14,6 +14,7 @@ public sealed class SaveProviderCredentialCommandHandlerTests
         var result = await SaveProviderCredentialCommandHandler.Handle(
             new SaveProviderCredentialCommand(CredentialKeys.ClaudeApiKey, "  sk-ant-x  "),
             store,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 
@@ -34,6 +35,7 @@ public sealed class SaveProviderCredentialCommandHandlerTests
         var result = await SaveProviderCredentialCommandHandler.Handle(
             new SaveProviderCredentialCommand(key, secret),
             store,
+            DomainLocalizer.Instance,
             CancellationToken.None
         );
 

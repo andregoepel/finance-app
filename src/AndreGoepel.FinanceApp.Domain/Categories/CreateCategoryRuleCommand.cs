@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Categories;
 
@@ -17,6 +19,7 @@ public static class CreateCategoryRuleCommandHandler
     public static async Task<Result<CategoryRule>> Handle(
         CreateCategoryRuleCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
@@ -30,13 +33,13 @@ public static class CreateCategoryRuleCommandHandler
         }
         if (command.MinAmount is decimal min && command.MaxAmount is decimal max && min > max)
         {
-            return Result.Fail<CategoryRule>("Minimum amount must not exceed maximum amount.");
+            return Result.Fail<CategoryRule>(localizer["Error.MinExceedsMax"]);
         }
 
         var category = await session.LoadAsync<Category>(command.CategoryId, cancellationToken);
         if (category is null)
         {
-            return Result.Fail<CategoryRule>("Category not found.");
+            return Result.Fail<CategoryRule>(localizer["Error.CategoryNotFound"]);
         }
 
         var duplicate = await session

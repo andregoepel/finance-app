@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Transactions;
 
@@ -18,12 +20,13 @@ public static class LinkTransactionsAsTransferCommandHandler
     public static async Task<Result> Handle(
         LinkTransactionsAsTransferCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         if (command.FirstTransactionId == command.SecondTransactionId)
         {
-            return Result.Fail("A transaction cannot be linked to itself.");
+            return Result.Fail(localizer["Error.CannotLinkToItself"]);
         }
 
         var first = await session.Events.FetchForWriting<TransactionView>(
@@ -36,17 +39,17 @@ public static class LinkTransactionsAsTransferCommandHandler
         );
         if (first.Aggregate is null || second.Aggregate is null)
         {
-            return Result.Fail("Transaction not found.");
+            return Result.Fail(localizer["Error.TransactionNotFound"]);
         }
 
         if (first.Aggregate.IsTransfer || second.Aggregate.IsTransfer)
         {
-            return Result.Fail("One of the transactions is already linked as a transfer.");
+            return Result.Fail(localizer["Error.AlreadyLinkedAsTransfer"]);
         }
 
         if (first.Aggregate.AccountId == second.Aggregate.AccountId)
         {
-            return Result.Fail("Transfer legs must belong to different accounts.");
+            return Result.Fail(localizer["Error.TransferLegsSameAccount"]);
         }
 
         first.AppendOne(new TransactionLinkedAsTransfer(command.SecondTransactionId));

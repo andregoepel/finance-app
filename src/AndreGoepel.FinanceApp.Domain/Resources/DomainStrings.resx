@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    English (neutral) user-facing failure messages produced by the domain layer — the source of
+    truth. Only actionable copy lives here; raw diagnostics stay English in code by design.
+    Keep DomainStrings.de.resx in sync: same keys, same order.
+  -->
+  <!--
+    English (neutral) UI strings for finance-app — the source of truth. Every <value> is
+    wrapped in CDATA so ampersands and inline HTML do not need manual escaping. Keep
+    Strings.de.resx in sync: same keys, same order.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+
+  <!-- Not-found guards, shared across many handlers -->
+  <data name="Error.AccountNotFound" xml:space="preserve"><value><![CDATA[Account not found.]]></value></data>
+  <data name="Error.CategoryNotFound" xml:space="preserve"><value><![CDATA[Category not found.]]></value></data>
+  <data name="Error.TransactionNotFound" xml:space="preserve"><value><![CDATA[Transaction not found.]]></value></data>
+  <data name="Error.PlannedItemNotFound" xml:space="preserve"><value><![CDATA[Planned item not found.]]></value></data>
+  <data name="Error.RuleNotFound" xml:space="preserve"><value><![CDATA[Rule not found.]]></value></data>
+  <data name="Error.ParentCategoryNotFound" xml:space="preserve"><value><![CDATA[Parent category not found.]]></value></data>
+
+  <!-- Accounts -->
+  <data name="Error.AccountNameRequired" xml:space="preserve"><value><![CDATA[Account name is required.]]></value></data>
+  <data name="Error.SelectAtLeastOneOwner" xml:space="preserve"><value><![CDATA[Select at least one owner for the account.]]></value></data>
+  <data name="Error.NonSharedSingleOwner" xml:space="preserve"><value><![CDATA[A non-shared account must have exactly one owner; enable “shared” to add more.]]></value></data>
+  <data name="Error.AccountHasTransactions" xml:space="preserve"><value><![CDATA[This account has {0} transaction(s); deactivate it instead of deleting, so its history is preserved.]]></value><comment>{0} = transaction count</comment></data>
+
+  <!-- Categories and rules -->
+  <data name="Error.CategoryNameRequired" xml:space="preserve"><value><![CDATA[Category name is required.]]></value></data>
+  <data name="Error.CategoryTwoLevelsOnly" xml:space="preserve"><value><![CDATA[Categories support two levels only (group > category).]]></value></data>
+  <data name="Error.DeleteSubcategoriesFirst" xml:space="preserve"><value><![CDATA[Delete or move the subcategories first.]]></value></data>
+  <data name="Error.CategoryInUse" xml:space="preserve"><value><![CDATA[Category is used by existing transactions.]]></value></data>
+  <data name="Error.RuleNeedsAPattern" xml:space="preserve"><value><![CDATA[A rule needs at least a counterparty or description pattern.]]></value></data>
+  <data name="Error.MinExceedsMax" xml:space="preserve"><value><![CDATA[Minimum amount must not exceed maximum amount.]]></value></data>
+
+  <!-- Transactions and transfers -->
+  <data name="Error.CannotLinkToItself" xml:space="preserve"><value><![CDATA[A transaction cannot be linked to itself.]]></value></data>
+  <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[One of the transactions is already linked as a transfer.]]></value></data>
+  <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Transaction is not linked as a transfer.]]></value></data>
+  <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Transfer legs must belong to different accounts.]]></value></data>
+
+  <!-- Planning -->
+  <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[A description is required.]]></value></data>
+  <data name="Error.AmountMustNotBeZero" xml:space="preserve"><value><![CDATA[The amount must not be zero (negative = expense, positive = income).]]></value></data>
+  <data name="Error.EndBeforeStart" xml:space="preserve"><value><![CDATA[The end date must not be before the start date.]]></value></data>
+
+  <!-- Budgets -->
+  <data name="Error.BudgetLimitPositive" xml:space="preserve"><value><![CDATA[A budget limit must be greater than zero.]]></value></data>
+
+  <!-- Crypto -->
+  <data name="Error.SymbolRequired" xml:space="preserve"><value><![CDATA[A symbol is required.]]></value></data>
+  <data name="Error.CoinGeckoIdRequired" xml:space="preserve"><value><![CDATA[A CoinGecko id is required.]]></value></data>
+  <data name="Error.QuantityPositive" xml:space="preserve"><value><![CDATA[The quantity must be greater than zero.]]></value></data>
+  <data name="Error.CryptoAccountsOnly" xml:space="preserve"><value><![CDATA[Holdings can only be added to crypto accounts.]]></value></data>
+
+  <!-- Credentials -->
+  <data name="Error.CredentialKeyRequired" xml:space="preserve"><value><![CDATA[Credential key is required.]]></value></data>
+  <data name="Error.SecretMustNotBeEmpty" xml:space="preserve"><value><![CDATA[The secret must not be empty.]]></value></data>
+</root>

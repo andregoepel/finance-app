@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Planning;
 
@@ -23,6 +25,7 @@ public static class UpdatePlannedItemCommandHandler
     public static async Task<Result<PlannedItem>> Handle(
         UpdatePlannedItemCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
@@ -30,7 +33,8 @@ public static class UpdatePlannedItemCommandHandler
             command.Description,
             command.Amount,
             command.EndDate,
-            command.StartDate
+            command.StartDate,
+            localizer
         );
         if (validation.IsFailure)
         {
@@ -40,7 +44,7 @@ public static class UpdatePlannedItemCommandHandler
         var item = await session.LoadAsync<PlannedItem>(command.Id, cancellationToken);
         if (item is null)
         {
-            return Result.Fail<PlannedItem>("Planned item not found.");
+            return Result.Fail<PlannedItem>(localizer["Error.PlannedItemNotFound"]);
         }
 
         item.Description = command.Description.Trim();

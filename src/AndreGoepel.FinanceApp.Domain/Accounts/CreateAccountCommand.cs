@@ -1,6 +1,8 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Accounts;
 
@@ -23,15 +25,16 @@ public static class CreateAccountCommandHandler
     public static async Task<Result<Account>> Handle(
         CreateAccountCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         if (string.IsNullOrWhiteSpace(command.Name))
         {
-            return Result.Fail<Account>("Account name is required.");
+            return Result.Fail<Account>(localizer["Error.AccountNameRequired"]);
         }
 
-        var owners = AccountOwners.Validate(command.IsShared, command.OwnerUserIds);
+        var owners = AccountOwners.Validate(command.IsShared, command.OwnerUserIds, localizer);
         if (owners.IsFailure)
         {
             return Result.Fail<Account>(owners.Error);
@@ -64,18 +67,20 @@ public static class CreateAccountCommandHandler
 /// <summary>Shared owner-selection validation for create and update.</summary>
 internal static class AccountOwners
 {
-    public static Result<List<Guid>> Validate(bool isShared, IReadOnlyList<Guid> ownerUserIds)
+    public static Result<List<Guid>> Validate(
+        bool isShared,
+        IReadOnlyList<Guid> ownerUserIds,
+        IStringLocalizer<DomainStrings> localizer
+    )
     {
         var owners = (ownerUserIds ?? []).Where(id => id != Guid.Empty).Distinct().ToList();
         if (owners.Count == 0)
         {
-            return Result.Fail<List<Guid>>("Select at least one owner for the account.");
+            return Result.Fail<List<Guid>>(localizer["Error.SelectAtLeastOneOwner"]);
         }
         if (!isShared && owners.Count > 1)
         {
-            return Result.Fail<List<Guid>>(
-                "A non-shared account must have exactly one owner; enable “shared” to add more."
-            );
+            return Result.Fail<List<Guid>>(localizer["Error.NonSharedSingleOwner"]);
         }
         return Result.Ok(owners);
     }

@@ -1,5 +1,7 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Transactions;
 
@@ -11,6 +13,7 @@ public static class UnlinkTransferCommandHandler
     public static async Task<Result> Handle(
         UnlinkTransferCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
@@ -20,12 +23,12 @@ public static class UnlinkTransferCommandHandler
         );
         if (stream.Aggregate is null)
         {
-            return Result.Fail("Transaction not found.");
+            return Result.Fail(localizer["Error.TransactionNotFound"]);
         }
 
         if (stream.Aggregate.TransferCounterpartId is not Guid counterpartId)
         {
-            return Result.Fail("Transaction is not linked as a transfer.");
+            return Result.Fail(localizer["Error.NotLinkedAsTransfer"]);
         }
 
         stream.AppendOne(new TransactionTransferUnlinked());

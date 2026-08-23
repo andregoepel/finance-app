@@ -11,7 +11,7 @@ public sealed class AccountOwnersTests
     public void Validate_NonSharedSingleOwner_Succeeds()
     {
         // Act
-        var result = AccountOwners.Validate(isShared: false, [UserA]);
+        var result = AccountOwners.Validate(isShared: false, [UserA], DomainLocalizer.Instance);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -22,7 +22,11 @@ public sealed class AccountOwnersTests
     public void Validate_SharedMultipleOwners_Succeeds()
     {
         // Act
-        var result = AccountOwners.Validate(isShared: true, [UserA, UserB]);
+        var result = AccountOwners.Validate(
+            isShared: true,
+            [UserA, UserB],
+            DomainLocalizer.Instance
+        );
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -33,7 +37,7 @@ public sealed class AccountOwnersTests
     public void Validate_SharedSingleOwner_Succeeds()
     {
         // Act
-        var result = AccountOwners.Validate(isShared: true, [UserA]);
+        var result = AccountOwners.Validate(isShared: true, [UserA], DomainLocalizer.Instance);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -43,7 +47,11 @@ public sealed class AccountOwnersTests
     public void Validate_NonSharedMultipleOwners_Fails()
     {
         // Act
-        var result = AccountOwners.Validate(isShared: false, [UserA, UserB]);
+        var result = AccountOwners.Validate(
+            isShared: false,
+            [UserA, UserB],
+            DomainLocalizer.Instance
+        );
 
         // Assert
         Assert.True(result.IsFailure);
@@ -54,7 +62,7 @@ public sealed class AccountOwnersTests
     public void Validate_NoOwners_Fails()
     {
         // Act
-        var result = AccountOwners.Validate(isShared: true, []);
+        var result = AccountOwners.Validate(isShared: true, [], DomainLocalizer.Instance);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -65,7 +73,11 @@ public sealed class AccountOwnersTests
     public void Validate_OnlyEmptyGuids_Fails()
     {
         // Act
-        var result = AccountOwners.Validate(isShared: false, [Guid.Empty]);
+        var result = AccountOwners.Validate(
+            isShared: false,
+            [Guid.Empty],
+            DomainLocalizer.Instance
+        );
 
         // Assert
         Assert.True(result.IsFailure);
@@ -78,7 +90,11 @@ public sealed class AccountOwnersTests
         // collapses to one distinct owner rather than tripping the >1 rule.
 
         // Act
-        var result = AccountOwners.Validate(isShared: false, [UserA, UserA, Guid.Empty]);
+        var result = AccountOwners.Validate(
+            isShared: false,
+            [UserA, UserA, Guid.Empty],
+            DomainLocalizer.Instance
+        );
 
         // Assert
         Assert.True(result.IsSuccess);

@@ -1,6 +1,8 @@
 using AndreGoepel.Core;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Categories;
 
@@ -15,13 +17,14 @@ public static class DeleteCategoryCommandHandler
     public static async Task<Result> Handle(
         DeleteCategoryCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var category = await session.LoadAsync<Category>(command.CategoryId, cancellationToken);
         if (category is null)
         {
-            return Result.Fail("Category not found.");
+            return Result.Fail(localizer["Error.CategoryNotFound"]);
         }
 
         var hasChildren = await session
@@ -30,7 +33,7 @@ public static class DeleteCategoryCommandHandler
             .AnyAsync(cancellationToken);
         if (hasChildren)
         {
-            return Result.Fail("Delete or move the subcategories first.");
+            return Result.Fail(localizer["Error.DeleteSubcategoriesFirst"]);
         }
 
         var isInUse = await session
@@ -39,7 +42,7 @@ public static class DeleteCategoryCommandHandler
             .AnyAsync(cancellationToken);
         if (isInUse)
         {
-            return Result.Fail("Category is used by existing transactions.");
+            return Result.Fail(localizer["Error.CategoryInUse"]);
         }
 
         session.Delete(category);

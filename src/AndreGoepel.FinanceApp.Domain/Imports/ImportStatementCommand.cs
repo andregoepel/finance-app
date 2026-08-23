@@ -1,7 +1,9 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Accounts;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Imports;
 
@@ -25,13 +27,14 @@ public static class ImportStatementCommandHandler
     public static async Task<Result<ImportBatch>> Handle(
         ImportStatementCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
         var account = await session.LoadAsync<Account>(command.AccountId, cancellationToken);
         if (account is null)
         {
-            return Result.Fail<ImportBatch>("Account not found.");
+            return Result.Fail<ImportBatch>(localizer["Error.AccountNotFound"]);
         }
 
         var hashedRows = command

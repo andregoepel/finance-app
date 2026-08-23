@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <!-- Abstractions-only, consistent with the DI reference above. Handlers take an
+         IStringLocalizer<DomainStrings> so their user-facing failure messages can be German;
+         Wolverine method-injects it exactly as it already injects ICredentialStore. -->
+    <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" />
     <PackageReference Include="AndreGoepel.Core" />
     <PackageReference Include="AndreGoepel.Marten.Configuration" />
