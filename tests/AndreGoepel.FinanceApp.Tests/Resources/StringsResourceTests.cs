@@ -1324,4 +1324,94 @@ public sealed class StringsResourceTests
     }
 
     #endregion
+
+    [Theory]
+    [InlineData("en", "Accounts.ShowDeactivated", "Show deactivated")]
+    [InlineData("de", "Accounts.ShowDeactivated", "Deaktivierte anzeigen")]
+    [InlineData("en", "Accounts.StatusActive", "Active")]
+    [InlineData("de", "Accounts.StatusActive", "Aktiv")]
+    [InlineData("en", "Accounts.StatusDeactivated", "Deactivated")]
+    [InlineData("de", "Accounts.StatusDeactivated", "Deaktiviert")]
+    [InlineData("en", "Accounts.AddTitle", "Add account")]
+    [InlineData("de", "Accounts.AddTitle", "Konto hinzufügen")]
+    [InlineData("en", "Accounts.EditTitle", "Edit account")]
+    [InlineData("de", "Accounts.EditTitle", "Konto bearbeiten")]
+    [InlineData("en", "Accounts.SharedLabel", "Shared")]
+    [InlineData("de", "Accounts.SharedLabel", "Gemeinsam")]
+    [InlineData("en", "Accounts.ConnectionLabel", "Connection")]
+    [InlineData("de", "Accounts.ConnectionLabel", "Verbindung")]
+    [InlineData("en", "Accounts.BankAccountLabel", "Bank account")]
+    [InlineData("de", "Accounts.BankAccountLabel", "Bankkonto")]
+    [InlineData("en", "Accounts.ActionFailedTitle", "Action failed")]
+    [InlineData("de", "Accounts.ActionFailedTitle", "Aktion fehlgeschlagen")]
+    [InlineData("en", "Accounts.DeactivatedMessage", "Account deactivated")]
+    [InlineData("de", "Accounts.DeactivatedMessage", "Konto deaktiviert")]
+    [InlineData("en", "Accounts.PermanentlyDeletedMessage", "Account permanently deleted")]
+    [InlineData("de", "Accounts.PermanentlyDeletedMessage", "Konto endgültig gelöscht")]
+    [InlineData("en", "Accounts.HardDeleteTitle", "Delete account permanently")]
+    [InlineData("de", "Accounts.HardDeleteTitle", "Konto endgültig löschen")]
+    [InlineData("en", "Enum.AccountType.Checking", "Checking")]
+    [InlineData("de", "Enum.AccountType.Checking", "Girokonto")]
+    [InlineData("en", "Enum.AccountType.CreditCard", "Credit card")]
+    [InlineData("de", "Enum.AccountType.CreditCard", "Kreditkarte")]
+    [InlineData("en", "Enum.AccountType.Crypto", "Crypto")]
+    [InlineData("de", "Enum.AccountType.Crypto", "Krypto")]
+    [InlineData("en", "Enum.AccountType.MultiCurrency", "Multi-currency")]
+    [InlineData("de", "Enum.AccountType.MultiCurrency", "Multiwährung")]
+    [InlineData("en", "Enum.SyncMethod.CsvUpload", "CSV upload")]
+    [InlineData("de", "Enum.SyncMethod.CsvUpload", "CSV-Upload")]
+    [InlineData("en", "Enum.SyncMethod.Api", "API")]
+    [InlineData("de", "Enum.SyncMethod.Api", "API")]
+    public void GetString_B8AccountsKey_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Fact]
+    public void GetString_AccountsHardDeleteConfirm_ComposesTheImpactSentenceInBothCultures()
+    {
+        // Arrange / Act — {1} is the already-assembled impact sentence, so the frame must not
+        // introduce punctuation that collides with the sentence's own full stop.
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = FinanceLocalizer.Create()[
+                "Accounts.HardDeleteConfirm",
+                "Joint account",
+                "Deletes the account."
+            ];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = FinanceLocalizer.Create()[
+                "Accounts.HardDeleteConfirm",
+                "Gemeinschaftskonto",
+                "Löscht das Konto."
+            ];
+        }
+
+        // Assert
+        Assert.Equal(
+            "Permanently delete 'Joint account'? Deletes the account. This cannot be undone.",
+            en
+        );
+        Assert.Equal(
+            "„Gemeinschaftskonto“ endgültig löschen? Löscht das Konto. Das kann nicht rückgängig gemacht werden.",
+            de
+        );
+    }
 }

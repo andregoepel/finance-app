@@ -42,56 +42,11 @@ public sealed record AccountDeletionImpact(
         && CryptoHoldings == 0
         && PlannedItemsDetached == 0;
 
-    /// <summary>The blast radius as one sentence, for the confirmation dialog.</summary>
-    public string Describe()
-    {
-        if (IsAccountOnly)
-        {
-            return "Deletes the account. It has no transactions or history.";
-        }
-
-        List<string> deleted = [];
-        AddPhrase(deleted, Transactions, "transaction", "transactions");
-        AddPhrase(deleted, ImportBatches, "import batch", "import batches");
-        AddPhrase(deleted, CryptoHoldings, "crypto holding", "crypto holdings");
-        AddPhrase(deleted, ReviewQueueEntries, "review-queue entry", "review-queue entries");
-
-        List<string> kept = [];
-        AddPhrase(
-            kept,
-            TransfersUnlinked,
-            "transfer on another account",
-            "transfers on other accounts"
-        );
-        AddPhrase(kept, PlannedMatchesCleared, "planned match", "planned matches");
-        AddPhrase(kept, PlannedItemsDetached, "planned item", "planned items");
-
-        var sentences = new List<string> { "Deletes the account" };
-        if (deleted.Count > 0)
-        {
-            sentences[0] += $" plus {Join(deleted)}";
-        }
-        sentences[0] += ".";
-        if (kept.Count > 0)
-        {
-            sentences.Add($"Unlinks {Join(kept)}.");
-        }
-
-        return string.Join(" ", sentences);
-    }
-
-    private static void AddPhrase(List<string> phrases, int count, string singular, string plural)
-    {
-        if (count > 0)
-        {
-            phrases.Add($"{count} {(count == 1 ? singular : plural)}");
-        }
-    }
-
-    private static string Join(IReadOnlyList<string> phrases) =>
-        phrases.Count == 1
-            ? phrases[0]
-            : $"{string.Join(", ", phrases.Take(phrases.Count - 1))} and {phrases[^1]}";
+    // The prose form of this ("Deletes the account plus 3 transactions and …") deliberately does
+    // NOT live here. It needs singular/plural selection and list-joining, which are language
+    // rules, not domain rules — German additionally needs case agreement the English version has
+    // no notion of. The sentence is assembled in the UI, where the localizer lives, from the
+    // counts above: see AccountDeletionDescription in the web project.
 }
 
 /// <summary>
