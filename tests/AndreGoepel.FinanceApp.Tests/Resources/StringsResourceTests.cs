@@ -43,7 +43,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Nav.SectionFinanceSettings", "FINANCE SETTINGS")]
     [InlineData("de", "Nav.SectionFinanceSettings", "FINANZ-EINSTELLUNGEN")]
     [InlineData("en", "Nav.Transactions", "Transactions")]
-    [InlineData("de", "Nav.Transactions", "Umsätze")]
+    [InlineData("de", "Nav.Transactions", "Transaktionen")]
     [InlineData("en", "Nav.Review", "Review")]
     [InlineData("de", "Nav.Review", "Zu prüfen")]
     [InlineData("en", "Nav.Recurring", "Recurring")]
@@ -105,7 +105,7 @@ public sealed class StringsResourceTests
     [InlineData(
         "de",
         "ApiKeys.SecretsIntro",
-        "Geheimnisse werden verschlüsselt in der Datenbank gespeichert (DataProtection) und nach dem Speichern nie wieder angezeigt. Wise- und Enable-Banking-Zugangsdaten befinden sich unter"
+        "Secrets werden verschlüsselt in der Datenbank gespeichert (DataProtection) und nach dem Speichern nie wieder angezeigt. Wise- und Enable-Banking-Zugangsdaten befinden sich unter"
     )]
     [InlineData(
         "en",
@@ -222,7 +222,7 @@ public sealed class StringsResourceTests
     [InlineData(
         "de",
         "Recurring.Subtitle",
-        "Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Zahlungen an denselben Zahlungspartner mit gleichbleibendem Intervall und Betrag."
+        "Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Zahlungspartnern mit gleichbleibendem Intervall und Betrag."
     )]
     [InlineData("en", "Recurring.EmptyTitle", "No recurring payments detected yet")]
     [InlineData("de", "Recurring.EmptyTitle", "Noch keine wiederkehrenden Zahlungen erkannt")]
@@ -264,7 +264,7 @@ public sealed class StringsResourceTests
     [InlineData("de", "Enum.RecurrenceInterval.Yearly", "Jährlich")]
     [InlineData("en", "Sync.SyncAllNow", "Sync all now")]
     [InlineData("de", "Sync.SyncAllNow", "Jetzt alle synchronisieren")]
-    [InlineData("en", "Sync.SyncingBusyText", "Syncing...")]
+    [InlineData("en", "Sync.SyncingBusyText", "Syncing…")]
     [InlineData("de", "Sync.SyncingBusyText", "Wird synchronisiert…")]
     [InlineData(
         "en",
@@ -574,7 +574,7 @@ public sealed class StringsResourceTests
             en
         );
         Assert.Equal(
-            "Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Umsatzübersicht mit „KI“ markiert.",
+            "Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Transaktionsübersicht mit „KI“ markiert.",
             de
         );
     }
@@ -594,7 +594,7 @@ public sealed class StringsResourceTests
     [InlineData("de", "Import.ColProblem", "Problem")]
     [InlineData("en", "Import.ColRawLine", "Raw line")]
     [InlineData("de", "Import.ColRawLine", "Rohzeile")]
-    [InlineData("en", "Import.ImportingBusyText", "Importing...")]
+    [InlineData("en", "Import.ImportingBusyText", "Importing…")]
     [InlineData("de", "Import.ImportingBusyText", "Wird importiert…")]
     [InlineData("en", "Import.HistoryTitle", "Import history")]
     [InlineData("de", "Import.HistoryTitle", "Import-Verlauf")]

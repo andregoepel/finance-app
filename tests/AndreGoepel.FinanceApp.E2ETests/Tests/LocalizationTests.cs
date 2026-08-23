@@ -34,7 +34,7 @@ public sealed class LocalizationTests(E2EAppFixture fixture) : FinanceE2ETestBas
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Übersicht" }).First)
             .ToBeVisibleAsync();
         await Expect(Page.GetByText("Einnahmen").First).ToBeVisibleAsync();
-        await Expect(Page.GetByText("Umsätze").First).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Transaktionen").First).ToBeVisibleAsync();
 
         // Assert — and the English is genuinely gone, not merely joined by German. Without this a
         // silent fallback to the neutral resx would still pass every assertion above.
