@@ -4,7 +4,9 @@ using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Credentials;
 using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using AndreGoepel.FinanceApp.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Connections;
 
@@ -13,7 +15,8 @@ internal sealed class WiseBalanceService(
     IWiseApiClient wiseApiClient,
     ICredentialStore credentialStore,
     IExchangeRateProvider exchangeRateProvider,
-    IDocumentSession session
+    IDocumentSession session,
+    IStringLocalizer<Strings> localizer
 ) : IWiseBalanceService
 {
     public async Task<Result<WiseBalanceSyncResult>> SyncConnectionAsync(
@@ -27,11 +30,11 @@ internal sealed class WiseBalanceService(
         );
         if (connection is null)
         {
-            return Result.Fail<WiseBalanceSyncResult>("Connection not found.");
+            return Result.Fail<WiseBalanceSyncResult>(localizer["Connections.NotFound"]);
         }
         if (connection.Provider != ProviderKind.Wise)
         {
-            return Result.Fail<WiseBalanceSyncResult>("Balance sync is Wise-only.");
+            return Result.Fail<WiseBalanceSyncResult>(localizer["Connections.BalanceSyncWiseOnly"]);
         }
 
         var token = await credentialStore.GetSecretAsync(

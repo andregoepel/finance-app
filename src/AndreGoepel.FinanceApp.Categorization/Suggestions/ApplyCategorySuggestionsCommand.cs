@@ -1,7 +1,9 @@
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Categories;
+using AndreGoepel.FinanceApp.Domain.Resources;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Categorization.Suggestions;
 
@@ -17,6 +19,7 @@ public static class ApplyCategorySuggestionsCommandHandler
     public static async Task<Result> Handle(
         ApplyCategorySuggestionsCommand command,
         IDocumentSession session,
+        IStringLocalizer<DomainStrings> localizer,
         CancellationToken cancellationToken
     )
     {
@@ -48,7 +51,7 @@ public static class ApplyCategorySuggestionsCommandHandler
 
         await session.SaveChangesAsync(cancellationToken);
         return applied == 0 && command.TransactionIds.Count > 0
-            ? Result.Fail("No pending suggestions found for the selected transactions.")
+            ? Result.Fail(localizer["Error.NoPendingSuggestions"])
             : Result.Ok();
     }
 }

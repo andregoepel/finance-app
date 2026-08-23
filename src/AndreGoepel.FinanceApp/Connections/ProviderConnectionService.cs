@@ -2,7 +2,9 @@ using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 using AndreGoepel.FinanceApp.Domain.Credentials;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using AndreGoepel.FinanceApp.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Connections;
 
@@ -10,7 +12,8 @@ namespace AndreGoepel.FinanceApp.Connections;
 internal sealed class ProviderConnectionService(
     IDocumentSession session,
     IEnableBankingClient enableBankingClient,
-    ICredentialStore credentialStore
+    ICredentialStore credentialStore,
+    IStringLocalizer<Strings> localizer
 ) : IProviderConnectionService
 {
     /// <summary>Requested AIS consent window; ASPSPs cap this (PSD2 is ~90 days).</summary>
@@ -33,7 +36,7 @@ internal sealed class ProviderConnectionService(
     {
         if (string.IsNullOrWhiteSpace(label))
         {
-            return Result.Fail<ProviderConnection>("A connection label is required.");
+            return Result.Fail<ProviderConnection>(localizer["Connections.LabelRequired"]);
         }
 
         var connection = new ProviderConnection
@@ -62,7 +65,7 @@ internal sealed class ProviderConnectionService(
         );
         if (connection is null)
         {
-            return Result.Fail("Connection not found.");
+            return Result.Fail(localizer["Connections.NotFound"]);
         }
         connection.Environment = environment;
         session.Store(connection);
@@ -95,15 +98,15 @@ internal sealed class ProviderConnectionService(
         );
         if (connection is null)
         {
-            return Result.Fail("Connection not found.");
+            return Result.Fail(localizer["Connections.NotFound"]);
         }
         if (connection.Provider != ProviderKind.Wise)
         {
-            return Result.Fail("Only Wise connections use an API token.");
+            return Result.Fail(localizer["Connections.WiseTokenOnly"]);
         }
         if (string.IsNullOrWhiteSpace(token))
         {
-            return Result.Fail("The Wise API token must not be empty.");
+            return Result.Fail(localizer["Connections.WiseTokenRequired"]);
         }
 
         await credentialStore.SaveSecretAsync(
@@ -126,7 +129,7 @@ internal sealed class ProviderConnectionService(
         );
         if (connection is null)
         {
-            return Result.Fail<string>("Connection not found.");
+            return Result.Fail<string>(localizer["Connections.NotFound"]);
         }
         if (!connection.UsesEnableBanking)
         {

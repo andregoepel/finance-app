@@ -1510,4 +1510,79 @@ public sealed class StringsResourceTests
         Assert.Equal("active until 22.11.2026", en);
         Assert.Equal("aktiv bis 22.11.2026", de);
     }
+
+    [Theory]
+    [InlineData("en", "Connections.LabelRequired", "A connection label is required.")]
+    [InlineData(
+        "de",
+        "Connections.LabelRequired",
+        "Eine Bezeichnung für die Verbindung ist erforderlich."
+    )]
+    [InlineData("en", "Connections.NotFound", "Connection not found.")]
+    [InlineData("de", "Connections.NotFound", "Verbindung nicht gefunden.")]
+    [InlineData("en", "Connections.WiseTokenOnly", "Only Wise connections use an API token.")]
+    [InlineData(
+        "de",
+        "Connections.WiseTokenOnly",
+        "Nur Wise-Verbindungen verwenden ein API-Token."
+    )]
+    [InlineData("en", "Connections.WiseTokenRequired", "The Wise API token must not be empty.")]
+    [InlineData("de", "Connections.WiseTokenRequired", "Das Wise-API-Token darf nicht leer sein.")]
+    [InlineData("en", "Connections.BalanceSyncWiseOnly", "Balance sync is Wise-only.")]
+    [InlineData(
+        "de",
+        "Connections.BalanceSyncWiseOnly",
+        "Der Guthabenabgleich ist nur für Wise verfügbar."
+    )]
+    [InlineData("en", "Sync.AccountNotFound", "Account not found.")]
+    [InlineData("de", "Sync.AccountNotFound", "Konto nicht gefunden.")]
+    [InlineData("en", "Sync.ImportOnlyAccount", "Account is import-only (no API sync).")]
+    [InlineData(
+        "de",
+        "Sync.ImportOnlyAccount",
+        "Konto ist nur für den Import vorgesehen (keine API-Synchronisierung)."
+    )]
+    public void GetString_BackendServiceKey_ReturnsTheCultureSpecificValue(
+        string culture,
+        string key,
+        string expected
+    )
+    {
+        // Arrange
+        using var scope = CultureScope.UiOnly(culture);
+        var localizer = FinanceLocalizer.Create();
+
+        // Act
+        var value = localizer[key];
+
+        // Assert
+        Assert.Equal(expected, value);
+        Assert.False(value.ResourceNotFound, $"Key '{key}' is missing for culture '{culture}'.");
+    }
+
+    [Theory]
+    [InlineData("Sync.AccountNotLinked")]
+    [InlineData("Sync.ConnectionGone")]
+    public void SyncNavPointers_NameTheAccountsMenuEntryInTheMatchingLanguage(string key)
+    {
+        // Arrange / Act — AccountSyncService fills {0} with Nav.Accounts so the pointer always
+        // names the menu entry the user actually sees. A German sentence ending in "(Einstellungen
+        // → Accounts)" would be the failure mode, and only composing both halves catches it.
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            var l = FinanceLocalizer.Create();
+            en = l[key, l["Nav.Accounts"]];
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            var l = FinanceLocalizer.Create();
+            de = l[key, l["Nav.Accounts"]];
+        }
+
+        // Assert
+        Assert.EndsWith("(Settings → Accounts).", en, StringComparison.Ordinal);
+        Assert.EndsWith("(Einstellungen → Konten).", de, StringComparison.Ordinal);
+    }
 }

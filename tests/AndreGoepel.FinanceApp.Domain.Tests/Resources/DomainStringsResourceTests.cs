@@ -109,6 +109,17 @@ public sealed class DomainStringsResourceTests
     // Credentials.
     [InlineData("en", "Error.SecretMustNotBeEmpty", "The secret must not be empty.")]
     [InlineData("de", "Error.SecretMustNotBeEmpty", "Das Secret darf nicht leer sein.")]
+    // Categorization — the one message reaching this resx from outside the Domain project.
+    [InlineData(
+        "en",
+        "Error.NoPendingSuggestions",
+        "No pending suggestions found for the selected transactions."
+    )]
+    [InlineData(
+        "de",
+        "Error.NoPendingSuggestions",
+        "Keine offenen Vorschläge für die ausgewählten Umsätze gefunden."
+    )]
     public void GetString_ErrorKey_ReturnsTheCultureSpecificValue(
         string culture,
         string key,

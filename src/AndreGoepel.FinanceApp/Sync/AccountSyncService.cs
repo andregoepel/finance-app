@@ -4,7 +4,9 @@ using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Planning;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using AndreGoepel.FinanceApp.Resources;
 using Marten;
+using Microsoft.Extensions.Localization;
 using Wolverine;
 
 namespace AndreGoepel.FinanceApp.Sync;
@@ -16,7 +18,8 @@ namespace AndreGoepel.FinanceApp.Sync;
 internal sealed class AccountSyncService(
     IQuerySession querySession,
     IProviderConnectorRegistry connectorRegistry,
-    IMessageBus messageBus
+    IMessageBus messageBus,
+    IStringLocalizer<Strings> localizer
 ) : IAccountSyncService
 {
     // Restricted-mode PSD2 history is ~90 days; default the first window to that.
@@ -34,18 +37,18 @@ internal sealed class AccountSyncService(
         var account = await querySession.LoadAsync<Account>(accountId, cancellationToken);
         if (account is null)
         {
-            return Failed(accountId, "Account", "Account not found.");
+            return Failed(accountId, "Account", localizer["Sync.AccountNotFound"]);
         }
         if (account.SyncMethod != SyncMethod.Api)
         {
-            return Failed(account.Id, account.Name, "Account is import-only (no API sync).");
+            return Failed(account.Id, account.Name, localizer["Sync.ImportOnlyAccount"]);
         }
         if (account.ConnectionId is not Guid connectionId)
         {
             return Failed(
                 account.Id,
                 account.Name,
-                "Account is not linked to a connection (Settings → Accounts)."
+                localizer["Sync.AccountNotLinked", localizer["Nav.Accounts"]]
             );
         }
 
@@ -58,7 +61,7 @@ internal sealed class AccountSyncService(
             return Failed(
                 account.Id,
                 account.Name,
-                "The account's connection no longer exists — re-link it (Settings → Accounts)."
+                localizer["Sync.ConnectionGone", localizer["Nav.Accounts"]]
             );
         }
 
