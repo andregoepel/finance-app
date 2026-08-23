@@ -233,7 +233,7 @@
   <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[Keine Budgets festgelegt —]]></value><comment>An "add one" link follows</comment></data>
   <data name="Dashboard.AddOneLink" xml:space="preserve"><value><![CDATA[eines hinzufügen]]></value></data>
   <data name="Dashboard.HoldingsLink" xml:space="preserve"><value><![CDATA[Bestände]]></value></data>
-  <data name="Dashboard.NoPriceYet" xml:space="preserve"><value><![CDATA[noch kein Kurs]]></value></data>
+  <data name="Common.NoPriceYet" xml:space="preserve"><value><![CDATA[noch kein Kurs]]></value><comment>Shared by the Dashboard crypto tile and the CryptoHoldings grid</comment></data>
   <data name="Dashboard.PricesFrom" xml:space="preserve"><value><![CDATA[Kurse vom {0} — aktualisieren auf der]]></value><comment>{0} = the price date; a "holdings page" link follows</comment></data>
   <data name="Dashboard.HoldingsPageLink" xml:space="preserve"><value><![CDATA[Bestandsseite]]></value></data>
   <data name="Dashboard.UpcomingOverdue" xml:space="preserve"><value><![CDATA[Anstehend & überfällig]]></value></data>
@@ -304,4 +304,84 @@
   <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget gespeichert]]></value></data>
   <data name="Budgets.RemovedTitle" xml:space="preserve"><value><![CDATA[Budget entfernt]]></value></data>
   <data name="Budgets.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[das Budget für „{0}“]]></value><comment>{0} = category path; substituted into the shared "Delete {0}? …" confirm template</comment></data>
+
+  <!-- Shared across Planning / CryptoHoldings -->
+  <data name="Common.Cancel" xml:space="preserve"><value><![CDATA[Abbrechen]]></value></data>
+  <data name="Common.Yes" xml:space="preserve"><value><![CDATA[ja]]></value></data>
+
+  <!-- Planning.razor -->
+  <data name="Planning.MatchNow" xml:space="preserve"><value><![CDATA[Jetzt zuordnen]]></value></data>
+  <data name="Planning.ExpensesPlannedVsActual" xml:space="preserve"><value><![CDATA[Ausgaben — geplant vs. tatsächlich]]></value></data>
+  <data name="Planning.IncomePlannedVsActual" xml:space="preserve"><value><![CDATA[Einnahmen — geplant vs. tatsächlich]]></value></data>
+  <data name="Planning.ThisMonthsPlan" xml:space="preserve"><value><![CDATA[Plan für diesen Monat]]></value></data>
+  <data name="Planning.NothingPlanned" xml:space="preserve"><value><![CDATA[Nichts für diesen Monat geplant. Unten geplante Posten hinzufügen.]]></value></data>
+  <data name="Planning.ColDue" xml:space="preserve"><value><![CDATA[Fällig]]></value></data>
+  <data name="Planning.ColPlanned" xml:space="preserve"><value><![CDATA[Geplant]]></value></data>
+  <data name="Planning.ColActual" xml:space="preserve"><value><![CDATA[Tatsächlich]]></value></data>
+  <data name="Planning.ColSchedule" xml:space="preserve"><value><![CDATA[Zeitplan]]></value></data>
+  <data name="Planning.Match" xml:space="preserve"><value><![CDATA[Zuordnen]]></value></data>
+  <data name="Planning.Unmatch" xml:space="preserve"><value><![CDATA[Zuordnung lösen]]></value></data>
+  <data name="Planning.Use" xml:space="preserve"><value><![CDATA[Übernehmen]]></value></data>
+  <data name="Planning.MatchHeading" xml:space="preserve"><value><![CDATA[„{0}“ zuordnen ({1})]]></value><comment>{0} = occurrence description, {1} = formatted due date</comment></data>
+  <data name="Planning.NoCandidates" xml:space="preserve"><value><![CDATA[Keine nicht zugeordneten Transaktionen in der Nähe dieses Datums.]]></value></data>
+  <data name="Planning.AddItemTitle" xml:space="preserve"><value><![CDATA[Geplanten Posten hinzufügen]]></value></data>
+  <data name="Planning.EditItemTitle" xml:space="preserve"><value><![CDATA[Geplanten Posten bearbeiten]]></value></data>
+  <data name="Planning.TypeLabel" xml:space="preserve"><value><![CDATA[Art]]></value></data>
+  <data name="Planning.TypeExpense" xml:space="preserve"><value><![CDATA[Ausgabe]]></value></data>
+  <data name="Planning.TypeIncome" xml:space="preserve"><value><![CDATA[Einnahme]]></value></data>
+  <data name="Planning.AmountLabel" xml:space="preserve"><value><![CDATA[Betrag (€)]]></value></data>
+  <data name="Planning.NonePlaceholder" xml:space="preserve"><value><![CDATA[(keine)]]></value></data>
+  <data name="Planning.FrequencyLabel" xml:space="preserve"><value><![CDATA[Häufigkeit]]></value></data>
+  <data name="Planning.StartDateLabel" xml:space="preserve"><value><![CDATA[Startdatum]]></value></data>
+  <data name="Planning.EndDateLabel" xml:space="preserve"><value><![CDATA[Enddatum (optional)]]></value></data>
+  <data name="Planning.ExpectedAccountLabel" xml:space="preserve"><value><![CDATA[Erwartetes Konto]]></value></data>
+  <data name="Planning.AnyPlaceholder" xml:space="preserve"><value><![CDATA[(beliebig)]]></value></data>
+  <data name="Planning.MatchHintPlaceholder" xml:space="preserve"><value><![CDATA[Suchhinweis]]></value></data>
+  <data name="Planning.ToleranceLabel" xml:space="preserve"><value><![CDATA[Toleranz (%)]]></value></data>
+  <data name="Planning.DateWindowLabel" xml:space="preserve"><value><![CDATA[Datumsfenster (± Tage)]]></value></data>
+  <data name="Planning.ActiveLabel" xml:space="preserve"><value><![CDATA[Aktiv]]></value></data>
+  <data name="Planning.ScheduleOnce" xml:space="preserve"><value><![CDATA[Einmalig, {0}]]></value><comment>{0} = formatted start date</comment></data>
+  <data name="Planning.ScheduleRecurring" xml:space="preserve"><value><![CDATA[{0} ab {1}]]></value><comment>{0} = localized PlannedFrequency, {1} = formatted start date</comment></data>
+  <data name="Planning.MatchingCompleteTitle" xml:space="preserve"><value><![CDATA[Zuordnung abgeschlossen]]></value></data>
+  <data name="Planning.MatchFailedTitle" xml:space="preserve"><value><![CDATA[Zuordnung fehlgeschlagen]]></value></data>
+  <data name="Planning.MatchedTitle" xml:space="preserve"><value><![CDATA[Zugeordnet]]></value></data>
+  <data name="Planning.UnmatchFailedTitle" xml:space="preserve"><value><![CDATA[Lösen der Zuordnung fehlgeschlagen]]></value></data>
+  <data name="Planning.ItemSavedTitle" xml:space="preserve"><value><![CDATA[Geplanter Posten gespeichert]]></value></data>
+  <data name="Planning.ItemRemovedTitle" xml:space="preserve"><value><![CDATA[Geplanter Posten entfernt]]></value></data>
+  <data name="Planning.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[den geplanten Posten „{0}“]]></value><comment>{0} = item description; substituted into the shared "Delete {0}? …" confirm template</comment></data>
+  <data name="Enum.PlannedFrequency.OneTime" xml:space="preserve"><value><![CDATA[Einmalig]]></value></data>
+  <data name="Enum.PlannedFrequency.Monthly" xml:space="preserve"><value><![CDATA[Monatlich]]></value></data>
+  <data name="Enum.PlannedFrequency.Quarterly" xml:space="preserve"><value><![CDATA[Vierteljährlich]]></value></data>
+  <data name="Enum.PlannedFrequency.Yearly" xml:space="preserve"><value><![CDATA[Jährlich]]></value></data>
+  <data name="Enum.PlannedOccurrenceStatus.Pending" xml:space="preserve"><value><![CDATA[Ausstehend]]></value></data>
+  <data name="Enum.PlannedOccurrenceStatus.Matched" xml:space="preserve"><value><![CDATA[Zugeordnet]]></value></data>
+  <data name="Enum.PlannedOccurrenceStatus.Overdue" xml:space="preserve"><value><![CDATA[Überfällig]]></value></data>
+  <data name="Enum.PlannedOccurrenceStatus.Skipped" xml:space="preserve"><value><![CDATA[Übersprungen]]></value></data>
+
+  <!-- CryptoHoldings.razor -->
+  <data name="Crypto.PageTitle" xml:space="preserve"><value><![CDATA[Krypto-Bestände]]></value></data>
+  <data name="Crypto.Subtitle" xml:space="preserve"><value><![CDATA[Erfassen, wie viel ein Krypto-Konto von jedem Wert hält. Die Bewertung erfolgt in EUR über CoinGecko (täglich und bei Aktualisierung) und bildet die Grundlage des Kontostands für das Vermögen. Die Währung des Krypto-Kontos auf EUR setzen — sein Kontostand ist die EUR-Summe seiner Bestände.]]></value></data>
+  <data name="Crypto.RefreshValues" xml:space="preserve"><value><![CDATA[Werte aktualisieren]]></value></data>
+  <data name="Crypto.NoAccountPrefix" xml:space="preserve"><value><![CDATA[Noch kein aktives Krypto-Konto — zuerst eines unter]]></value><comment>An "Accounts" link and Crypto.NoAccountSuffix follow</comment></data>
+  <data name="Crypto.NoAccountSuffix" xml:space="preserve"><value><![CDATA[mit dem Typ „Crypto“ anlegen.]]></value><comment>Trails the "Accounts" link</comment></data>
+  <data name="Crypto.SetHoldingTitle" xml:space="preserve"><value><![CDATA[Bestand festlegen]]></value></data>
+  <data name="Crypto.SymbolLabel" xml:space="preserve"><value><![CDATA[Symbol]]></value></data>
+  <data name="Crypto.CoinGeckoIdLabel" xml:space="preserve"><value><![CDATA[CoinGecko-ID]]></value></data>
+  <data name="Crypto.QuantityLabel" xml:space="preserve"><value><![CDATA[Menge]]></value></data>
+  <data name="Crypto.CoinGeckoIdHint" xml:space="preserve"><value><![CDATA[Die CoinGecko-ID ist der letzte Teil der coingecko.com-URL der Münze, z. B. „bitcoin“ oder „ethereum“. Eine unbekannte ID erhält keinen Kurs.]]></value></data>
+  <data name="Crypto.CurrentHoldingsHeading" xml:space="preserve"><value><![CDATA[Aktuelle Bestände]]></value></data>
+  <data name="Crypto.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Bestände]]></value></data>
+  <data name="Crypto.EmptyText" xml:space="preserve"><value><![CDATA[Oben einen Bestand hinzufügen, um Menge und EUR-Wert eines Werts zu verfolgen.]]></value></data>
+  <data name="Crypto.ColPrice" xml:space="preserve"><value><![CDATA[Kurs]]></value></data>
+  <data name="Crypto.ColValue" xml:space="preserve"><value><![CDATA[Wert]]></value></data>
+  <data name="Crypto.PricesAsOf" xml:space="preserve"><value><![CDATA[Kurse vom {0}]]></value><comment>{0} = formatted date and time</comment></data>
+  <data name="Crypto.Total" xml:space="preserve"><value><![CDATA[Gesamt: {0}]]></value><comment>{0} = formatted EUR total</comment></data>
+  <data name="Crypto.HoldingSavedTitle" xml:space="preserve"><value><![CDATA[Bestand gespeichert]]></value></data>
+  <data name="Crypto.HoldingRemovedTitle" xml:space="preserve"><value><![CDATA[Bestand entfernt]]></value></data>
+  <data name="Crypto.RefreshFailedTitle" xml:space="preserve"><value><![CDATA[Aktualisierung fehlgeschlagen]]></value></data>
+  <data name="Crypto.PricesUnavailableTitle" xml:space="preserve"><value><![CDATA[Kurse nicht verfügbar]]></value></data>
+  <data name="Crypto.PricesUnavailableMessage" xml:space="preserve"><value><![CDATA[CoinGecko war nicht erreichbar — zwischengespeicherte Kurse wurden verwendet.]]></value></data>
+  <data name="Crypto.ValuesRefreshedTitle" xml:space="preserve"><value><![CDATA[Werte aktualisiert]]></value></data>
+  <data name="Crypto.ValuesRefreshedMessage" xml:space="preserve"><value><![CDATA[{0} Konto/Konten aktualisiert.]]></value><comment>{0} = count of updated accounts</comment></data>
+  <data name="Crypto.DeleteConfirmSubject" xml:space="preserve"><value><![CDATA[den {0}-Bestand]]></value><comment>{0} = asset symbol; substituted into the shared "Delete {0}? …" confirm template — German reorders so the noun follows the symbol</comment></data>
 </root>
