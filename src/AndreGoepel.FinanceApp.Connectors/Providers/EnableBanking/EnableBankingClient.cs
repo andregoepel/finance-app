@@ -1,9 +1,13 @@
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Credentials;
+using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 
@@ -15,10 +19,19 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers.EnableBanking;
 internal sealed class EnableBankingClient(
     IHttpClientFactory httpClientFactory,
     ICredentialStore credentialStore,
-    TimeProvider timeProvider
+    TimeProvider timeProvider,
+    ILogger<EnableBankingClient> logger
 ) : IEnableBankingClient
 {
     internal const string HttpClientName = "enablebanking";
+
+    /// <summary>
+    /// Ceiling on <c>continuation_key</c> follow-ups in one fetch, mirroring
+    /// <c>WiseApiClient.MaxActivityPages</c>. An ASPSP that returns a repeating key would
+    /// otherwise spin forever inside the Quartz sync job, with no request ever failing to
+    /// break the loop.
+    /// </summary>
+    private const int MaxTransactionPages = 20;
 
     public async Task<Result<AuthorizationStart>> StartAuthorizationAsync(
         EnableBankingAuthRequest request,
@@ -113,9 +126,13 @@ internal sealed class EnableBankingClient(
     {
         var transactions = new List<EnableBankingTransaction>();
         string? continuationKey = null;
+        var page = 0;
+        var rawEntries = 0;
+        var skipped = 0;
 
         do
         {
+            page++;
             var query =
                 $"accounts/{accountUid}/transactions?date_from={from:yyyy-MM-dd}"
                 + (
@@ -132,13 +149,50 @@ internal sealed class EnableBankingClient(
             var root = JsonNode.Parse(response.Value!);
             foreach (var entry in root?["transactions"] as JsonArray ?? [])
             {
+                rawEntries++;
                 if (TryParseTransaction(entry, out var transaction))
                 {
                     transactions.Add(transaction);
                 }
+                else
+                {
+                    skipped++;
+                    // Which field was missing, not the row itself: the entry is raw bank data.
+                    logger.LogWarning(
+                        "Skipped an Enable Banking entry for account {AccountRef} on page {Page}: "
+                            + "booking_date {BookingDate}, transaction_amount.amount {Amount}.",
+                        Fingerprint(accountUid),
+                        page,
+                        entry?["booking_date"] is null ? "missing" : "present",
+                        entry?["transaction_amount"]?["amount"] is null ? "missing" : "unparseable"
+                    );
+                }
             }
             continuationKey = root?["continuation_key"]?.GetValue<string>();
+
+            if (page >= MaxTransactionPages && !string.IsNullOrEmpty(continuationKey))
+            {
+                logger.LogWarning(
+                    "Stopped paging Enable Banking transactions for account {AccountRef} at the "
+                        + "{MaxPages}-page cap with a continuation key still outstanding; the "
+                        + "result may be incomplete.",
+                    Fingerprint(accountUid),
+                    MaxTransactionPages
+                );
+                break;
+            }
         } while (!string.IsNullOrEmpty(continuationKey));
+
+        logger.LogInformation(
+            "Enable Banking transactions for account {AccountRef} since {DateFrom}: {Pages} "
+                + "page(s), {RawEntries} raw entries, {Parsed} parsed, {Skipped} skipped.",
+            Fingerprint(accountUid),
+            from,
+            page,
+            rawEntries,
+            transactions.Count,
+            skipped
+        );
 
         return Result.Ok<IReadOnlyList<EnableBankingTransaction>>(transactions);
     }
@@ -209,10 +263,19 @@ internal sealed class EnableBankingClient(
         }
 
         var httpClient = httpClientFactory.CreateClient(HttpClientName);
+        var started = Stopwatch.GetTimestamp();
         try
         {
             using var response = await httpClient.SendAsync(request, cancellationToken);
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            logger.LogDebug(
+                "Enable Banking {Method} {Path} -> {StatusCode} in {ElapsedMs}ms, {Bytes} bytes.",
+                method.Method,
+                Redact(path),
+                (int)response.StatusCode,
+                (int)Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+                content.Length
+            );
             if (!response.IsSuccessStatusCode)
             {
                 return Result.Fail<string>(
@@ -224,9 +287,45 @@ internal sealed class EnableBankingClient(
         catch (Exception exception)
             when (exception is HttpRequestException or TaskCanceledException)
         {
+            logger.LogWarning(
+                exception,
+                "Enable Banking {Method} {Path} failed after {ElapsedMs}ms.",
+                method.Method,
+                Redact(path),
+                (int)Stopwatch.GetElapsedTime(started).TotalMilliseconds
+            );
             return Result.Fail<string>($"Enable Banking API unreachable: {exception.Message}");
         }
     }
+
+    /// <summary>
+    /// Replaces the session-specific account uid in a request path with its fingerprint, so a
+    /// log line stays correlatable without carrying a live handle to someone's bank account.
+    /// </summary>
+    private static string Redact(string path)
+    {
+        const string prefix = "accounts/";
+        if (!path.StartsWith(prefix, StringComparison.Ordinal))
+        {
+            return path;
+        }
+
+        var rest = path[prefix.Length..];
+        var uidLength = rest.IndexOfAny(['/', '?']);
+        if (uidLength < 0)
+        {
+            uidLength = rest.Length;
+        }
+
+        return prefix + Fingerprint(rest[..uidLength]) + rest[uidLength..];
+    }
+
+    /// <summary>
+    /// Short, stable, non-reversible stand-in for an identifier, so the same account can be
+    /// followed across log lines without the identifier itself appearing in them.
+    /// </summary>
+    private static string Fingerprint(string value) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)))[..8].ToLowerInvariant();
 
     private async Task<Result<string>> BuildBearerTokenAsync(CancellationToken cancellationToken)
     {

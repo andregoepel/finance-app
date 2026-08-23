@@ -5,6 +5,7 @@ using AndreGoepel.FinanceApp.Domain.Providers;
 using AndreGoepel.FinanceApp.Resources;
 using Marten;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Connections;
 
@@ -13,7 +14,8 @@ internal sealed class ProviderConnectionService(
     IDocumentSession session,
     IEnableBankingClient enableBankingClient,
     ICredentialStore credentialStore,
-    IStringLocalizer<Strings> localizer
+    IStringLocalizer<Strings> localizer,
+    ILogger<ProviderConnectionService> logger
 ) : IProviderConnectionService
 {
     /// <summary>Requested AIS consent window; ASPSPs cap this (PSD2 is ~90 days).</summary>
@@ -212,6 +214,19 @@ internal sealed class ProviderConnectionService(
         connection.PendingState = null;
         session.Store(connection);
         await session.SaveChangesAsync(cancellationToken);
+
+        // Identification hashes are already non-PII and are the join key every later sync
+        // depends on — logging them is what makes a re-consent that silently changed them
+        // diagnosable after the fact. The session id is truncated; it is a live handle.
+        logger.LogInformation(
+            "Consent authorized for connection {Connection} (session …{SessionSuffix}), valid "
+                + "until {ExpiresAt}, {AccountCount} account(s) linked: {Hashes}.",
+            connection.Label,
+            connection.SessionId is { Length: >= 6 } id ? id[^6..] : "?",
+            connection.ConsentExpiresAt,
+            connection.LinkedAccounts.Count,
+            string.Join(", ", connection.LinkedAccounts.Select(a => a.IdentificationHash))
+        );
 
         return Result.Ok(connection);
     }
