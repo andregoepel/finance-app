@@ -117,7 +117,10 @@
                             {
                                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
                                     @L["Dashboard.AccountsWithoutBalance", netWorth.AccountsWithoutBalance]
-                                    <RadzenLink Path="settings/accounts" Text="@L["Dashboard.SetOneLink"]" /> @L["Dashboard.ToIncludeThem"]
+                                    @* No literal space before the trailing fragment: each culture
+                                       owns its own leading separator, so German can attach a comma
+                                       directly to the link without a space in front of it. *@
+                                    <RadzenLink Path="settings/accounts" Text="@L["Dashboard.SetOneLink"]" />@L["Dashboard.ToIncludeThem"]
                                 </RadzenText>
                             }
                         }

@@ -68,7 +68,7 @@
   <data name="Nav.SectionFinance" xml:space="preserve"><value><![CDATA[FINANZEN]]></value></data>
   <data name="Nav.SectionFinanceSettings" xml:space="preserve"><value><![CDATA[FINANZ-EINSTELLUNGEN]]></value></data>
   <data name="Nav.Transactions" xml:space="preserve"><value><![CDATA[Umsätze]]></value></data>
-  <data name="Nav.Review" xml:space="preserve"><value><![CDATA[Prüfung]]></value></data>
+  <data name="Nav.Review" xml:space="preserve"><value><![CDATA[Zu prüfen]]></value></data>
   <data name="Nav.Recurring" xml:space="preserve"><value><![CDATA[Wiederkehrend]]></value></data>
   <data name="Nav.Planning" xml:space="preserve"><value><![CDATA[Planung]]></value></data>
   <data name="Nav.Import" xml:space="preserve"><value><![CDATA[Import]]></value></data>
@@ -93,8 +93,8 @@
   <data name="ApiKeys.ClaudeSectionTitle" xml:space="preserve"><value><![CDATA[Claude-API-Schlüssel]]></value></data>
   <data name="ApiKeys.ConfiguredOn" xml:space="preserve"><value><![CDATA[konfiguriert am {0}]]></value><comment>{0} = the date it was configured or last rotated</comment></data>
   <data name="ApiKeys.NotConfigured" xml:space="preserve"><value><![CDATA[nicht konfiguriert]]></value></data>
-  <data name="ApiKeys.ClaudeDescription" xml:space="preserve"><value><![CDATA[Wird für die KI-Kategorisierung importierter Transaktionen verwendet. Ohne Schlüssel bleiben unkategorisierte Transaktionen einfach in der Prüfung.]]></value></data>
-  <data name="ApiKeys.RotateKeyPlaceholder" xml:space="preserve"><value><![CDATA[Neuen Schlüssel zum Rotieren eingeben]]></value></data>
+  <data name="ApiKeys.ClaudeDescription" xml:space="preserve"><value><![CDATA[Wird für die KI-Kategorisierung importierter Transaktionen verwendet. Ohne Schlüssel bleiben unkategorisierte Transaktionen einfach zur Prüfung liegen.]]></value></data>
+  <data name="ApiKeys.RotateKeyPlaceholder" xml:space="preserve"><value><![CDATA[Neuen Schlüssel eingeben, um ihn zu ersetzen]]></value></data>
   <data name="ApiKeys.ClaudeKeySavedMessage" xml:space="preserve"><value><![CDATA[Claude-API-Schlüssel verschlüsselt gespeichert.]]></value></data>
 
   <!-- Categories.razor -->
@@ -107,23 +107,23 @@
 
   <!-- Shared across mid pages (Sync, Recurring) -->
   <data name="Common.Loading" xml:space="preserve"><value><![CDATA[Wird geladen…]]></value></data>
-  <data name="Common.Counterparty" xml:space="preserve"><value><![CDATA[Gegenpartei]]></value></data>
+  <data name="Common.Counterparty" xml:space="preserve"><value><![CDATA[Zahlungspartner]]></value></data>
   <data name="Common.Account" xml:space="preserve"><value><![CDATA[Konto]]></value></data>
   <data name="Common.Provider" xml:space="preserve"><value><![CDATA[Anbieter]]></value></data>
   <data name="Common.Enabled" xml:space="preserve"><value><![CDATA[Aktiviert]]></value></data>
   <data name="Common.Disabled" xml:space="preserve"><value><![CDATA[Deaktiviert]]></value></data>
 
   <!-- Recurring.razor -->
-  <data name="Recurring.Subtitle" xml:space="preserve"><value><![CDATA[Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Gegenparteien mit konsistentem Intervall und Betrag.]]></value></data>
+  <data name="Recurring.Subtitle" xml:space="preserve"><value><![CDATA[Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Zahlungen an denselben Zahlungspartner mit gleichbleibendem Intervall und Betrag.]]></value></data>
   <data name="Recurring.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine wiederkehrenden Zahlungen erkannt]]></value></data>
-  <data name="Recurring.EmptyText" xml:space="preserve"><value><![CDATA[Dafür werden einige Monate an Transaktionen benötigt, bevor sich Muster abzeichnen.]]></value></data>
+  <data name="Recurring.EmptyText" xml:space="preserve"><value><![CDATA[Dafür braucht es erst einige Monate an Transaktionen, bevor sich Muster abzeichnen.]]></value></data>
   <data name="Recurring.ColInterval" xml:space="preserve"><value><![CDATA[Intervall]]></value></data>
-  <data name="Recurring.ColTypicalAmount" xml:space="preserve"><value><![CDATA[Typischer Betrag]]></value></data>
-  <data name="Recurring.ColSeen" xml:space="preserve"><value><![CDATA[Gesehen]]></value></data>
+  <data name="Recurring.ColTypicalAmount" xml:space="preserve"><value><![CDATA[Typ. Betrag]]></value></data>
+  <data name="Recurring.ColSeen" xml:space="preserve"><value><![CDATA[Anzahl]]></value></data>
   <data name="Recurring.ColLast" xml:space="preserve"><value><![CDATA[Zuletzt]]></value></data>
-  <data name="Recurring.ColNextExpected" xml:space="preserve"><value><![CDATA[Nächste erwartet]]></value></data>
-  <data name="Recurring.AddAsPlanned" xml:space="preserve"><value><![CDATA[Als geplant hinzufügen]]></value></data>
-  <data name="Recurring.CouldNotAddTitle" xml:space="preserve"><value><![CDATA[Konnte nicht hinzugefügt werden]]></value></data>
+  <data name="Recurring.ColNextExpected" xml:space="preserve"><value><![CDATA[Nächster Termin]]></value></data>
+  <data name="Recurring.AddAsPlanned" xml:space="preserve"><value><![CDATA[Zur Planung hinzufügen]]></value></data>
+  <data name="Recurring.CouldNotAddTitle" xml:space="preserve"><value><![CDATA[Hinzufügen fehlgeschlagen]]></value></data>
   <data name="Recurring.AddedToPlanningTitle" xml:space="preserve"><value><![CDATA[Zur Planung hinzugefügt]]></value></data>
   <data name="Recurring.AddedToPlanningMessage" xml:space="preserve"><value><![CDATA[„{0}“ — auf der Planungsseite anpassen.]]></value><comment>{0} = the counterparty name</comment></data>
   <data name="Enum.RecurrenceInterval.Weekly" xml:space="preserve"><value><![CDATA[Wöchentlich]]></value></data>
@@ -134,25 +134,25 @@
 
   <!-- Sync.razor -->
   <data name="Sync.SyncAllNow" xml:space="preserve"><value><![CDATA[Jetzt alle synchronisieren]]></value></data>
-  <data name="Sync.SyncingBusyText" xml:space="preserve"><value><![CDATA[Synchronisiere...]]></value></data>
+  <data name="Sync.SyncingBusyText" xml:space="preserve"><value><![CDATA[Wird synchronisiert…]]></value></data>
   <data name="Sync.Intro" xml:space="preserve"><value><![CDATA[API-basierte Konten werden automatisch nach dem unten stehenden Zeitplan synchronisiert; hier kann jederzeit eine manuelle Synchronisierung ausgelöst werden. Zugangsdaten und Bank-Einwilligungen befinden sich unter]]></value></data>
   <data name="Sync.SettingsConnectionsLink" xml:space="preserve"><value><![CDATA[Einstellungen → Verbindungen]]></value></data>
-  <data name="Sync.ConsentAttentionNeeded" xml:space="preserve"><value><![CDATA[Einwilligung erfordert Aufmerksamkeit:]]></value></data>
+  <data name="Sync.ConsentAttentionNeeded" xml:space="preserve"><value><![CDATA[Bank-Einwilligungen prüfen:]]></value></data>
   <data name="Sync.ConsentExpired" xml:space="preserve"><value><![CDATA[abgelaufen]]></value></data>
   <data name="Sync.ConsentExpiresOn" xml:space="preserve"><value><![CDATA[läuft ab am {0}]]></value><comment>{0} = the expiry date</comment></data>
   <data name="Sync.AutomaticScheduleTitle" xml:space="preserve"><value><![CDATA[Automatischer Zeitplan]]></value></data>
   <data name="Sync.CronLabel" xml:space="preserve"><value><![CDATA[Cron-Ausdruck (Quartz)]]></value></data>
   <data name="Sync.SaveScheduleButton" xml:space="preserve"><value><![CDATA[Zeitplan speichern]]></value></data>
-  <data name="Sync.PresetsLabel" xml:space="preserve"><value><![CDATA[Vorlagen:]]></value></data>
+  <data name="Sync.PresetsLabel" xml:space="preserve"><value><![CDATA[Voreinstellungen:]]></value></data>
   <data name="Sync.PresetDaily3am" xml:space="preserve"><value><![CDATA[Täglich 03:00]]></value></data>
   <data name="Sync.PresetDaily6am" xml:space="preserve"><value><![CDATA[Täglich 06:00]]></value></data>
   <data name="Sync.PresetEvery6Hours" xml:space="preserve"><value><![CDATA[Alle 6 Stunden]]></value></data>
   <data name="Sync.PresetHourly" xml:space="preserve"><value><![CDATA[Stündlich]]></value></data>
-  <data name="Sync.OffPrompt" xml:space="preserve"><value><![CDATA[Automatische Synchronisierung ist deaktiviert — „{0}“ nutzen, um manuell zu synchronisieren.]]></value><comment>{0} = the "Sync all now" button's label</comment></data>
+  <data name="Sync.OffPrompt" xml:space="preserve"><value><![CDATA[Automatische Synchronisierung ist deaktiviert — „{0}“ nutzen, um sie manuell auszulösen.]]></value><comment>{0} = the "Sync all now" button's label</comment></data>
   <data name="Sync.NextRun" xml:space="preserve"><value><![CDATA[Nächster Lauf: {0}]]></value><comment>{0} = the formatted next-run date/time</comment></data>
   <data name="Sync.InvalidCronExpression" xml:space="preserve"><value><![CDATA[Kein gültiger Cron-Ausdruck.]]></value></data>
   <data name="Sync.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine API-basierten Konten]]></value></data>
-  <data name="Sync.EmptyText" xml:space="preserve"><value><![CDATA[Die Synchronisierungsmethode eines Kontos unter {0} auf API setzen, um es hier zu synchronisieren.]]></value><comment>{0} = the "Accounts" nav label</comment></data>
+  <data name="Sync.EmptyText" xml:space="preserve"><value><![CDATA[Die Synchronisierungsmethode eines Kontos unter „{0}“ auf API setzen, um es hier zu synchronisieren.]]></value><comment>{0} = the "Accounts" nav label</comment></data>
   <data name="Sync.ColLastSync" xml:space="preserve"><value><![CDATA[Letzte Synchronisierung]]></value></data>
   <data name="Sync.NeverSynced" xml:space="preserve"><value><![CDATA[nie]]></value></data>
   <data name="Sync.SyncNowButton" xml:space="preserve"><value><![CDATA[Jetzt synchronisieren]]></value></data>
@@ -174,11 +174,11 @@
   <data name="Common.ChooseCategoryPlaceholder" xml:space="preserve"><value><![CDATA[Kategorie wählen]]></value></data>
 
   <!-- Review.razor -->
-  <data name="Review.PageTitle" xml:space="preserve"><value><![CDATA[Prüfwarteschlange]]></value></data>
-  <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Transaktionsübersicht mit „KI“ markiert.]]></value></data>
+  <data name="Review.PageTitle" xml:space="preserve"><value><![CDATA[Zu prüfen]]></value></data>
+  <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Umsatzübersicht mit „KI“ markiert.]]></value></data>
   <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge übernehmen]]></value></data>
   <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge verwerfen]]></value></data>
-  <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Kategorie für Auswahl festlegen]]></value></data>
+  <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Kategorie für die Auswahl festlegen]]></value></data>
   <data name="Review.ApplyToSelection" xml:space="preserve"><value><![CDATA[Auf Auswahl anwenden]]></value></data>
   <data name="Review.ColAiSuggestion" xml:space="preserve"><value><![CDATA[KI-Vorschlag]]></value></data>
   <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Vorschlag übernehmen]]></value></data>
@@ -200,7 +200,7 @@
   <data name="Import.ColProblem" xml:space="preserve"><value><![CDATA[Problem]]></value></data>
   <data name="Import.ColRawLine" xml:space="preserve"><value><![CDATA[Rohzeile]]></value></data>
   <data name="Import.ImportButton" xml:space="preserve"><value><![CDATA[{0} Transaktionen importieren]]></value><comment>{0} = count of new transactions</comment></data>
-  <data name="Import.ImportingBusyText" xml:space="preserve"><value><![CDATA[Importiere...]]></value></data>
+  <data name="Import.ImportingBusyText" xml:space="preserve"><value><![CDATA[Wird importiert…]]></value></data>
   <data name="Import.HistoryTitle" xml:space="preserve"><value><![CDATA[Import-Verlauf]]></value></data>
   <data name="Import.ColWhen" xml:space="preserve"><value><![CDATA[Wann]]></value></data>
   <data name="Import.ColFile" xml:space="preserve"><value><![CDATA[Datei]]></value></data>
@@ -208,7 +208,7 @@
   <data name="Import.ColImported" xml:space="preserve"><value><![CDATA[Importiert]]></value></data>
   <data name="Import.ColDuplicates" xml:space="preserve"><value><![CDATA[Duplikate]]></value></data>
   <data name="Import.ColErrors" xml:space="preserve"><value><![CDATA[Fehler]]></value></data>
-  <data name="Import.ColImportedBy" xml:space="preserve"><value><![CDATA[Von]]></value></data>
+  <data name="Import.ColImportedBy" xml:space="preserve"><value><![CDATA[Benutzer]]></value></data>
   <data name="Import.CouldNotReadFile" xml:space="preserve"><value><![CDATA[Datei konnte nicht gelesen werden: {0}]]></value><comment>{0} = the exception message (technical, stays untranslated)</comment></data>
   <data name="Import.ImportFailedTitle" xml:space="preserve"><value><![CDATA[Import fehlgeschlagen]]></value></data>
   <data name="Import.ImportCompleteTitle" xml:space="preserve"><value><![CDATA[Import abgeschlossen]]></value></data>
@@ -226,15 +226,15 @@
   <data name="Dashboard.ColCategory" xml:space="preserve"><value><![CDATA[Kategorie]]></value></data>
   <data name="Dashboard.UncategorizedCount" xml:space="preserve"><value><![CDATA[{0} Transaktion(en) sind unkategorisiert —]]></value><comment>{0} = count; a "review them" link follows</comment></data>
   <data name="Dashboard.ReviewThemLink" xml:space="preserve"><value><![CDATA[jetzt prüfen]]></value></data>
-  <data name="Dashboard.NetWorth" xml:space="preserve"><value><![CDATA[Vermögen]]></value></data>
-  <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[Für {0} Konto/Konten ist kein Kontostand hinterlegt —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
+  <data name="Dashboard.NetWorth" xml:space="preserve"><value><![CDATA[Nettovermögen]]></value></data>
+  <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[Bei {0} Konto/Konten fehlt der Kontostand —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
   <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[jetzt festlegen]]></value></data>
-  <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[, um sie einzubeziehen.]]></value><comment>Trails the "set one" link</comment></data>
+  <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[ und sie werden mitgezählt.]]></value><comment>Leading space is deliberate — the Razor puts none before this fragment</comment></data>
   <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[Keine Budgets festgelegt —]]></value><comment>An "add one" link follows</comment></data>
   <data name="Dashboard.AddOneLink" xml:space="preserve"><value><![CDATA[eines hinzufügen]]></value></data>
   <data name="Dashboard.HoldingsLink" xml:space="preserve"><value><![CDATA[Bestände]]></value></data>
   <data name="Common.NoPriceYet" xml:space="preserve"><value><![CDATA[noch kein Kurs]]></value><comment>Shared by the Dashboard crypto tile and the CryptoHoldings grid</comment></data>
-  <data name="Dashboard.PricesFrom" xml:space="preserve"><value><![CDATA[Kurse vom {0} — aktualisieren auf der]]></value><comment>{0} = the price date; a "holdings page" link follows</comment></data>
+  <data name="Dashboard.PricesFrom" xml:space="preserve"><value><![CDATA[Kurse vom {0} — Aktualisierung auf der]]></value><comment>{0} = the price date; a "holdings page" link follows</comment></data>
   <data name="Dashboard.HoldingsPageLink" xml:space="preserve"><value><![CDATA[Bestandsseite]]></value></data>
   <data name="Dashboard.UpcomingOverdue" xml:space="preserve"><value><![CDATA[Anstehend & überfällig]]></value></data>
   <data name="Dashboard.NothingUpcoming" xml:space="preserve"><value><![CDATA[Nichts anstehend —]]></value><comment>An "add planned items" link follows</comment></data>
@@ -255,21 +255,21 @@
 
   <!-- Transactions.razor -->
   <data name="Transactions.RuleOfferPrefix" xml:space="preserve"><value><![CDATA[Immer]]></value><comment>Followed by the counterparty in bold, then Transactions.RuleOfferInfix</comment></data>
-  <data name="Transactions.RuleOfferInfix" xml:space="preserve"><value><![CDATA[kategorisieren als]]></value><comment>Sits between the bold counterparty and the bold category</comment></data>
-  <data name="Transactions.RuleOfferSuffix" xml:space="preserve"><value><![CDATA[?]]></value><comment>Trails the bold category; a separate key so German can move punctuation if needed</comment></data>
+  <data name="Transactions.RuleOfferInfix" xml:space="preserve"><value><![CDATA[als]]></value><comment>Sits between the bold counterparty and the bold category</comment></data>
+  <data name="Transactions.RuleOfferSuffix" xml:space="preserve"><value><![CDATA[ kategorisieren?]]></value><comment>Trails the bold category; a separate key so German can move punctuation if needed</comment></data>
   <data name="Transactions.CreateRule" xml:space="preserve"><value><![CDATA[Regel erstellen]]></value></data>
-  <data name="Transactions.SearchPlaceholder" xml:space="preserve"><value><![CDATA[Beschreibung oder Gegenpartei]]></value></data>
+  <data name="Transactions.SearchPlaceholder" xml:space="preserve"><value><![CDATA[Beschreibung oder Zahlungspartner]]></value></data>
   <data name="Transactions.LinkAsTransfer" xml:space="preserve"><value><![CDATA[Als Umbuchung verknüpfen]]></value></data>
   <data name="Transactions.UncategorizedPlaceholder" xml:space="preserve"><value><![CDATA[Unkategorisiert]]></value></data>
   <data name="Transactions.TransferBadge" xml:space="preserve"><value><![CDATA[Umbuchung]]></value></data>
-  <data name="Transactions.UnlinkTransfer" xml:space="preserve"><value><![CDATA[Umbuchung trennen]]></value></data>
+  <data name="Transactions.UnlinkTransfer" xml:space="preserve"><value><![CDATA[Verknüpfung aufheben]]></value></data>
   <data name="Transactions.CategorizationFailedTitle" xml:space="preserve"><value><![CDATA[Kategorisierung fehlgeschlagen]]></value></data>
   <data name="Transactions.RuleCreationFailedTitle" xml:space="preserve"><value><![CDATA[Regelerstellung fehlgeschlagen]]></value></data>
   <data name="Transactions.RuleCreatedTitle" xml:space="preserve"><value><![CDATA[Regel erstellt]]></value></data>
   <data name="Transactions.LinkingFailedTitle" xml:space="preserve"><value><![CDATA[Verknüpfen fehlgeschlagen]]></value></data>
   <data name="Transactions.LinkedTitle" xml:space="preserve"><value><![CDATA[Verknüpft]]></value></data>
   <data name="Transactions.LinkedMessage" xml:space="preserve"><value><![CDATA[Transaktionen als Umbuchung verknüpft.]]></value></data>
-  <data name="Transactions.UnlinkingFailedTitle" xml:space="preserve"><value><![CDATA[Trennen fehlgeschlagen]]></value></data>
+  <data name="Transactions.UnlinkingFailedTitle" xml:space="preserve"><value><![CDATA[Aufheben der Verknüpfung fehlgeschlagen]]></value></data>
   <data name="Enum.CategorySource.Provider" xml:space="preserve"><value><![CDATA[Anbieter]]></value></data>
   <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Regel]]></value></data>
   <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[KI]]></value><comment>Matches the „KI“ wording referenced in Review.Subtitle</comment></data>
@@ -277,10 +277,10 @@
 
   <!-- Rules.razor -->
   <data name="Rules.PageTitle" xml:space="preserve"><value><![CDATA[Kategorisierungsregeln]]></value></data>
-  <data name="Rules.Subtitle" xml:space="preserve"><value><![CDATA[Regeln laufen bei jedem Import vor der KI. Alle gesetzten Bedingungen müssen zutreffen (Textabgleich ist ein „enthält“ ohne Berücksichtigung der Groß-/Kleinschreibung).]]></value></data>
+  <data name="Rules.Subtitle" xml:space="preserve"><value><![CDATA[Regeln werden bei jedem Import vor der KI angewendet. Alle gesetzten Bedingungen müssen zutreffen (Textabgleich ist ein „enthält“ ohne Berücksichtigung der Groß-/Kleinschreibung).]]></value></data>
   <data name="Rules.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Regeln]]></value></data>
-  <data name="Rules.EmptyText" xml:space="preserve"><value><![CDATA[Unten eine Regel hinzufügen, um passende Transaktionen vor dem KI-Lauf zu kategorisieren.]]></value></data>
-  <data name="Rules.ColCounterpartyContains" xml:space="preserve"><value><![CDATA[Gegenpartei enthält]]></value></data>
+  <data name="Rules.EmptyText" xml:space="preserve"><value><![CDATA[Unten eine Regel hinzufügen, um passende Transaktionen zu kategorisieren, bevor die KI greift.]]></value></data>
+  <data name="Rules.ColCounterpartyContains" xml:space="preserve"><value><![CDATA[Zahlungspartner enthält]]></value></data>
   <data name="Rules.ColDescriptionContains" xml:space="preserve"><value><![CDATA[Beschreibung enthält]]></value></data>
   <data name="Rules.ColSource" xml:space="preserve"><value><![CDATA[Quelle]]></value></data>
   <data name="Rules.AddRuleTitle" xml:space="preserve"><value><![CDATA[Regel hinzufügen]]></value></data>
@@ -298,7 +298,7 @@
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monatliches Limit (€)]]></value></data>
   <data name="Budgets.CurrentBudgetsHeading" xml:space="preserve"><value><![CDATA[Aktuelle Budgets]]></value></data>
   <data name="Budgets.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Budgets festgelegt]]></value></data>
-  <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Oben ein monatliches Limit für eine Kategorie festlegen, um sie zu verfolgen.]]></value></data>
+  <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Oben ein monatliches Limit für eine Kategorie festlegen, um deren Ausgaben zu verfolgen.]]></value></data>
   <data name="Budgets.ColMonthlyLimit" xml:space="preserve"><value><![CDATA[Monatliches Limit]]></value></data>
   <data name="Budgets.DeletedCategory" xml:space="preserve"><value><![CDATA[(gelöschte Kategorie)]]></value></data>
   <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget gespeichert]]></value></data>

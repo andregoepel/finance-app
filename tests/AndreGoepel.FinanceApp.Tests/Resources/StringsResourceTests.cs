@@ -45,7 +45,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Nav.Transactions", "Transactions")]
     [InlineData("de", "Nav.Transactions", "Umsätze")]
     [InlineData("en", "Nav.Review", "Review")]
-    [InlineData("de", "Nav.Review", "Prüfung")]
+    [InlineData("de", "Nav.Review", "Zu prüfen")]
     [InlineData("en", "Nav.Recurring", "Recurring")]
     [InlineData("de", "Nav.Recurring", "Wiederkehrend")]
     [InlineData("en", "Nav.Planning", "Planning")]
@@ -115,12 +115,16 @@ public sealed class StringsResourceTests
     [InlineData(
         "de",
         "ApiKeys.ClaudeDescription",
-        "Wird für die KI-Kategorisierung importierter Transaktionen verwendet. Ohne Schlüssel bleiben unkategorisierte Transaktionen einfach in der Prüfung."
+        "Wird für die KI-Kategorisierung importierter Transaktionen verwendet. Ohne Schlüssel bleiben unkategorisierte Transaktionen einfach zur Prüfung liegen."
     )]
     [InlineData("en", "ApiKeys.NotConfigured", "not configured")]
     [InlineData("de", "ApiKeys.NotConfigured", "nicht konfiguriert")]
     [InlineData("en", "ApiKeys.RotateKeyPlaceholder", "Enter new key to rotate")]
-    [InlineData("de", "ApiKeys.RotateKeyPlaceholder", "Neuen Schlüssel zum Rotieren eingeben")]
+    [InlineData(
+        "de",
+        "ApiKeys.RotateKeyPlaceholder",
+        "Neuen Schlüssel eingeben, um ihn zu ersetzen"
+    )]
     [InlineData("en", "ApiKeys.ClaudeKeySavedMessage", "Claude API key stored encrypted.")]
     [InlineData(
         "de",
@@ -201,7 +205,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Common.Loading", "Loading…")]
     [InlineData("de", "Common.Loading", "Wird geladen…")]
     [InlineData("en", "Common.Counterparty", "Counterparty")]
-    [InlineData("de", "Common.Counterparty", "Gegenpartei")]
+    [InlineData("de", "Common.Counterparty", "Zahlungspartner")]
     [InlineData("en", "Common.Account", "Account")]
     [InlineData("de", "Common.Account", "Konto")]
     [InlineData("en", "Common.Provider", "Provider")]
@@ -218,7 +222,7 @@ public sealed class StringsResourceTests
     [InlineData(
         "de",
         "Recurring.Subtitle",
-        "Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Gegenparteien mit konsistentem Intervall und Betrag."
+        "Erkannte Abonnements und andere regelmäßige Zahlungen oder Einnahmen, basierend auf wiederkehrenden Zahlungen an denselben Zahlungspartner mit gleichbleibendem Intervall und Betrag."
     )]
     [InlineData("en", "Recurring.EmptyTitle", "No recurring payments detected yet")]
     [InlineData("de", "Recurring.EmptyTitle", "Noch keine wiederkehrenden Zahlungen erkannt")]
@@ -230,22 +234,22 @@ public sealed class StringsResourceTests
     [InlineData(
         "de",
         "Recurring.EmptyText",
-        "Dafür werden einige Monate an Transaktionen benötigt, bevor sich Muster abzeichnen."
+        "Dafür braucht es erst einige Monate an Transaktionen, bevor sich Muster abzeichnen."
     )]
     [InlineData("en", "Recurring.ColInterval", "Interval")]
     [InlineData("de", "Recurring.ColInterval", "Intervall")]
     [InlineData("en", "Recurring.ColTypicalAmount", "Typical amount")]
-    [InlineData("de", "Recurring.ColTypicalAmount", "Typischer Betrag")]
+    [InlineData("de", "Recurring.ColTypicalAmount", "Typ. Betrag")]
     [InlineData("en", "Recurring.ColSeen", "Seen")]
-    [InlineData("de", "Recurring.ColSeen", "Gesehen")]
+    [InlineData("de", "Recurring.ColSeen", "Anzahl")]
     [InlineData("en", "Recurring.ColLast", "Last")]
     [InlineData("de", "Recurring.ColLast", "Zuletzt")]
     [InlineData("en", "Recurring.ColNextExpected", "Next expected")]
-    [InlineData("de", "Recurring.ColNextExpected", "Nächste erwartet")]
+    [InlineData("de", "Recurring.ColNextExpected", "Nächster Termin")]
     [InlineData("en", "Recurring.AddAsPlanned", "Add as planned")]
-    [InlineData("de", "Recurring.AddAsPlanned", "Als geplant hinzufügen")]
+    [InlineData("de", "Recurring.AddAsPlanned", "Zur Planung hinzufügen")]
     [InlineData("en", "Recurring.CouldNotAddTitle", "Could not add")]
-    [InlineData("de", "Recurring.CouldNotAddTitle", "Konnte nicht hinzugefügt werden")]
+    [InlineData("de", "Recurring.CouldNotAddTitle", "Hinzufügen fehlgeschlagen")]
     [InlineData("en", "Recurring.AddedToPlanningTitle", "Added to planning")]
     [InlineData("de", "Recurring.AddedToPlanningTitle", "Zur Planung hinzugefügt")]
     [InlineData("en", "Enum.RecurrenceInterval.Weekly", "Weekly")]
@@ -261,7 +265,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Sync.SyncAllNow", "Sync all now")]
     [InlineData("de", "Sync.SyncAllNow", "Jetzt alle synchronisieren")]
     [InlineData("en", "Sync.SyncingBusyText", "Syncing...")]
-    [InlineData("de", "Sync.SyncingBusyText", "Synchronisiere...")]
+    [InlineData("de", "Sync.SyncingBusyText", "Wird synchronisiert…")]
     [InlineData(
         "en",
         "Sync.Intro",
@@ -275,7 +279,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Sync.SettingsConnectionsLink", "Settings → Connections")]
     [InlineData("de", "Sync.SettingsConnectionsLink", "Einstellungen → Verbindungen")]
     [InlineData("en", "Sync.ConsentAttentionNeeded", "Consent attention needed:")]
-    [InlineData("de", "Sync.ConsentAttentionNeeded", "Einwilligung erfordert Aufmerksamkeit:")]
+    [InlineData("de", "Sync.ConsentAttentionNeeded", "Bank-Einwilligungen prüfen:")]
     [InlineData("en", "Sync.ConsentExpired", "expired")]
     [InlineData("de", "Sync.ConsentExpired", "abgelaufen")]
     [InlineData("en", "Sync.AutomaticScheduleTitle", "Automatic schedule")]
@@ -285,7 +289,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Sync.SaveScheduleButton", "Save schedule")]
     [InlineData("de", "Sync.SaveScheduleButton", "Zeitplan speichern")]
     [InlineData("en", "Sync.PresetsLabel", "Presets:")]
-    [InlineData("de", "Sync.PresetsLabel", "Vorlagen:")]
+    [InlineData("de", "Sync.PresetsLabel", "Voreinstellungen:")]
     [InlineData("en", "Sync.PresetDaily3am", "Daily 03:00")]
     [InlineData("de", "Sync.PresetDaily3am", "Täglich 03:00")]
     [InlineData("en", "Sync.PresetDaily6am", "Daily 06:00")]
@@ -388,7 +392,7 @@ public sealed class StringsResourceTests
         // Assert
         Assert.Equal("Automatic sync is off — use “Sync all now” to run manually.", en);
         Assert.Equal(
-            "Automatische Synchronisierung ist deaktiviert — „Jetzt alle synchronisieren“ nutzen, um manuell zu synchronisieren.",
+            "Automatische Synchronisierung ist deaktiviert — „Jetzt alle synchronisieren“ nutzen, um sie manuell auszulösen.",
             de
         );
     }
@@ -431,7 +435,7 @@ public sealed class StringsResourceTests
         // Assert
         Assert.Equal("Set an account's sync method to API under Accounts to sync it here.", en);
         Assert.Equal(
-            "Die Synchronisierungsmethode eines Kontos unter Konten auf API setzen, um es hier zu synchronisieren.",
+            "Die Synchronisierungsmethode eines Kontos unter „Konten“ auf API setzen, um es hier zu synchronisieren.",
             de
         );
     }
@@ -512,13 +516,13 @@ public sealed class StringsResourceTests
     [InlineData("en", "Common.ChooseCategoryPlaceholder", "Choose category")]
     [InlineData("de", "Common.ChooseCategoryPlaceholder", "Kategorie wählen")]
     [InlineData("en", "Review.PageTitle", "Review queue")]
-    [InlineData("de", "Review.PageTitle", "Prüfwarteschlange")]
+    [InlineData("de", "Review.PageTitle", "Zu prüfen")]
     [InlineData("en", "Review.AcceptSuggestions", "Accept suggestions")]
     [InlineData("de", "Review.AcceptSuggestions", "Vorschläge übernehmen")]
     [InlineData("en", "Review.DismissSuggestions", "Dismiss suggestions")]
     [InlineData("de", "Review.DismissSuggestions", "Vorschläge verwerfen")]
     [InlineData("en", "Review.SetCategoryLabel", "Set category for selection")]
-    [InlineData("de", "Review.SetCategoryLabel", "Kategorie für Auswahl festlegen")]
+    [InlineData("de", "Review.SetCategoryLabel", "Kategorie für die Auswahl festlegen")]
     [InlineData("en", "Review.ApplyToSelection", "Apply to selection")]
     [InlineData("de", "Review.ApplyToSelection", "Auf Auswahl anwenden")]
     [InlineData("en", "Review.ColAiSuggestion", "AI suggestion")]
@@ -570,7 +574,7 @@ public sealed class StringsResourceTests
             en
         );
         Assert.Equal(
-            "Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Transaktionsübersicht mit „KI“ markiert.",
+            "Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Umsatzübersicht mit „KI“ markiert.",
             de
         );
     }
@@ -591,7 +595,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Import.ColRawLine", "Raw line")]
     [InlineData("de", "Import.ColRawLine", "Rohzeile")]
     [InlineData("en", "Import.ImportingBusyText", "Importing...")]
-    [InlineData("de", "Import.ImportingBusyText", "Importiere...")]
+    [InlineData("de", "Import.ImportingBusyText", "Wird importiert…")]
     [InlineData("en", "Import.HistoryTitle", "Import history")]
     [InlineData("de", "Import.HistoryTitle", "Import-Verlauf")]
     [InlineData("en", "Import.ColWhen", "When")]
@@ -607,7 +611,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Import.ColErrors", "Errors")]
     [InlineData("de", "Import.ColErrors", "Fehler")]
     [InlineData("en", "Import.ColImportedBy", "By")]
-    [InlineData("de", "Import.ColImportedBy", "Von")]
+    [InlineData("de", "Import.ColImportedBy", "Benutzer")]
     [InlineData("en", "Import.ImportFailedTitle", "Import failed")]
     [InlineData("de", "Import.ImportFailedTitle", "Import fehlgeschlagen")]
     [InlineData("en", "Import.ImportCompleteTitle", "Import complete")]
@@ -804,11 +808,11 @@ public sealed class StringsResourceTests
     [InlineData("en", "Dashboard.ReviewThemLink", "review them")]
     [InlineData("de", "Dashboard.ReviewThemLink", "jetzt prüfen")]
     [InlineData("en", "Dashboard.NetWorth", "Net worth")]
-    [InlineData("de", "Dashboard.NetWorth", "Vermögen")]
+    [InlineData("de", "Dashboard.NetWorth", "Nettovermögen")]
     [InlineData("en", "Dashboard.SetOneLink", "set one")]
     [InlineData("de", "Dashboard.SetOneLink", "jetzt festlegen")]
-    [InlineData("en", "Dashboard.ToIncludeThem", "to include them.")]
-    [InlineData("de", "Dashboard.ToIncludeThem", ", um sie einzubeziehen.")]
+    [InlineData("en", "Dashboard.ToIncludeThem", " to include them.")]
+    [InlineData("de", "Dashboard.ToIncludeThem", " und sie werden mitgezählt.")]
     [InlineData("en", "Dashboard.NoBudgetsSet", "No budgets set —")]
     [InlineData("de", "Dashboard.NoBudgetsSet", "Keine Budgets festgelegt —")]
     [InlineData("en", "Dashboard.AddOneLink", "add one")]
@@ -893,7 +897,7 @@ public sealed class StringsResourceTests
 
         // Assert
         Assert.Equal("2 account(s) have no balance set —", en);
-        Assert.Equal("Für 2 Konto/Konten ist kein Kontostand hinterlegt —", de);
+        Assert.Equal("Bei 2 Konto/Konten fehlt der Kontostand —", de);
     }
 
     [Fact]
@@ -913,7 +917,7 @@ public sealed class StringsResourceTests
 
         // Assert
         Assert.Equal("Prices from 20.08.2026 — refresh on the", en);
-        Assert.Equal("Kurse vom 20.08.2026 — aktualisieren auf der", de);
+        Assert.Equal("Kurse vom 20.08.2026 — Aktualisierung auf der", de);
     }
 
     [Theory]
@@ -942,7 +946,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Transactions.CreateRule", "Create rule")]
     [InlineData("de", "Transactions.CreateRule", "Regel erstellen")]
     [InlineData("en", "Transactions.SearchPlaceholder", "Description or counterparty")]
-    [InlineData("de", "Transactions.SearchPlaceholder", "Beschreibung oder Gegenpartei")]
+    [InlineData("de", "Transactions.SearchPlaceholder", "Beschreibung oder Zahlungspartner")]
     [InlineData("en", "Transactions.LinkAsTransfer", "Link as transfer")]
     [InlineData("de", "Transactions.LinkAsTransfer", "Als Umbuchung verknüpfen")]
     [InlineData("en", "Transactions.UncategorizedPlaceholder", "Uncategorized")]
@@ -950,7 +954,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Transactions.TransferBadge", "Transfer")]
     [InlineData("de", "Transactions.TransferBadge", "Umbuchung")]
     [InlineData("en", "Transactions.UnlinkTransfer", "Unlink transfer")]
-    [InlineData("de", "Transactions.UnlinkTransfer", "Umbuchung trennen")]
+    [InlineData("de", "Transactions.UnlinkTransfer", "Verknüpfung aufheben")]
     [InlineData("en", "Transactions.LinkedMessage", "Transactions linked as transfer.")]
     [InlineData("de", "Transactions.LinkedMessage", "Transaktionen als Umbuchung verknüpft.")]
     [InlineData("en", "Rules.PageTitle", "Categorization rules")]
@@ -958,7 +962,7 @@ public sealed class StringsResourceTests
     [InlineData("en", "Rules.EmptyTitle", "No rules yet")]
     [InlineData("de", "Rules.EmptyTitle", "Noch keine Regeln")]
     [InlineData("en", "Rules.ColCounterpartyContains", "Counterparty contains")]
-    [InlineData("de", "Rules.ColCounterpartyContains", "Gegenpartei enthält")]
+    [InlineData("de", "Rules.ColCounterpartyContains", "Zahlungspartner enthält")]
     [InlineData("en", "Rules.ColSource", "Source")]
     [InlineData("de", "Rules.ColSource", "Quelle")]
     [InlineData("en", "Rules.AddRuleTitle", "Add rule")]
@@ -1241,4 +1245,83 @@ public sealed class StringsResourceTests
         Assert.Equal("the BTC holding", enCrypto);
         Assert.Equal("den BTC-Bestand", deCrypto);
     }
+
+    #region Assembled multi-fragment sentences
+
+    // Several UI strings are split across keys so a link or a bold value can sit mid-sentence.
+    // Pinning the fragments individually is not enough: each fragment can be a correct translation
+    // while the assembled sentence is ungrammatical, which is exactly what happened to the
+    // rule-offer prompt (German strands the verb if the "als" complement follows it) and to the
+    // net-worth hint (a stray space before the German comma). These tests assemble the fragments
+    // the same way the Razor does and assert the whole sentence.
+
+    /// <summary>
+    /// Mirrors <c>Transactions.razor</c>: prefix, bold counterparty, infix, bold category, suffix —
+    /// with no whitespace between the bold category and the suffix.
+    /// </summary>
+    private static string AssembleRuleOffer(string counterparty, string category)
+    {
+        var l = FinanceLocalizer.Create();
+        return $"{l["Transactions.RuleOfferPrefix"]} {counterparty} "
+            + $"{l["Transactions.RuleOfferInfix"]} {category}{l["Transactions.RuleOfferSuffix"]}";
+    }
+
+    [Fact]
+    public void RuleOfferPrompt_AssemblesGrammaticallyInBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = AssembleRuleOffer("REWE", "Groceries");
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = AssembleRuleOffer("REWE", "Lebensmittel");
+        }
+
+        // Assert — German puts the "als …" complement before the infinitive, so the verb has to
+        // land after the category, not between the counterparty and it.
+        Assert.Equal("Always categorize REWE as Groceries?", en);
+        Assert.Equal("Immer REWE als Lebensmittel kategorisieren?", de);
+    }
+
+    /// <summary>
+    /// Mirrors <c>Dashboard.razor</c>: the count fragment, a space, the link text, then the
+    /// trailing fragment with <em>no</em> separating space — each culture supplies its own.
+    /// </summary>
+    private static string AssembleNetWorthHint(int accounts)
+    {
+        var l = FinanceLocalizer.Create();
+        return $"{l["Dashboard.AccountsWithoutBalance", accounts]} "
+            + $"{l["Dashboard.SetOneLink"]}{l["Dashboard.ToIncludeThem"]}";
+    }
+
+    [Fact]
+    public void NetWorthHint_AssemblesWithoutStraySpacesInBothCultures()
+    {
+        // Arrange / Act
+        string en;
+        string de;
+        using (CultureScope.UiOnly("en"))
+        {
+            en = AssembleNetWorthHint(2);
+        }
+        using (CultureScope.UiOnly("de"))
+        {
+            de = AssembleNetWorthHint(2);
+        }
+
+        // Assert
+        Assert.Equal("2 account(s) have no balance set — set one to include them.", en);
+        Assert.Equal(
+            "Bei 2 Konto/Konten fehlt der Kontostand — jetzt festlegen und sie werden mitgezählt.",
+            de
+        );
+        Assert.DoesNotContain(" ,", de);
+        Assert.DoesNotContain("  ", en);
+    }
+
+    #endregion
 }
