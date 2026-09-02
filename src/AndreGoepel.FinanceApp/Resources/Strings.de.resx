@@ -408,6 +408,9 @@
   <data name="AccountDelete.PlannedMatchesMany" xml:space="preserve"><value><![CDATA[{0} geplante Zuordnungen]]></value></data>
   <data name="AccountDelete.PlannedItemsOne" xml:space="preserve"><value><![CDATA[{0} geplanter Posten]]></value></data>
   <data name="AccountDelete.PlannedItemsMany" xml:space="preserve"><value><![CDATA[{0} geplante Posten]]></value></data>
+  <data name="AccountClear.Nothing" xml:space="preserve"><value><![CDATA[Dieses Konto hat keine importierte Historie zum Löschen.]]></value></data>
+  <data name="AccountClear.Removes" xml:space="preserve"><value><![CDATA[Entfernt {0}.]]></value><comment>{0} = joined list of what is removed</comment></data>
+  <data name="AccountClear.KeepsAccount" xml:space="preserve"><value><![CDATA[Das Konto selbst, sein Saldo und seine Krypto-Bestände bleiben erhalten.]]></value></data>
 
   <!-- Accounts.razor -->
   <data name="Accounts.ShowDeactivated" xml:space="preserve"><value><![CDATA[Deaktivierte anzeigen]]></value></data>
@@ -446,6 +449,11 @@
   <data name="Accounts.ReactivatedMessage" xml:space="preserve"><value><![CDATA[Konto reaktiviert]]></value></data>
   <data name="Accounts.DeletedMessage" xml:space="preserve"><value><![CDATA[Konto gelöscht]]></value></data>
   <data name="Accounts.PermanentlyDeletedMessage" xml:space="preserve"><value><![CDATA[Konto endgültig gelöscht]]></value></data>
+  <data name="Accounts.TransactionsClearedMessage" xml:space="preserve"><value><![CDATA[Importierte Historie gelöscht]]></value></data>
+  <data name="Accounts.ClearTransactionsTooltip" xml:space="preserve"><value><![CDATA[Importierte Historie löschen…]]></value></data>
+  <data name="Accounts.ClearTransactionsTitle" xml:space="preserve"><value><![CDATA[Importierte Historie löschen]]></value></data>
+  <data name="Accounts.ClearTransactionsAction" xml:space="preserve"><value><![CDATA[Historie löschen]]></value></data>
+  <data name="Accounts.ClearTransactionsConfirm" xml:space="preserve"><value><![CDATA[Importierte Historie von „{0}“ löschen? {1} Das lässt sich nicht rückgängig machen, das Konto kann danach aber erneut synchronisiert oder importiert werden.]]></value><comment>{0} = account name, {1} = the clear-impact sentence</comment></data>
   <data name="Accounts.DeleteTitle" xml:space="preserve"><value><![CDATA[Konto löschen]]></value></data>
   <data name="Accounts.HardDeleteTitle" xml:space="preserve"><value><![CDATA[Konto endgültig löschen]]></value></data>
   <data name="Accounts.HardDeleteAction" xml:space="preserve"><value><![CDATA[Endgültig löschen]]></value></data>

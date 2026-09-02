@@ -408,6 +408,9 @@
   <data name="AccountDelete.PlannedMatchesMany" xml:space="preserve"><value><![CDATA[{0} planned matches]]></value></data>
   <data name="AccountDelete.PlannedItemsOne" xml:space="preserve"><value><![CDATA[{0} planned item]]></value></data>
   <data name="AccountDelete.PlannedItemsMany" xml:space="preserve"><value><![CDATA[{0} planned items]]></value></data>
+  <data name="AccountClear.Nothing" xml:space="preserve"><value><![CDATA[This account has no imported history to clear.]]></value></data>
+  <data name="AccountClear.Removes" xml:space="preserve"><value><![CDATA[Removes {0}.]]></value><comment>{0} = joined list of what is removed</comment></data>
+  <data name="AccountClear.KeepsAccount" xml:space="preserve"><value><![CDATA[The account itself, its balance and its crypto holdings stay.]]></value></data>
 
   <!-- Accounts.razor -->
   <data name="Accounts.ShowDeactivated" xml:space="preserve"><value><![CDATA[Show deactivated]]></value></data>
@@ -446,6 +449,11 @@
   <data name="Accounts.ReactivatedMessage" xml:space="preserve"><value><![CDATA[Account reactivated]]></value></data>
   <data name="Accounts.DeletedMessage" xml:space="preserve"><value><![CDATA[Account deleted]]></value></data>
   <data name="Accounts.PermanentlyDeletedMessage" xml:space="preserve"><value><![CDATA[Account permanently deleted]]></value></data>
+  <data name="Accounts.TransactionsClearedMessage" xml:space="preserve"><value><![CDATA[Imported history cleared]]></value></data>
+  <data name="Accounts.ClearTransactionsTooltip" xml:space="preserve"><value><![CDATA[Clear imported history…]]></value></data>
+  <data name="Accounts.ClearTransactionsTitle" xml:space="preserve"><value><![CDATA[Clear imported history]]></value></data>
+  <data name="Accounts.ClearTransactionsAction" xml:space="preserve"><value><![CDATA[Clear history]]></value></data>
+  <data name="Accounts.ClearTransactionsConfirm" xml:space="preserve"><value><![CDATA[Clear the imported history of '{0}'? {1} This cannot be undone, but the account can be synced or imported again afterwards.]]></value><comment>{0} = account name, {1} = the clear-impact sentence</comment></data>
   <data name="Accounts.DeleteTitle" xml:space="preserve"><value><![CDATA[Delete account]]></value></data>
   <data name="Accounts.HardDeleteTitle" xml:space="preserve"><value><![CDATA[Delete account permanently]]></value></data>
   <data name="Accounts.HardDeleteAction" xml:space="preserve"><value><![CDATA[Delete permanently]]></value></data>
