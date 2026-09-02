@@ -17,12 +17,18 @@ public interface IClaudeCategorizer
     );
 }
 
+/// <param name="RecurrenceHint">
+/// One-line note when the counterparty forms a recurring series (see
+/// <c>CategorizationHistory.RecurrenceHintFor</c>); <c>null</c> otherwise.
+/// </param>
 public sealed record TransactionToCategorize(
     Guid TransactionId,
     string? Counterparty,
     string Description,
     decimal Amount,
-    string Currency
+    string Currency,
+    DateOnly? BookingDate = null,
+    string? RecurrenceHint = null
 );
 
 /// <summary>A category the model may choose, with its display path (e.g. "Living › Groceries").</summary>

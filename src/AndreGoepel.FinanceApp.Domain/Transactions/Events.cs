@@ -77,4 +77,11 @@ public enum CategorySource
     Rule,
     Ai,
     Manual,
+
+    /// <summary>
+    /// Applied because the household had already confirmed this counterparty by
+    /// hand, consistently, at least twice. Appended last: Marten stores enums as
+    /// integers, so existing values must keep their position.
+    /// </summary>
+    History,
 }

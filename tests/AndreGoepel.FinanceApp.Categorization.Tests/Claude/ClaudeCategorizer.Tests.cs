@@ -135,6 +135,50 @@ public sealed class ClaudeCategorizerTests
         Assert.Contains(TransactionA.ToString("D"), body.ToJsonString());
     }
 
+    [Fact]
+    public void BuildRequestBody_IncludesBookingDateAndRecurrenceOnlyWhenPresent()
+    {
+        // Arrange
+        var withHints = new TransactionToCategorize(
+            TransactionA,
+            "UNIQA",
+            "premium",
+            -142.50m,
+            "EUR",
+            new DateOnly(2026, 6, 15),
+            "recurs monthly with a consistent amount"
+        );
+        var plain = new TransactionToCategorize(Guid.NewGuid(), "Billa", "shop", -9m, "EUR");
+
+        // Act
+        var hinted = ClaudeCategorizer.TransactionLine(withHints);
+        var bare = ClaudeCategorizer.TransactionLine(plain);
+
+        // Assert
+        Assert.Equal("2026-06-15", hinted["booking_date"]!.GetValue<string>());
+        Assert.Equal(
+            "recurs monthly with a consistent amount",
+            hinted["recurrence"]!.GetValue<string>()
+        );
+        Assert.False(bare.ContainsKey("booking_date"));
+        Assert.False(bare.ContainsKey("recurrence"));
+    }
+
+    [Fact]
+    public void BuildSystemPrompt_ExplainsTheRecurrenceNote()
+    {
+        // Act
+        var prompt = ClaudeCategorizer.BuildSystemPrompt(
+            [new CategoryOption(CategoryA, "Living › Groceries")],
+            []
+        );
+
+        // Assert
+        Assert.Contains("\"recurrence\" note", prompt);
+        Assert.Contains("insurance premiums", prompt);
+        Assert.DoesNotContain("Confirmed examples", prompt);
+    }
+
     #endregion
 
     #region SuggestAsync
