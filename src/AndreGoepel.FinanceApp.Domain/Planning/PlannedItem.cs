@@ -31,6 +31,16 @@ public sealed class PlannedItem
     public int DateWindowDays { get; set; } = 7;
 
     public bool Active { get; set; } = true;
+
+    /// <summary>
+    /// The detected recurring series this item was created from, if any — the
+    /// series key, which is the counterparty the detector grouped on. Provenance
+    /// only: it records where the item came from and is never rewritten when the
+    /// item is edited, so the Recurring page can tell that a series has already
+    /// been taken over even after its description or pattern was changed. Null
+    /// for items entered by hand and for anything created before this existed.
+    /// </summary>
+    public string? CreatedFromRecurringKey { get; set; }
 }
 
 /// <summary>

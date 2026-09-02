@@ -123,6 +123,7 @@
   <data name="Recurring.ColLast" xml:space="preserve"><value><![CDATA[Zuletzt]]></value></data>
   <data name="Recurring.ColNextExpected" xml:space="preserve"><value><![CDATA[Nächster Termin]]></value></data>
   <data name="Recurring.AddAsPlanned" xml:space="preserve"><value><![CDATA[Zur Planung hinzufügen]]></value></data>
+  <data name="Recurring.AlreadyPlanned" xml:space="preserve"><value><![CDATA[Geplant]]></value></data>
   <data name="Recurring.CouldNotAddTitle" xml:space="preserve"><value><![CDATA[Hinzufügen fehlgeschlagen]]></value></data>
   <data name="Recurring.AddedToPlanningTitle" xml:space="preserve"><value><![CDATA[Zur Planung hinzugefügt]]></value></data>
   <data name="Recurring.AddedToPlanningMessage" xml:space="preserve"><value><![CDATA[„{0}“ — auf der Planungsseite anpassen.]]></value><comment>{0} = the counterparty name</comment></data>
