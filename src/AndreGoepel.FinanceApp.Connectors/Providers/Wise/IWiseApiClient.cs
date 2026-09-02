@@ -33,8 +33,11 @@ public interface IWiseApiClient
 
     /// <summary>
     /// Monetary activities of a profile in a time window (newest first, all
-    /// currencies — the caller filters). Follows cursor pagination until the
-    /// window is exhausted.
+    /// currencies — the caller filters). Follows cursor pagination for as long as
+    /// Wise keeps handing back pages, however far the window reaches. Anything
+    /// that would leave the feed half-read fails instead of returning what was
+    /// collected: the missing part is always the oldest history, which silently
+    /// skews every balance reconstructed from it.
     /// </summary>
     Task<Result<IReadOnlyList<WiseActivity>>> GetActivitiesAsync(
         string apiToken,
