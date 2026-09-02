@@ -40,13 +40,13 @@ public sealed class WiseApiClientTests
     public async Task GetBalancesAsync_ParsesAmountsTypesJarNamesAndPrimary()
     {
         // Arrange — a primary standard balance (name null), a savings jar with a
-        // name, and a second, non-primary standard balance sharing a currency
-        // with the first (Wise's "grouped balances" — real shape, id 158095158
-        // from a live account, trimmed to the fields this client reads).
+        // name, and a second, non-primary standard balance sharing a currency with
+        // the first (Wise's "grouped balances"), trimmed to the fields this client
+        // reads.
         const string json = """
             [{"id":306149,"currency":"EUR","amount":{"value":999334.00,"currency":"EUR"},"type":"STANDARD","name":null,"primary":true},
              {"id":306999,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"},"type":"SAVINGS","name":"Vacation","primary":false},
-             {"id":158095158,"currency":"EUR","amount":{"value":0,"currency":"EUR"},"type":"STANDARD","name":"Family","primary":false}]
+             {"id":306150,"currency":"EUR","amount":{"value":0,"currency":"EUR"},"type":"STANDARD","name":"Set aside","primary":false}]
             """;
         var client = ClientReturning(json, out var handler);
 
@@ -81,10 +81,10 @@ public sealed class WiseApiClientTests
             },
             grouped =>
             {
-                Assert.Equal(158095158, grouped.Id);
+                Assert.Equal(306150, grouped.Id);
                 Assert.Equal("EUR", grouped.Currency);
                 Assert.Equal("STANDARD", grouped.Type);
-                Assert.Equal("Family", grouped.Name);
+                Assert.Equal("Set aside", grouped.Name);
                 Assert.False(grouped.Primary);
             }
         );

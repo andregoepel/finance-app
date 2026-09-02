@@ -16,6 +16,8 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 /// balance; every other balance sharing that currency — a SAVINGS jar, or one of
 /// Wise's "grouped" non-primary STANDARD balances — stays balance-only, since
 /// syncing it too would duplicate the primary balance's whole history onto it.
+/// Which currency an activity belongs to is the funding currency, not the
+/// headline one — see <see cref="MapForCurrency"/> for point-of-sale conversions.
 /// Only COMPLETED entries import (in-progress ones still change).
 /// </summary>
 public sealed class WiseConnector(IWiseApiClient client, ICredentialStore credentialStore)
@@ -167,7 +169,7 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
 
     /// <summary>
     /// Maps one activity to the account being synced, or null when the activity
-    /// does not touch that account's currency. Balance conversions (INTERBALANCE)
+    /// does not touch that account's balance. Balance conversions (INTERBALANCE)
     /// book both sides: the secondary amount is the source currency spent (money
     /// out), the primary amount is the target currency received (money in) — the
     /// two rows land in their respective accounts and can be linked as a transfer.
@@ -175,6 +177,17 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
     /// standard balance and its jars never leaves the household and cannot be
     /// attributed a direction from the feed, so they are skipped (jar balances
     /// refresh separately).
+    /// <para>
+    /// Everything else books on the balance the money actually came from, which
+    /// is not always the currency in the headline: paying by card abroad without
+    /// holding that currency makes Wise convert at the point of sale, and the feed
+    /// then shows the merchant's currency as the primary amount and the funding
+    /// currency as the secondary one ("100.00 USD" / "92.00 EUR" = 92.00 EUR left
+    /// the EUR balance, no USD balance was involved at all). So a differing
+    /// secondary currency wins over the primary one, and the primary currency's
+    /// account gets nothing — booking it there would invent a movement on a
+    /// balance that never held money, while the real debit went missing.
+    /// </para>
     /// </summary>
     internal static NormalizedTransaction? MapForCurrency(WiseActivity a, string accountCurrency)
     {
@@ -205,6 +218,28 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
                 return Normalize(a, Math.Abs(a.Amount), a.Currency);
             }
             return null;
+        }
+
+        // Point-of-sale conversion: the secondary currency is the funding balance.
+        // Both amounts describe the same single movement, so the funding side keeps
+        // the primary amount's direction rather than being forced negative.
+        if (
+            a.SecondaryAmount is decimal funded
+            && !string.IsNullOrWhiteSpace(a.SecondaryCurrency)
+            && !string.Equals(a.Currency, a.SecondaryCurrency, StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return string.Equals(
+                a.SecondaryCurrency,
+                accountCurrency,
+                StringComparison.OrdinalIgnoreCase
+            )
+                ? Normalize(
+                    a,
+                    a.Amount < 0 ? -Math.Abs(funded) : Math.Abs(funded),
+                    a.SecondaryCurrency!
+                )
+                : null;
         }
 
         return string.Equals(a.Currency, accountCurrency, StringComparison.OrdinalIgnoreCase)
