@@ -18,8 +18,15 @@ namespace AndreGoepel.FinanceApp.Categorization;
 /// remaining transactions uncategorized — they surface in the review queue and
 /// the next import retries; the import itself has long since succeeded.
 /// </summary>
+/// <remarks>
+/// Must stay <c>public</c>: Wolverine's handler discovery skips non-public
+/// types (the generated handler code has to reference the class), and the
+/// <see cref="WolverineHandlerAttribute"/> does not override that. An
+/// <c>internal</c> handler leaves the command without a subscriber and it
+/// is dropped silently. Guarded by <c>HandlerDiscoveryTests</c>.
+/// </remarks>
 [WolverineHandler]
-internal sealed class CategorizeImportedTransactionsCommandHandler
+public sealed class CategorizeImportedTransactionsCommandHandler
 {
     internal const decimal HighConfidenceThreshold = 0.8m;
     private const int BatchSize = 50;
