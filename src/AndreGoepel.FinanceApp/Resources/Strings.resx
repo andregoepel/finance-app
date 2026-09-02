@@ -480,7 +480,11 @@
   <data name="Connections.RotateTokenPlaceholder" xml:space="preserve"><value><![CDATA[Enter new token to rotate]]></value></data>
   <data name="Connections.SaveToken" xml:space="preserve"><value><![CDATA[Save token]]></value></data>
   <data name="Connections.SyncBalances" xml:space="preserve"><value><![CDATA[Sync balances]]></value></data>
+  <data name="Connections.ImportAccounts" xml:space="preserve"><value><![CDATA[Import accounts]]></value></data>
+  <data name="Connections.ImportAccountsTooltip" xml:space="preserve"><value><![CDATA[Create an account for every Wise balance and jar not linked yet]]></value></data>
+  <data name="Connections.ImportFailedTitle" xml:space="preserve"><value><![CDATA[Import failed]]></value></data>
   <data name="Connections.BalanceEntry" xml:space="preserve"><value><![CDATA[{0} {1} (id {2})]]></value><comment>{0} = formatted amount, {1} = currency code, {2} = Wise balance id</comment></data>
+  <data name="Connections.BalanceEntryNamed" xml:space="preserve"><value><![CDATA[{0} {1} {2} (id {3})]]></value><comment>{0} = jar name, {1} = formatted amount, {2} = currency code, {3} = Wise balance id</comment></data>
   <data name="Connections.LinkedAccountsCount" xml:space="preserve"><value><![CDATA[{0} linked account(s)]]></value><comment>{0} = count</comment></data>
   <data name="Connections.Connect" xml:space="preserve"><value><![CDATA[Connect]]></value></data>
   <data name="Connections.Reconnect" xml:space="preserve"><value><![CDATA[Reconnect]]></value></data>

@@ -10,9 +10,11 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 /// accounts cannot register SCA public keys anymore, so the SCA-protected
 /// statement endpoints are unusable). The account's <c>ExternalId</c> is the
 /// Wise balance id — used to verify the token actually sees the linked balance
-/// and to resolve the owning profile. Activities span every currency of the
-/// profile, so only rows in the account's currency are kept; only COMPLETED
-/// entries import (in-progress ones still change).
+/// and to resolve the owning profile. The feed is profile-wide and carries no
+/// balance attribution, so all activities of a currency book onto that
+/// currency's <b>standard</b> balance account only; jar (SAVINGS) accounts are
+/// balance-only — anything else would import the same movement once per jar.
+/// Only COMPLETED entries import (in-progress ones still change).
 /// </summary>
 public sealed class WiseConnector(IWiseApiClient client, ICredentialStore credentialStore)
     : IProviderConnector
@@ -51,21 +53,30 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
             );
         }
 
-        var profileId = await ResolveProfileIdAsync(
+        var resolved = await ResolveBalanceAsync(
             token,
             request.Environment,
             balanceId,
             cancellationToken
         );
-        if (profileId.IsFailure)
+        if (resolved.IsFailure)
         {
-            return Result.Fail<ProviderSyncResult>(profileId.Error!);
+            return Result.Fail<ProviderSyncResult>(resolved.Error!);
+        }
+        var (profileId, balance) = resolved.Value!;
+
+        // The activity feed cannot be attributed per balance, so jars stay
+        // balance-only: their money movements are jar shuffles that book (once)
+        // on the standard account. Returning success keeps scheduled runs quiet.
+        if (!string.Equals(balance.Type, "STANDARD", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Ok(new ProviderSyncResult(SyncSource, [], []));
         }
 
         var activities = await client.GetActivitiesAsync(
             token,
             request.Environment,
-            profileId.Value,
+            profileId,
             request.Since,
             DateOnly.FromDateTime(DateTime.UtcNow),
             cancellationToken
@@ -86,8 +97,11 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
         return Result.Ok(new ProviderSyncResult(SyncSource, rows, []));
     }
 
-    /// <summary>Finds the profile that owns the linked balance (a token usually sees one profile).</summary>
-    private async Task<Result<long>> ResolveProfileIdAsync(
+    /// <summary>
+    /// Finds the profile that owns the linked balance (a token usually sees one
+    /// profile) and the balance itself, whose type decides jar vs. standard.
+    /// </summary>
+    private async Task<Result<(long ProfileId, WiseBalance Balance)>> ResolveBalanceAsync(
         string token,
         ProviderEnvironment environment,
         long balanceId,
@@ -97,7 +111,7 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
         var profiles = await client.GetProfilesAsync(token, environment, cancellationToken);
         if (profiles.IsFailure)
         {
-            return Result.Fail<long>(profiles.Error!);
+            return Result.Fail<(long, WiseBalance)>(profiles.Error!);
         }
 
         foreach (var profile in profiles.Value!)
@@ -110,15 +124,15 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
             );
             if (balances.IsFailure)
             {
-                return Result.Fail<long>(balances.Error!);
+                return Result.Fail<(long, WiseBalance)>(balances.Error!);
             }
-            if (balances.Value!.Any(b => b.Id == balanceId))
+            if (balances.Value!.FirstOrDefault(b => b.Id == balanceId) is WiseBalance balance)
             {
-                return Result.Ok(profile.Id);
+                return Result.Ok((profile.Id, balance));
             }
         }
 
-        return Result.Fail<long>(
+        return Result.Fail<(long, WiseBalance)>(
             $"No Wise profile reachable with this token holds balance {balanceId} — "
                 + "check the balance id on the account (Settings → Accounts)."
         );
@@ -130,6 +144,10 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
     /// book both sides: the secondary amount is the source currency spent (money
     /// out), the primary amount is the target currency received (money in) — the
     /// two rows land in their respective accounts and can be linked as a transfer.
+    /// Same-currency conversions are jar shuffles: money moving between a
+    /// standard balance and its jars never leaves the household and cannot be
+    /// attributed a direction from the feed, so they are skipped (jar balances
+    /// refresh separately).
     /// </summary>
     internal static NormalizedTransaction? MapForCurrency(WiseActivity a, string accountCurrency)
     {
@@ -141,6 +159,10 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
 
         if (isConversion)
         {
+            if (string.Equals(a.Currency, a.SecondaryCurrency, StringComparison.OrdinalIgnoreCase))
+            {
+                return null; // jar shuffle within one currency
+            }
             if (
                 string.Equals(
                     a.SecondaryCurrency,
