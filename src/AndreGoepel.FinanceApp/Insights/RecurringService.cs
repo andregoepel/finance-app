@@ -1,3 +1,4 @@
+using AndreGoepel.FinanceApp.Domain.Planning;
 using AndreGoepel.FinanceApp.Domain.Recurring;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
@@ -8,6 +9,8 @@ namespace AndreGoepel.FinanceApp.Insights;
 /// Implements <see cref="IRecurringService"/>: pulls the recent transaction
 /// history (EUR, non-transfer) and runs the pure <see cref="RecurringDetector"/>.
 /// Transactions without a counterparty fall back to their description as the key.
+/// Marks the series that already have a planned item, which the detector cannot
+/// know about — that is a planning fact, not a property of the transactions.
 /// </summary>
 internal sealed class RecurringService(IQuerySession session) : IRecurringService
 {
@@ -34,6 +37,32 @@ internal sealed class RecurringService(IQuerySession session) : IRecurringServic
             .Where(c => !string.IsNullOrWhiteSpace(c.Counterparty))
             .ToList();
 
-        return RecurringDetector.Detect(candidates);
+        var detected = RecurringDetector.Detect(candidates);
+        var alreadyPlanned = await AlreadyPlannedKeysAsync(cancellationToken);
+        return
+        [
+            .. detected.Select(s =>
+                s with
+                {
+                    AlreadyPlanned = alreadyPlanned.Contains(s.Counterparty),
+                }
+            ),
+        ];
+    }
+
+    /// <summary>
+    /// Series keys that an active planned item was created from. Only active items
+    /// count: retiring a planned item is how you say the series is not planned any
+    /// more, and the page should offer to add it again rather than keep claiming
+    /// it is covered.
+    /// </summary>
+    private async Task<HashSet<string>> AlreadyPlannedKeysAsync(CancellationToken cancellationToken)
+    {
+        var keys = await session
+            .Query<PlannedItem>()
+            .Where(i => i.Active && i.CreatedFromRecurringKey != null)
+            .Select(i => i.CreatedFromRecurringKey!)
+            .ToListAsync(cancellationToken);
+        return [.. keys];
     }
 }
