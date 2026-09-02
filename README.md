@@ -12,7 +12,8 @@ from the foundation.
 See [PLAN.md](PLAN.md) for the implementation plan (phases 0–5),
 [CLAUDE.md](CLAUDE.md) for project conventions, and
 [docs/data-protection.md](docs/data-protection.md) for key ring encryption,
-backup and rotation.
+backup and rotation, and [docs/deployment.md](docs/deployment.md) for the
+production setup (Docker Compose, nginx, first start).
 
 ## Getting started
 
