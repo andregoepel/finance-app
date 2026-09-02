@@ -103,6 +103,19 @@ internal sealed record AccountPurgeTargets(
             PlannedItemIdsToDetach.Count
         );
 
+    /// <summary>
+    /// The same targets seen by a history-only purge: crypto holdings and planned
+    /// items belong to the account, which that one keeps, so they are left out.
+    /// </summary>
+    public AccountTransactionsClearedImpact ToTransactionsImpact() =>
+        new(
+            TransactionIds.Count,
+            ImportBatchIds.Count,
+            TransferCounterpartIds.Count,
+            PlannedMatchIds.Count,
+            ReviewQueueIds.Count
+        );
+
     public static async Task<AccountPurgeTargets> CollectAsync(
         IQuerySession session,
         Guid accountId,

@@ -46,6 +46,41 @@ internal static class AccountDeletionDescription
     }
 
     /// <summary>
+    /// The same sentence for clearing an account's history rather than deleting the
+    /// account. Reuses the counted nouns above — only the frame differs, because the
+    /// account survives.
+    /// </summary>
+    public static string Build(AccountTransactionsClearedImpact impact, IStringLocalizer<Strings> l)
+    {
+        if (impact.IsEmpty)
+        {
+            return l["AccountClear.Nothing"];
+        }
+
+        List<string> deleted = [];
+        AddPhrase(deleted, impact.Transactions, "AccountDelete.Transactions", l);
+        AddPhrase(deleted, impact.ImportBatches, "AccountDelete.ImportBatches", l);
+        AddPhrase(deleted, impact.ReviewQueueEntries, "AccountDelete.ReviewEntries", l);
+
+        List<string> kept = [];
+        AddPhrase(kept, impact.TransfersUnlinked, "AccountDelete.Transfers", l);
+        AddPhrase(kept, impact.PlannedMatchesCleared, "AccountDelete.PlannedMatches", l);
+
+        List<string> sentences = [];
+        if (deleted.Count > 0)
+        {
+            sentences.Add(l["AccountClear.Removes", Join(deleted, l)]);
+        }
+        if (kept.Count > 0)
+        {
+            sentences.Add(l["AccountDelete.Unlinks", Join(kept, l)]);
+        }
+        sentences.Add(l["AccountClear.KeepsAccount"]);
+
+        return string.Join(" ", sentences);
+    }
+
+    /// <summary>
     /// Appends "{count} {noun}" for a non-zero count, choosing the singular or plural resource.
     /// Real plural selection rather than the "(s)" hedge used elsewhere: the count is known here,
     /// and the English wording already distinguished the two.

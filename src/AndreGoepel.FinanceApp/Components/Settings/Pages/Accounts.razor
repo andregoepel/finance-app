@@ -46,10 +46,12 @@
                                      Variant="@(account.IsActive ? BadgeVariant.Success : BadgeVariant.Neutral)" />
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="Account" Title="" Width="170px" Sortable="false" TextAlign="TextAlign.End">
+                <RadzenDataGridColumn TItem="Account" Title="" Width="210px" Sortable="false" TextAlign="TextAlign.End">
                     <Template Context="account">
                         <RowActions>
                             <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => StartEdit(account)) />
+                            <IconButton Icon="layers_clear" Title="@L["Accounts.ClearTransactionsTooltip"]"
+                                        Click=@(_ => ClearTransactionsAsync(account)) />
                             @if (account.IsActive)
                             {
                                 <RadzenButton Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"
@@ -446,6 +448,45 @@
         await AfterLifecycleAsync(
             result.IsFailure ? result.Error : null,
             L["Accounts.PermanentlyDeletedMessage"]
+        );
+    }
+
+    // Same shape as the hard delete: state the blast radius first, then act. An
+    // account with nothing to clear still gets the dialog, so the answer to "did
+    // this do anything?" is given before the click rather than after it.
+    private async Task ClearTransactionsAsync(Account account)
+    {
+        var preview = await AccountTransactionsClearPreview.ForAccountAsync(
+            QuerySession,
+            account.Id,
+            DomainL
+        );
+        if (preview.IsFailure)
+        {
+            NotificationService.Error(L["Accounts.ActionFailedTitle"], preview.Error);
+            return;
+        }
+
+        var confirmed = await ConfirmService.ConfirmAsync(
+            L[
+                "Accounts.ClearTransactionsConfirm",
+                account.Name,
+                AccountDeletionDescription.Build(preview.Value!, L)
+            ],
+            title: L["Accounts.ClearTransactionsTitle"],
+            okText: L["Accounts.ClearTransactionsAction"]
+        );
+        if (!confirmed)
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result<AccountTransactionsClearedImpact>>(
+            new ClearAccountTransactionsCommand(account.Id)
+        );
+        await AfterLifecycleAsync(
+            result.IsFailure ? result.Error : null,
+            L["Accounts.TransactionsClearedMessage"]
         );
     }
 
