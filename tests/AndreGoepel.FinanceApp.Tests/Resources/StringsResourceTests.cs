@@ -39,6 +39,10 @@ public sealed class StringsResourceTests
 
     [Theory]
     [InlineData("en", "Nav.SectionFinance", "FINANCE")]
+    [InlineData("en", "Review.CategorizeWithAi", "Categorize with AI")]
+    [InlineData("de", "Review.CategorizeWithAi", "Mit KI nachkategorisieren")]
+    [InlineData("en", "Review.Refresh", "Refresh")]
+    [InlineData("de", "Review.Refresh", "Aktualisieren")]
     [InlineData("de", "Nav.SectionFinance", "FINANZEN")]
     [InlineData("en", "Nav.SectionFinanceSettings", "FINANCE SETTINGS")]
     [InlineData("de", "Nav.SectionFinanceSettings", "FINANZ-EINSTELLUNGEN")]

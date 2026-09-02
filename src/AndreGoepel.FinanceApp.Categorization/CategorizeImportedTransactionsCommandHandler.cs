@@ -1,6 +1,5 @@
 using AndreGoepel.FinanceApp.Categorization.Claude;
 using AndreGoepel.FinanceApp.Categorization.Rules;
-using AndreGoepel.FinanceApp.Categorization.Suggestions;
 using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Transactions;
@@ -11,19 +10,24 @@ using Wolverine.Attributes;
 namespace AndreGoepel.FinanceApp.Categorization;
 
 /// <summary>
-/// Async categorization after an import: learned rules first (free,
-/// deterministic), then Claude for the remainder in batches of 50. High
-/// confidence auto-applies (flagged "AI" in the grid); low confidence becomes a
-/// stored suggestion for the review queue. Any Claude failure leaves the
-/// remaining transactions uncategorized — they surface in the review queue and
-/// the next import retries; the import itself has long since succeeded.
+/// Async categorization: learned rules first (free, deterministic), then Claude
+/// for the remainder in batches of 50. High confidence auto-applies (flagged
+/// "AI" in the grid); low confidence becomes a stored suggestion for the review
+/// queue. Any Claude failure leaves the remaining transactions uncategorized —
+/// they surface in the review queue and the next run retries; the import itself
+/// has long since succeeded.
 /// </summary>
 /// <remarks>
+/// Two entry points share the pipeline: the per-import follow-up published
+/// after every upload or sync, and the backfill over everything still
+/// uncategorized, triggered from the review page.
+/// <para>
 /// Must stay <c>public</c>: Wolverine's handler discovery skips non-public
 /// types (the generated handler code has to reference the class), and the
 /// <see cref="WolverineHandlerAttribute"/> does not override that. An
 /// <c>internal</c> handler leaves the command without a subscriber and it
 /// is dropped silently. Guarded by <c>HandlerDiscoveryTests</c>.
+/// </para>
 /// </remarks>
 [WolverineHandler]
 public sealed class CategorizeImportedTransactionsCommandHandler
@@ -32,6 +36,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
     private const int BatchSize = 50;
     private const int FewShotExampleCount = 30;
 
+    /// <summary>Import follow-up: the batch's rows that are still uncategorized.</summary>
     public async Task Handle(
         CategorizeImportedTransactionsCommand command,
         IDocumentSession session,
@@ -44,6 +49,69 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             .Query<TransactionView>()
             .Where(t => t.ImportBatchId == command.ImportBatchId && t.CategoryId == null)
             .ToListAsync(cancellationToken);
+
+        await CategorizeAsync(
+            pending.ToList(),
+            $"import batch {command.ImportBatchId}",
+            session,
+            claudeCategorizer,
+            logger,
+            cancellationToken
+        );
+    }
+
+    /// <summary>
+    /// Backfill: every uncategorized transaction across all imports, minus
+    /// transfer legs (never categorized) and transactions that already carry a
+    /// pending suggestion (the reviewer has not decided yet; asking again would
+    /// only burn tokens for the same answer).
+    /// </summary>
+    public async Task Handle(
+        CategorizeUncategorizedTransactionsCommand command,
+        IDocumentSession session,
+        IClaudeCategorizer claudeCategorizer,
+        ILogger<CategorizeImportedTransactionsCommandHandler> logger,
+        CancellationToken cancellationToken
+    )
+    {
+        var uncategorized = await session
+            .Query<TransactionView>()
+            .Where(t => t.CategoryId == null && t.TransferCounterpartId == null)
+            .ToListAsync(cancellationToken);
+
+        var awaitingReview = (
+            await session
+                .Query<CategorySuggestion>()
+                .Select(s => s.Id)
+                .ToListAsync(cancellationToken)
+        ).ToHashSet();
+        var pending = uncategorized.Where(t => !awaitingReview.Contains(t.Id)).ToList();
+
+        logger.LogInformation(
+            "Backfill categorization: {Pending} of {Uncategorized} uncategorized transactions eligible.",
+            pending.Count,
+            uncategorized.Count
+        );
+
+        await CategorizeAsync(
+            pending,
+            "backfill",
+            session,
+            claudeCategorizer,
+            logger,
+            cancellationToken
+        );
+    }
+
+    private static async Task CategorizeAsync(
+        List<TransactionView> pending,
+        string scope,
+        IDocumentSession session,
+        IClaudeCategorizer claudeCategorizer,
+        ILogger<CategorizeImportedTransactionsCommandHandler> logger,
+        CancellationToken cancellationToken
+    )
+    {
         if (pending.Count == 0)
         {
             return;
@@ -109,8 +177,8 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             {
                 // Graceful degradation: stay uncategorized → review queue.
                 logger.LogWarning(
-                    "AI categorization skipped for batch {BatchId}: {Reason}",
-                    command.ImportBatchId,
+                    "AI categorization skipped for {Scope}: {Reason}",
+                    scope,
                     result.Error
                 );
                 return;

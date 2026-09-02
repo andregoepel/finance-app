@@ -1,8 +1,10 @@
 @page "/review"
 @attribute [Authorize]
+@using AndreGoepel.FinanceApp.Domain.Credentials
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
+@inject ICredentialStore CredentialStore
 @inject NotificationService NotificationService
 @inject IStringLocalizer<Strings> L
 
@@ -34,6 +36,12 @@
                           ButtonStyle="ButtonStyle.Secondary"
                           Disabled=@(bulkCategoryId is null || selected.Count == 0)
                           Click=@BulkCategorizeAsync />
+            <RadzenButton Text="@L["Review.CategorizeWithAi"]"
+                          Icon="auto_awesome"
+                          ButtonStyle="ButtonStyle.Light"
+                          Disabled=@(items.Count == 0)
+                          Click=@CategorizeWithAiAsync />
+            <IconButton Icon="refresh" Title="@L["Review.Refresh"]" Click=@(_ => ReloadAsync()) />
         </RadzenStack>
     </RadzenCard>
 
@@ -162,6 +170,28 @@
             }
         }
         await ReloadAsync();
+    }
+
+    /// <summary>
+    /// Fire-and-forget backfill over everything still uncategorized — the same
+    /// pipeline an import kicks off, so it can take a while for a large queue.
+    /// Checked up front for the API key because the handler itself only logs
+    /// when it is missing and the user would never learn why nothing happened.
+    /// </summary>
+    private async Task CategorizeWithAiAsync()
+    {
+        var apiKey = await CredentialStore.GetSecretAsync(CredentialKeys.ClaudeApiKey);
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            NotificationService.Warning(
+                L["Review.NoClaudeKeyTitle"],
+                L["Review.NoClaudeKeyMessage", L["Nav.ApiKeys"]]
+            );
+            return;
+        }
+
+        await MessageBus.PublishAsync(new CategorizeUncategorizedTransactionsCommand());
+        NotificationService.Success(L["Common.DoneTitle"], L["Review.CategorizeWithAiStartedMessage"]);
     }
 
     private async Task RunAsync(object command, string successMessage)
