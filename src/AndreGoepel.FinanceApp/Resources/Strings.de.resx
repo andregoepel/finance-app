@@ -182,6 +182,11 @@
   <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge übernehmen]]></value></data>
   <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge verwerfen]]></value></data>
   <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Kategorie für die Auswahl festlegen]]></value></data>
+  <data name="Review.CategorizeWithAi" xml:space="preserve"><value><![CDATA[Mit KI nachkategorisieren]]></value></data>
+  <data name="Review.CategorizeWithAiStartedMessage" xml:space="preserve"><value><![CDATA[Die KI-Kategorisierung läuft im Hintergrund. Liste in Kürze aktualisieren.]]></value></data>
+  <data name="Review.NoClaudeKeyTitle" xml:space="preserve"><value><![CDATA[Kein Claude-API-Schlüssel]]></value></data>
+  <data name="Review.NoClaudeKeyMessage" xml:space="preserve"><value><![CDATA[Zuerst unter „{0}“ einen Claude-API-Schlüssel hinterlegen.]]></value></data>
+  <data name="Review.Refresh" xml:space="preserve"><value><![CDATA[Aktualisieren]]></value></data>
   <data name="Review.ApplyToSelection" xml:space="preserve"><value><![CDATA[Auf Auswahl anwenden]]></value></data>
   <data name="Review.ColAiSuggestion" xml:space="preserve"><value><![CDATA[KI-Vorschlag]]></value></data>
   <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Vorschlag übernehmen]]></value></data>

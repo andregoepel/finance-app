@@ -182,6 +182,11 @@
   <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Accept suggestions]]></value></data>
   <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Dismiss suggestions]]></value></data>
   <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Set category for selection]]></value></data>
+  <data name="Review.CategorizeWithAi" xml:space="preserve"><value><![CDATA[Categorize with AI]]></value></data>
+  <data name="Review.CategorizeWithAiStartedMessage" xml:space="preserve"><value><![CDATA[AI categorization is running in the background. Refresh the list in a moment.]]></value></data>
+  <data name="Review.NoClaudeKeyTitle" xml:space="preserve"><value><![CDATA[No Claude API key]]></value></data>
+  <data name="Review.NoClaudeKeyMessage" xml:space="preserve"><value><![CDATA[Store a Claude API key under {0} first.]]></value></data>
+  <data name="Review.Refresh" xml:space="preserve"><value><![CDATA[Refresh]]></value></data>
   <data name="Review.ApplyToSelection" xml:space="preserve"><value><![CDATA[Apply to selection]]></value></data>
   <data name="Review.ColAiSuggestion" xml:space="preserve"><value><![CDATA[AI suggestion]]></value></data>
   <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Accept suggestion]]></value></data>
