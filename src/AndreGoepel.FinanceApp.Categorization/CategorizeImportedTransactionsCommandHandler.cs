@@ -1,4 +1,5 @@
 using AndreGoepel.FinanceApp.Categorization.Claude;
+using AndreGoepel.FinanceApp.Categorization.History;
 using AndreGoepel.FinanceApp.Categorization.Rules;
 using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.Imports;
@@ -10,12 +11,14 @@ using Wolverine.Attributes;
 namespace AndreGoepel.FinanceApp.Categorization;
 
 /// <summary>
-/// Async categorization: learned rules first (free, deterministic), then Claude
-/// for the remainder in batches of 50. High confidence auto-applies (flagged
-/// "AI" in the grid); low confidence becomes a stored suggestion for the review
-/// queue. Any Claude failure leaves the remaining transactions uncategorized —
-/// they surface in the review queue and the next run retries; the import itself
-/// has long since succeeded.
+/// Async categorization in three stages, cheapest first: learned rules, then
+/// the household's own history (a counterparty confirmed by hand twice with
+/// the same category), then Claude for whatever is left, in batches of 50 and
+/// with examples and recurrence notes drawn from that same history. High
+/// confidence auto-applies (flagged "AI" in the grid); low confidence becomes a
+/// stored suggestion for the review queue. Any Claude failure leaves the
+/// remaining transactions uncategorized — they surface in the review queue and
+/// the next run retries; the import itself has long since succeeded.
 /// </summary>
 /// <remarks>
 /// Two entry points share the pipeline: the per-import follow-up published
@@ -117,6 +120,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             return;
         }
 
+        // Stage 1: learned rules.
         var rules = await session.Query<CategoryRule>().ToListAsync(cancellationToken);
         var unmatched = new List<TransactionView>();
         foreach (var transaction in pending)
@@ -133,16 +137,12 @@ public sealed class CategorizeImportedTransactionsCommandHandler
                 continue;
             }
 
-            var stream = await session.Events.FetchForWriting<TransactionView>(
+            await AppendCategorizedAsync(
+                session,
                 transaction.Id,
+                new TransactionCategorized(rule.CategoryId, CategorySource.Rule, null),
                 cancellationToken
             );
-            if (stream.Aggregate is { CategoryId: null })
-            {
-                stream.AppendOne(
-                    new TransactionCategorized(rule.CategoryId, CategorySource.Rule, null)
-                );
-            }
         }
         await session.SaveChangesAsync(cancellationToken);
 
@@ -151,11 +151,47 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             return;
         }
 
+        // Stage 2: the household's own confirmed history.
         var categories = await session.Query<Category>().ToListAsync(cancellationToken);
         var options = CategoryPaths.Build(categories.ToList());
-        var examples = await LoadFewShotExamplesAsync(session, categories, cancellationToken);
+        var history = new CategorizationHistory(
+            await LoadHistoryAsync(session, cancellationToken),
+            options
+        );
 
-        foreach (var batch in unmatched.Chunk(BatchSize))
+        var forClaude = new List<TransactionView>();
+        foreach (var transaction in unmatched)
+        {
+            if (history.ConsistentCategoryFor(transaction.Counterparty) is not Guid categoryId)
+            {
+                forClaude.Add(transaction);
+                continue;
+            }
+
+            await AppendCategorizedAsync(
+                session,
+                transaction.Id,
+                new TransactionCategorized(categoryId, CategorySource.History, null),
+                cancellationToken
+            );
+        }
+        await session.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation(
+            "Categorization {Scope}: {Rules} by rule, {History} by history, {Claude} for Claude.",
+            scope,
+            pending.Count - unmatched.Count,
+            unmatched.Count - forClaude.Count,
+            forClaude.Count
+        );
+
+        if (forClaude.Count == 0)
+        {
+            return;
+        }
+
+        // Stage 3: Claude, with examples and recurrence notes from the same history.
+        foreach (var batch in forClaude.Chunk(BatchSize))
         {
             var toCategorize = batch
                 .Select(t => new TransactionToCategorize(
@@ -163,9 +199,15 @@ public sealed class CategorizeImportedTransactionsCommandHandler
                     t.Counterparty,
                     t.Description,
                     t.Amount,
-                    t.Currency
+                    t.Currency,
+                    t.BookingDate,
+                    history.RecurrenceHintFor(t.Counterparty)
                 ))
                 .ToList();
+            var examples = history.ExamplesFor(
+                batch.Select(t => t.Counterparty),
+                FewShotExampleCount
+            );
 
             var result = await claudeCategorizer.SuggestAsync(
                 toCategorize,
@@ -193,20 +235,16 @@ public sealed class CategorizeImportedTransactionsCommandHandler
 
                 if (suggestion.Confidence >= HighConfidenceThreshold)
                 {
-                    var stream = await session.Events.FetchForWriting<TransactionView>(
+                    await AppendCategorizedAsync(
+                        session,
                         suggestion.TransactionId,
+                        new TransactionCategorized(
+                            categoryId,
+                            CategorySource.Ai,
+                            suggestion.Confidence
+                        ),
                         cancellationToken
                     );
-                    if (stream.Aggregate is { CategoryId: null })
-                    {
-                        stream.AppendOne(
-                            new TransactionCategorized(
-                                categoryId,
-                                CategorySource.Ai,
-                                suggestion.Confidence
-                            )
-                        );
-                    }
                 }
                 else
                 {
@@ -224,28 +262,50 @@ public sealed class CategorizeImportedTransactionsCommandHandler
         }
     }
 
-    private static async Task<List<FewShotExample>> LoadFewShotExamplesAsync(
+    /// <summary>
+    /// Appends the categorization unless the stream was categorized in the
+    /// meantime (a concurrent run, a manual pick while the batch was in flight).
+    /// </summary>
+    private static async Task AppendCategorizedAsync(
         IDocumentSession session,
-        IReadOnlyList<Category> categories,
+        Guid transactionId,
+        TransactionCategorized categorized,
         CancellationToken cancellationToken
     )
     {
-        var byId = categories.ToDictionary(category => category.Id);
-        var confirmed = await session
-            .Query<TransactionView>()
-            .Where(t => t.CategorySource == CategorySource.Manual && t.CategoryId != null)
-            .OrderByDescending(t => t.BookingDate)
-            .Take(FewShotExampleCount)
-            .ToListAsync(cancellationToken);
-
-        return confirmed
-            .Where(t => byId.ContainsKey(t.CategoryId!.Value))
-            .Select(t => new FewShotExample(
-                t.Counterparty,
-                t.Description,
-                t.Amount,
-                CategoryPaths.PathOf(byId[t.CategoryId!.Value], byId)
-            ))
-            .ToList();
+        var stream = await session.Events.FetchForWriting<TransactionView>(
+            transactionId,
+            cancellationToken
+        );
+        if (stream.Aggregate is { CategoryId: null })
+        {
+            stream.AppendOne(categorized);
+        }
     }
+
+    /// <summary>
+    /// Every non-transfer transaction of the household, reduced to the fields
+    /// the history needs. Includes the rows being categorized right now — they
+    /// are occurrences of their counterparty too, which is what recurrence
+    /// detection counts.
+    /// </summary>
+    private static async Task<IReadOnlyList<HistoryEntry>> LoadHistoryAsync(
+        IDocumentSession session,
+        CancellationToken cancellationToken
+    ) =>
+        await session
+            .Query<TransactionView>()
+            .Where(t => t.TransferCounterpartId == null)
+            .Select(t => new HistoryEntry
+            {
+                Id = t.Id,
+                Counterparty = t.Counterparty,
+                Description = t.Description,
+                Amount = t.Amount,
+                AmountEur = t.AmountEur,
+                BookingDate = t.BookingDate,
+                CategoryId = t.CategoryId,
+                CategorySource = t.CategorySource,
+            })
+            .ToListAsync(cancellationToken);
 }

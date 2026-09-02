@@ -282,6 +282,7 @@
   <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Regel]]></value></data>
   <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[KI]]></value><comment>Matches the „KI“ wording referenced in Review.Subtitle</comment></data>
   <data name="Enum.CategorySource.Manual" xml:space="preserve"><value><![CDATA[Manuell]]></value></data>
+  <data name="Enum.CategorySource.History" xml:space="preserve"><value><![CDATA[Verlauf]]></value></data>
 
   <!-- Rules.razor -->
   <data name="Rules.PageTitle" xml:space="preserve"><value><![CDATA[Kategorisierungsregeln]]></value></data>

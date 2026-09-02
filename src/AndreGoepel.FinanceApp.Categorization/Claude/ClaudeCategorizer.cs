@@ -88,14 +88,7 @@ public sealed class ClaudeCategorizer(
         IReadOnlyList<FewShotExample> examples
     )
     {
-        var transactionLines = transactions.Select(t => new JsonObject
-        {
-            ["transaction_id"] = t.TransactionId.ToString("D"),
-            ["counterparty"] = t.Counterparty,
-            ["description"] = t.Description,
-            ["amount"] = t.Amount,
-            ["currency"] = t.Currency,
-        });
+        var transactionLines = transactions.Select(TransactionLine);
 
         return new JsonObject
         {
@@ -160,6 +153,27 @@ public sealed class ClaudeCategorizer(
         };
     }
 
+    internal static JsonObject TransactionLine(TransactionToCategorize transaction)
+    {
+        var line = new JsonObject
+        {
+            ["transaction_id"] = transaction.TransactionId.ToString("D"),
+            ["counterparty"] = transaction.Counterparty,
+            ["description"] = transaction.Description,
+            ["amount"] = transaction.Amount,
+            ["currency"] = transaction.Currency,
+        };
+        if (transaction.BookingDate is DateOnly bookingDate)
+        {
+            line["booking_date"] = bookingDate.ToString("yyyy-MM-dd");
+        }
+        if (!string.IsNullOrWhiteSpace(transaction.RecurrenceHint))
+        {
+            line["recurrence"] = transaction.RecurrenceHint;
+        }
+        return line;
+    }
+
     internal static string BuildSystemPrompt(
         IReadOnlyList<CategoryOption> categories,
         IReadOnlyList<FewShotExample> examples
@@ -174,6 +188,12 @@ public sealed class ClaudeCategorizer(
                 + "or null when no category fits. Report a confidence between 0 and 1; use low "
                 + "confidence when unsure. Negative amounts are expenses, positive amounts income."
         );
+        builder.AppendLine(
+            "A transaction may carry a \"recurrence\" note: the same counterparty has appeared at "
+                + "that interval with a consistent amount. Treat it as a strong signal for "
+                + "subscriptions, insurance premiums, rent, utilities, loan instalments and salary, "
+                + "and prefer that reading over a one-off interpretation of the name."
+        );
         builder.AppendLine();
         builder.AppendLine("Available categories (id: path):");
         foreach (var category in categories)
@@ -184,7 +204,10 @@ public sealed class ClaudeCategorizer(
         if (examples.Count > 0)
         {
             builder.AppendLine();
-            builder.AppendLine("Confirmed examples from this household's history:");
+            builder.AppendLine(
+                "Confirmed examples from this household's history (examples for the "
+                    + "counterparties in this batch come first; follow them when they apply):"
+            );
             foreach (var example in examples)
             {
                 builder.AppendLine(

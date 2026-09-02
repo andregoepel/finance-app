@@ -1019,6 +1019,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Enum.CategorySource.Ai", "KI")]
     [InlineData("en", "Enum.CategorySource.Manual", "Manual")]
     [InlineData("de", "Enum.CategorySource.Manual", "Manuell")]
+    [InlineData("en", "Enum.CategorySource.History", "History")]
+    [InlineData("de", "Enum.CategorySource.History", "Verlauf")]
     [InlineData("en", "Enum.CategoryRuleSource.Manual", "Manual")]
     [InlineData("de", "Enum.CategoryRuleSource.Manual", "Manuell")]
     [InlineData("en", "Enum.CategoryRuleSource.LearnedFromCorrection", "Learned from correction")]

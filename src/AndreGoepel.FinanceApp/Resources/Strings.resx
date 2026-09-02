@@ -282,6 +282,7 @@
   <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Rule]]></value></data>
   <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[Ai]]></value><comment>Matches the "Ai" wording referenced in Review.Subtitle</comment></data>
   <data name="Enum.CategorySource.Manual" xml:space="preserve"><value><![CDATA[Manual]]></value></data>
+  <data name="Enum.CategorySource.History" xml:space="preserve"><value><![CDATA[History]]></value></data>
 
   <!-- Rules.razor -->
   <data name="Rules.PageTitle" xml:space="preserve"><value><![CDATA[Categorization rules]]></value></data>
