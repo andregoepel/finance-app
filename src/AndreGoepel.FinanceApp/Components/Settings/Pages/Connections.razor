@@ -137,15 +137,22 @@
                                 <Template>@L[$"Enum.ProviderEnvironment.{context}"]</Template>
                             </RadzenDropDown>
                             <div style="flex: 1;"></div>
+                            <RadzenButton Text="@L["Connections.ImportAccounts"]" Icon="library_add" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                          title="@L["Connections.ImportAccountsTooltip"]"
+                                          Disabled=@(WiseTokenInfo(connection.Id) is null || importingConnectionId == connection.Id || syncingConnectionId == connection.Id)
+                                          IsBusy=@(importingConnectionId == connection.Id)
+                                          Click=@(() => ImportAccountsAsync(connection.Id)) />
                             <RadzenButton Text="@L["Connections.SyncBalances"]" Icon="sync" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
-                                          Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id)
+                                          Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id || importingConnectionId == connection.Id)
                                           IsBusy=@(syncingConnectionId == connection.Id)
                                           Click=@(() => SyncBalancesAsync(connection.Id)) />
                         </RadzenStack>
                         @if (balanceResults.TryGetValue(connection.Id, out var balances))
                         {
                             <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                                @string.Join(" · ", balances.Select(b => L["Connections.BalanceEntry", $"{b.Amount:N2}", b.Currency, b.Id]))
+                                @string.Join(" · ", balances.Select(b => string.IsNullOrWhiteSpace(b.Name)
+                                    ? L["Connections.BalanceEntry", $"{b.Amount:N2}", b.Currency, b.Id]
+                                    : L["Connections.BalanceEntryNamed", b.Name, $"{b.Amount:N2}", b.Currency, b.Id]))
                             </RadzenText>
                         }
                     }
@@ -195,6 +202,7 @@
     private readonly Dictionary<Guid, CredentialInfo?> wiseTokenInfos = [];
     private readonly Dictionary<Guid, IReadOnlyList<WiseBalance>> balanceResults = [];
     private Guid? syncingConnectionId;
+    private Guid? importingConnectionId;
 
     private string CallbackUrl => new Uri(new Uri(Navigation.BaseUri), "enablebanking/callback").ToString();
 
@@ -293,6 +301,32 @@
         finally
         {
             syncingConnectionId = null;
+        }
+    }
+
+    private async Task ImportAccountsAsync(Guid connectionId)
+    {
+        importingConnectionId = connectionId;
+        try
+        {
+            var result = await WiseBalanceService.ImportAccountsAsync(connectionId);
+            if (result.IsFailure)
+            {
+                NotificationService.Error(L["Connections.ImportFailedTitle"], result.Error);
+                return;
+            }
+            var created = result.Value!.CreatedAccountNames;
+            NotificationService.Notify(
+                created.Count > 0 ? NotificationSeverity.Success : NotificationSeverity.Info,
+                created.Count > 0 ? "Accounts created" : "Nothing to import",
+                created.Count > 0
+                    ? $"{string.Join(", ", created)} — {result.Value.AlreadyLinked} balance(s) were already linked."
+                    : $"All {result.Value.AlreadyLinked} balance(s) are already linked to accounts."
+            );
+        }
+        finally
+        {
+            importingConnectionId = null;
         }
     }
 
