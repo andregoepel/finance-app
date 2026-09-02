@@ -1,5 +1,7 @@
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Marten.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Domain.Planning;
 
@@ -18,6 +20,7 @@ public static class MatchPlannedTransactionsCommandHandler
     public static async Task Handle(
         MatchPlannedTransactionsCommand command,
         IDocumentSession session,
+        ILogger<MatchPlannedTransactionsCommand> logger,
         CancellationToken cancellationToken
     )
     {
@@ -114,7 +117,20 @@ public static class MatchPlannedTransactionsCommandHandler
 
         if (matchedAny)
         {
-            await session.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await session.SaveChangesAsync(cancellationToken);
+            }
+            catch (ConcurrentUpdateException)
+            {
+                // This command is published after every account sync, so a burst of
+                // syncs (e.g. "Sync All") can have two runs match the same transaction
+                // and race to append it. Whichever loses is skipped rather than
+                // failing the whole message — the next publish re-matches cleanly.
+                logger.LogInformation(
+                    "Skipped a batch of planned-item matches: a concurrent run already applied them."
+                );
+            }
         }
     }
 }
