@@ -8,6 +8,7 @@
 @inject ICredentialStore CredentialStore
 @inject IProviderConnectionService ConnectionService
 @inject IWiseBalanceService WiseBalanceService
+@inject IAccountSyncService SyncService
 @inject IMessageBus MessageBus
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
@@ -143,9 +144,14 @@
                                           IsBusy=@(importingConnectionId == connection.Id)
                                           Click=@(() => ImportAccountsAsync(connection.Id)) />
                             <RadzenButton Text="@L["Connections.SyncBalances"]" Icon="sync" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
-                                          Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id || importingConnectionId == connection.Id)
+                                          Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id || importingConnectionId == connection.Id || fullSyncingConnectionId == connection.Id)
                                           IsBusy=@(syncingConnectionId == connection.Id)
                                           Click=@(() => SyncBalancesAsync(connection.Id)) />
+                            <RadzenButton Text="@L["Connections.FullSync"]" Icon="history" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                                          title="@L["Connections.FullSyncTooltip"]"
+                                          Disabled=@(WiseTokenInfo(connection.Id) is null || syncingConnectionId == connection.Id || importingConnectionId == connection.Id || fullSyncingConnectionId == connection.Id)
+                                          IsBusy=@(fullSyncingConnectionId == connection.Id)
+                                          Click=@(() => FullSyncAsync(connection.Id)) />
                         </RadzenStack>
                         @if (balanceResults.TryGetValue(connection.Id, out var balances))
                         {
@@ -179,6 +185,9 @@
 </PageBody>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
     private static readonly ProviderKind[] ConnectionProviders =
         [ProviderKind.Wise, ProviderKind.Dkb, ProviderKind.Revolut];
     private static readonly ProviderEnvironment[] Environments = Enum.GetValues<ProviderEnvironment>();
@@ -203,8 +212,12 @@
     private readonly Dictionary<Guid, IReadOnlyList<WiseBalance>> balanceResults = [];
     private Guid? syncingConnectionId;
     private Guid? importingConnectionId;
+    private Guid? fullSyncingConnectionId;
 
     private string CallbackUrl => new Uri(new Uri(Navigation.BaseUri), "enablebanking/callback").ToString();
+
+    private async Task<string?> CurrentUserAsync() =>
+        AuthenticationState is null ? null : (await AuthenticationState).User.Identity?.Name;
 
     protected override async Task OnInitializedAsync()
     {
@@ -327,6 +340,48 @@
         finally
         {
             importingConnectionId = null;
+        }
+    }
+
+    private async Task FullSyncAsync(Guid connectionId)
+    {
+        var confirmed = await ConfirmService.ConfirmAsync(
+            L["Connections.FullSyncConfirm"],
+            title: L["Connections.FullSyncConfirmTitle"],
+            okText: L["Connections.FullSyncConfirmAction"]
+        );
+        if (!confirmed)
+        {
+            return;
+        }
+
+        fullSyncingConnectionId = connectionId;
+        try
+        {
+            var summaries = await SyncService.SyncAllAsync(
+                await CurrentUserAsync(),
+                fullHistory: true,
+                connectionId: connectionId
+            );
+            var failures = summaries.Where(s => s.IsFailure).ToList();
+            if (failures.Count > 0)
+            {
+                NotificationService.Warning(
+                    L["Connections.FullSyncPartialTitle"],
+                    string.Join(" · ", failures.Select(f => $"{f.AccountName}: {f.Error}"))
+                );
+            }
+            else
+            {
+                NotificationService.Success(
+                    L["Connections.FullSyncDoneTitle"],
+                    $"{summaries.Sum(s => s.Imported)} imported, {summaries.Sum(s => s.Duplicates)} duplicate(s), across {summaries.Count} account(s)."
+                );
+            }
+        }
+        finally
+        {
+            fullSyncingConnectionId = null;
         }
     }
 

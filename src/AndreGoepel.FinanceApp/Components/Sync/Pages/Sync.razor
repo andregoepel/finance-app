@@ -91,9 +91,13 @@
                             @(row.LastSync is null ? L["Sync.NeverSynced"] : Dates.ShortTime(row.LastSync.Value.ToLocalTime()))
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="AccountRow" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
+                    <RadzenDataGridColumn TItem="AccountRow" Title="" Width="240px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
+                                <RadzenButton Text="@L["Sync.FullSyncButton"]" Icon="history" Size="ButtonSize.Small"
+                                              ButtonStyle="ButtonStyle.Light" Disabled=@isSyncing
+                                              title="@L["Sync.FullSyncTooltip"]"
+                                              Click=@(() => SyncOneAsync(row.Id, fullHistory: true)) />
                                 <RadzenButton Text="@L["Sync.SyncNowButton"]" Icon="sync" Size="ButtonSize.Small"
                                               ButtonStyle="ButtonStyle.Secondary" Disabled=@isSyncing
                                               Click=@(() => SyncOneAsync(row.Id)) />
@@ -185,12 +189,16 @@
     private async Task<string?> CurrentUserAsync() =>
         AuthenticationState is null ? null : (await AuthenticationState).User.Identity?.Name;
 
-    private async Task SyncOneAsync(Guid accountId)
+    private async Task SyncOneAsync(Guid accountId, bool fullHistory = false)
     {
         isSyncing = true;
         try
         {
-            var summary = await SyncService.SyncAccountAsync(accountId, await CurrentUserAsync());
+            var summary = await SyncService.SyncAccountAsync(
+                accountId,
+                await CurrentUserAsync(),
+                fullHistory
+            );
             NotifySummary(summary);
             await LoadAsync();
         }
