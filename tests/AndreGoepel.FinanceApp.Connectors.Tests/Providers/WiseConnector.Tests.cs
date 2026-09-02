@@ -39,7 +39,7 @@ public sealed class WiseConnectorTests
             Date: new DateOnly(2026, 7, 4),
             Amount: amount,
             Currency: currency,
-            Title: "André Example",
+            Title: "Example Counterparty",
             Description: "Sending",
             RawJson: "{}"
         );
@@ -106,7 +106,7 @@ public sealed class WiseConnectorTests
         var row = Assert.Single(result.Value.Rows);
         Assert.Equal(-666m, row.Amount);
         Assert.Equal("EUR", row.Currency);
-        Assert.Equal("André Example", row.Counterparty);
+        Assert.Equal("Example Counterparty", row.Counterparty);
         Assert.Equal("keep", row.ExternalId);
         Assert.Empty(result.Value.Errors);
     }
@@ -133,7 +133,7 @@ public sealed class WiseConnectorTests
             )
             .Returns(
                 Result.Ok<IReadOnlyList<WiseBalance>>([
-                    new WiseBalance(306149, "EUR", 100m, Type: "SAVINGS", Name: "Family"),
+                    new WiseBalance(306149, "EUR", 100m, Type: "SAVINGS", Name: "Vacation"),
                 ])
             );
         var connector = new WiseConnector(client, store);
@@ -186,7 +186,7 @@ public sealed class WiseConnectorTests
                         "EUR",
                         100m,
                         Type: "STANDARD",
-                        Name: "Family",
+                        Name: "Set aside",
                         Primary: false
                     ),
                 ])
@@ -363,6 +363,130 @@ public sealed class WiseConnectorTests
         Assert.Equal(9329.84m, gbpSide!.Amount);
         Assert.Equal("GBP", gbpSide.Currency);
         Assert.Null(usdSide);
+    }
+
+    [Fact]
+    public void MapForCurrency_ForeignCardPayment_BooksTheFundingDebitNotTheMerchantCurrency()
+    {
+        // Arrange — paying by card in a currency the household does not hold: Wise
+        // converts at the point of sale, so 92 EUR left the EUR balance and no USD
+        // balance was ever involved.
+        var cardPayment = new WiseActivity(
+            Id: "card-usd",
+            Type: "CARD_PAYMENT",
+            Status: "COMPLETED",
+            Date: new DateOnly(2026, 7, 4),
+            Amount: -100m,
+            Currency: "USD",
+            Title: "Merchant",
+            Description: "",
+            RawJson: "{}",
+            SecondaryAmount: 92m,
+            SecondaryCurrency: "EUR"
+        );
+
+        // Act
+        var eurSide = WiseConnector.MapForCurrency(cardPayment, "EUR");
+        var usdSide = WiseConnector.MapForCurrency(cardPayment, "USD");
+
+        // Assert — the funding balance is debited; the merchant currency books nothing.
+        Assert.Equal(-92m, eurSide!.Amount);
+        Assert.Equal("EUR", eurSide.Currency);
+        Assert.Equal("Merchant", eurSide.Counterparty);
+        Assert.Null(usdSide);
+    }
+
+    [Fact]
+    public void MapForCurrency_ForeignCreditWithConversion_KeepsTheIncomingDirection()
+    {
+        // Arrange — same shape, opposite direction: money arriving in a currency the
+        // household does not hold is credited to the funding balance instead.
+        var refund = new WiseActivity(
+            Id: "refund-usd",
+            Type: "CARD_PAYMENT",
+            Status: "COMPLETED",
+            Date: new DateOnly(2026, 7, 11),
+            Amount: 100m,
+            Currency: "USD",
+            Title: "Merchant refund",
+            Description: "",
+            RawJson: "{}",
+            SecondaryAmount: 92m,
+            SecondaryCurrency: "EUR"
+        );
+
+        // Act / Assert — the funding side follows the primary amount's sign.
+        Assert.Equal(92m, WiseConnector.MapForCurrency(refund, "EUR")!.Amount);
+    }
+
+    [Fact]
+    public void MapForCurrency_ForeignPaymentFundedByAnUntrackedBalance_BooksNothing()
+    {
+        // Arrange — funded from a GBP balance the household has no account for.
+        // Booking the USD side instead would invent a movement that never happened.
+        var cardPayment = new WiseActivity(
+            Id: "card-usd-gbp",
+            Type: "CARD_PAYMENT",
+            Status: "COMPLETED",
+            Date: new DateOnly(2026, 7, 4),
+            Amount: -100m,
+            Currency: "USD",
+            Title: "Merchant",
+            Description: "",
+            RawJson: "{}",
+            SecondaryAmount: 79m,
+            SecondaryCurrency: "GBP"
+        );
+
+        // Act / Assert
+        Assert.Null(WiseConnector.MapForCurrency(cardPayment, "EUR"));
+        Assert.Null(WiseConnector.MapForCurrency(cardPayment, "USD"));
+    }
+
+    [Fact]
+    public void MapForCurrency_PaymentFromTheMatchingBalance_StillBooksThePrimaryAmount()
+    {
+        // Arrange — no secondary amount means the money really came from that
+        // currency's own balance (the household holds USD here).
+        var cardPayment = new WiseActivity(
+            Id: "card-from-own-balance",
+            Type: "CARD_PAYMENT",
+            Status: "COMPLETED",
+            Date: new DateOnly(2026, 7, 4),
+            Amount: -100m,
+            Currency: "USD",
+            Title: "Merchant",
+            Description: "",
+            RawJson: "{}"
+        );
+
+        // Act / Assert
+        Assert.Equal(-100m, WiseConnector.MapForCurrency(cardPayment, "USD")!.Amount);
+        Assert.Null(WiseConnector.MapForCurrency(cardPayment, "EUR"));
+    }
+
+    [Fact]
+    public void MapForCurrency_SameCurrencySecondary_KeepsBookingThePrimaryAmount()
+    {
+        // Arrange — a top-up: 1,000 EUR landed in the balance while 1,010.80 EUR left
+        // an external funding source this app does not track. The primary amount is
+        // the one that moved the Wise balance, so the secondary must not win here.
+        var deposit = new WiseActivity(
+            Id: "topup",
+            Type: "BALANCE_DEPOSIT",
+            Status: "COMPLETED",
+            Date: new DateOnly(2026, 7, 4),
+            Amount: 1000m,
+            Currency: "EUR",
+            Title: "To EUR",
+            Description: "Added",
+            RawJson: "{}",
+            SecondaryAmount: 1010.80m,
+            SecondaryCurrency: "EUR"
+        );
+
+        // Act / Assert
+        Assert.Equal(1000m, WiseConnector.MapForCurrency(deposit, "EUR")!.Amount);
     }
 
     [Fact]
