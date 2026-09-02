@@ -83,9 +83,13 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
                     b.GetProperty("id").GetInt64(),
                     b.GetProperty("currency").GetString() ?? "",
                     b.GetProperty("amount").GetProperty("value").GetDecimal(),
+                    // Deliberately not defaulted to "STANDARD": a missing/unparseable type
+                    // must not silently masquerade as a normal balance — WiseConnector fails
+                    // loudly on anything it doesn't recognize as STANDARD or SAVINGS, rather
+                    // than risk syncing a jar's full transaction history onto the household.
                     b.TryGetProperty("type", out var type)
-                        ? type.GetString() ?? "STANDARD"
-                        : "STANDARD",
+                        ? type.GetString() ?? ""
+                        : "",
                     b.TryGetProperty("name", out var name) ? name.GetString() : null
                 ))
                 .ToList();

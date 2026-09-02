@@ -81,6 +81,33 @@ public sealed class WiseApiClientTests
     }
 
     [Fact]
+    public async Task GetBalancesAsync_MissingTypeField_DoesNotDefaultToStandard()
+    {
+        // Arrange — a balance object without a "type" field at all, e.g. a schema
+        // drift or a balance shape Wise didn't populate it for. Defaulting this to
+        // "STANDARD" previously let a jar's activity sync through undetected.
+        const string json = """
+            [{"id":306149,"currency":"EUR","amount":{"value":100.00,"currency":"EUR"}}]
+            """;
+        var client = ClientReturning(json, out _);
+
+        // Act
+        var result = await client.GetBalancesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — Type is neither "STANDARD" nor "SAVINGS", so downstream code
+        // (WiseConnector) fails loudly instead of guessing either way.
+        Assert.True(result.IsSuccess);
+        var balance = Assert.Single(result.Value!);
+        Assert.NotEqual("STANDARD", balance.Type);
+        Assert.NotEqual("SAVINGS", balance.Type);
+    }
+
+    [Fact]
     public async Task GetBalancesAsync_NonSuccessStatus_FailsWithStatus()
     {
         // Arrange

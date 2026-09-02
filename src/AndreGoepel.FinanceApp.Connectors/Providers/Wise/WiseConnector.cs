@@ -68,9 +68,22 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
         // The activity feed cannot be attributed per balance, so jars stay
         // balance-only: their money movements are jar shuffles that book (once)
         // on the standard account. Returning success keeps scheduled runs quiet.
-        if (!string.Equals(balance.Type, "STANDARD", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(balance.Type, "SAVINGS", StringComparison.OrdinalIgnoreCase))
         {
             return Result.Ok(new ProviderSyncResult(SyncSource, [], []));
+        }
+        if (!string.Equals(balance.Type, "STANDARD", StringComparison.OrdinalIgnoreCase))
+        {
+            // Never guess: a missing/unrecognized type must not silently fall through
+            // to a full activity sync (it would duplicate the standard balance's whole
+            // transaction history onto whatever this balance actually is) nor silently
+            // sync nothing either — both failure modes hide the problem instead of
+            // surfacing it.
+            return Result.Fail<ProviderSyncResult>(
+                $"Wise balance {balanceId} has an unrecognized type "
+                    + $"'{balance.Type}' (expected STANDARD or SAVINGS) — check it under "
+                    + "Settings → Connections."
+            );
         }
 
         var activities = await client.GetActivitiesAsync(
