@@ -19,14 +19,6 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
     /// <summary>Activities requested per page; Wise's maximum.</summary>
     private const int ActivityPageSize = 100;
 
-    /// <summary>
-    /// Brake against a cursor that never terminates, not a limit on how much
-    /// history may be fetched: a full-history sync of a busy profile runs to
-    /// several thousand activities. Reaching it is treated as a failure rather
-    /// than quietly returning a partial feed — see <see cref="GetActivitiesAsync"/>.
-    /// </summary>
-    private const int MaxActivityPages = 200;
-
     private static string BaseUrl(ProviderEnvironment environment) =>
         environment == ProviderEnvironment.Sandbox
             ? "https://api.wise-sandbox.com"
@@ -132,8 +124,15 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
             + $"&size={ActivityPageSize}";
 
         var activities = new List<WiseActivity>();
+        // Paging runs until Wise says there is nothing left: capping it would drop
+        // the oldest history (the feed is newest first) and silently skew every
+        // balance the app reconstructs from it. The only way this does not
+        // terminate is a cursor that stops advancing, so that is what is guarded —
+        // by remembering the ones already used rather than by limiting how far
+        // back the window may reach.
+        var seenCursors = new HashSet<string>(StringComparer.Ordinal);
         string? cursor = null;
-        for (var page = 0; page < MaxActivityPages; page++)
+        while (true)
         {
             var path = cursor is null
                 ? basePath
@@ -157,25 +156,19 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
 
             if (cursor is null)
             {
-                break;
+                return Result.Ok<IReadOnlyList<WiseActivity>>(activities);
+            }
+            if (!seenCursors.Add(cursor))
+            {
+                return Result.Fail<IReadOnlyList<WiseActivity>>(
+                    "Wise handed back a pagination cursor it had already used while reading "
+                        + $"activities for {since:yyyy-MM-dd}..{until:yyyy-MM-dd}, so the feed "
+                        + "never ends. Returning what was read would drop the oldest part of "
+                        + "the window without saying so; try again, and narrow the period if "
+                        + "it keeps happening."
+                );
             }
         }
-
-        // A cursor still pending means the brake stopped us mid-feed. The feed is
-        // ordered newest first, so what would be dropped is the oldest history —
-        // and a partial ledger silently skews every balance the app reconstructs
-        // from it. Fail instead, and say what to do about it.
-        if (cursor is not null)
-        {
-            return Result.Fail<IReadOnlyList<WiseActivity>>(
-                $"Wise returned more than {MaxActivityPages * ActivityPageSize} activities for "
-                    + $"{since:yyyy-MM-dd}..{until:yyyy-MM-dd} and there are still more to read. "
-                    + "Importing this window would silently drop the oldest part of it — sync a "
-                    + "shorter period instead, and load anything older from a statement file."
-            );
-        }
-
-        return Result.Ok<IReadOnlyList<WiseActivity>>(activities);
     }
 
     /// <summary>

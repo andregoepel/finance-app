@@ -205,18 +205,57 @@ public sealed class WiseApiClientTests
     }
 
     [Fact]
-    public async Task GetActivitiesAsync_FeedLongerThanThePageBrake_FailsInsteadOfTruncating()
+    public async Task GetActivitiesAsync_ManyPages_KeepsPagingWithoutAVolumeLimit()
     {
-        // Arrange — every page hands back another cursor, so the brake eventually
-        // stops the loop. Returning what was collected would silently drop the
-        // oldest history (the feed is newest first).
+        // Arrange — 250 pages, well past any page count this client used to allow.
+        // A long window must not be a reason to stop reading.
+        var pages = Enumerable
+            .Range(1, 250)
+            .Select(i =>
+                i < 250
+                    ? $$"""
+                        {"cursor":"page-{{i + 1}}","activities":[
+                          {"id":"a{{i}}","type":"TRANSFER","status":"COMPLETED",
+                           "createdOn":"2026-07-04T10:00:00.000Z","primaryAmount":"5 EUR","title":"x"}]}
+                        """
+                    : """
+                        {"activities":[
+                          {"id":"last","type":"TRANSFER","status":"COMPLETED",
+                           "createdOn":"2026-07-04T10:00:00.000Z","primaryAmount":"5 EUR","title":"x"}]}
+                        """
+            )
+            .ToArray();
+        var client = ClientReturningInOrder(out var handler, pages);
+
+        // Act
+        var result = await client.GetActivitiesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            new DateOnly(2015, 1, 1),
+            new DateOnly(2026, 9, 2),
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — every page was read to the end.
+        Assert.True(result.IsSuccess);
+        Assert.Equal(250, result.Value!.Count);
+        Assert.Equal(250, handler.RequestCount);
+    }
+
+    [Fact]
+    public async Task GetActivitiesAsync_CursorThatStopsAdvancing_FailsInsteadOfLoopingForever()
+    {
+        // Arrange — every page hands back the same cursor, so the feed never ends.
+        // Returning what was collected would silently drop the oldest history
+        // (the feed is newest first).
         var client = ClientReturning(
             """
-            {"cursor":"always-more","activities":[
+            {"cursor":"stuck","activities":[
               {"id":"a1","type":"TRANSFER","status":"COMPLETED","createdOn":"2026-07-04T10:00:00.000Z",
                "primaryAmount":"5 EUR","title":"One"}]}
             """,
-            out _
+            out var handler
         );
 
         // Act
@@ -229,10 +268,10 @@ public sealed class WiseApiClientTests
             TestContext.Current.CancellationToken
         );
 
-        // Assert — actionable failure, not a quietly shortened list.
+        // Assert — stops at the repeat rather than spinning, and says why.
         Assert.True(result.IsFailure);
-        Assert.Contains("still more to read", result.Error);
-        Assert.Contains("shorter period", result.Error);
+        Assert.Contains("already used", result.Error);
+        Assert.Equal(2, handler.RequestCount);
     }
 
     private static WiseApiClient ClientReturning(
