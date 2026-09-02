@@ -7,13 +7,15 @@ namespace AndreGoepel.FinanceApp.Connectors.Providers.Wise;
 
 /// <summary>
 /// Syncs Wise transactions through the token-only activity feed (personal
-/// accounts cannot register SCA public keys anymore, so the SCA-protected
-/// statement endpoints are unusable). The account's <c>ExternalId</c> is the
-/// Wise balance id — used to verify the token actually sees the linked balance
-/// and to resolve the owning profile. The feed is profile-wide and carries no
-/// balance attribution, so all activities of a currency book onto that
-/// currency's <b>standard</b> balance account only; jar (SAVINGS) accounts are
-/// balance-only — anything else would import the same movement once per jar.
+/// accounts cannot register SCA public keys anymore, so the SCA-protected,
+/// per-balance statement endpoints are unusable). The account's <c>ExternalId</c>
+/// is the Wise balance id — used to verify the token actually sees the linked
+/// balance and to resolve the owning profile. The feed is profile-wide and
+/// carries no balance attribution at all, so activities of a currency can only
+/// ever book onto that currency's one <see cref="WiseBalance.Primary"/> STANDARD
+/// balance; every other balance sharing that currency — a SAVINGS jar, or one of
+/// Wise's "grouped" non-primary STANDARD balances — stays balance-only, since
+/// syncing it too would duplicate the primary balance's whole history onto it.
 /// Only COMPLETED entries import (in-progress ones still change).
 /// </summary>
 public sealed class WiseConnector(IWiseApiClient client, ICredentialStore credentialStore)
@@ -65,14 +67,10 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
         }
         var (profileId, balance) = resolved.Value!;
 
-        // The activity feed cannot be attributed per balance, so jars stay
-        // balance-only: their money movements are jar shuffles that book (once)
-        // on the standard account. Returning success keeps scheduled runs quiet.
-        if (string.Equals(balance.Type, "SAVINGS", StringComparison.OrdinalIgnoreCase))
-        {
-            return Result.Ok(new ProviderSyncResult(SyncSource, [], []));
-        }
-        if (!string.Equals(balance.Type, "STANDARD", StringComparison.OrdinalIgnoreCase))
+        if (
+            !string.Equals(balance.Type, "SAVINGS", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(balance.Type, "STANDARD", StringComparison.OrdinalIgnoreCase)
+        )
         {
             // Never guess: a missing/unrecognized type must not silently fall through
             // to a full activity sync (it would duplicate the standard balance's whole
@@ -84,6 +82,22 @@ public sealed class WiseConnector(IWiseApiClient client, ICredentialStore creden
                     + $"'{balance.Type}' (expected STANDARD or SAVINGS) — check it under "
                     + "Settings → Connections."
             );
+        }
+
+        // The activity feed is profile-wide, filtered only by currency — it cannot be
+        // attributed to one specific balance. That is fine for the one true STANDARD
+        // balance per currency (Primary), but a SAVINGS jar or a non-primary STANDARD
+        // balance (Wise allows several "grouped" balances per currency) would each pull
+        // in the primary balance's whole transaction history too. Both stay balance-only;
+        // returning success keeps scheduled runs quiet.
+        if (
+            !(
+                string.Equals(balance.Type, "STANDARD", StringComparison.OrdinalIgnoreCase)
+                && balance.Primary
+            )
+        )
+        {
+            return Result.Ok(new ProviderSyncResult(SyncSource, [], []));
         }
 
         var activities = await client.GetActivitiesAsync(

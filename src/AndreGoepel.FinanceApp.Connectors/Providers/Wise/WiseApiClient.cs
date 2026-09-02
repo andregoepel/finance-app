@@ -90,7 +90,12 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
                     b.TryGetProperty("type", out var type)
                         ? type.GetString() ?? ""
                         : "",
-                    b.TryGetProperty("name", out var name) ? name.GetString() : null
+                    b.TryGetProperty("name", out var name) ? name.GetString() : null,
+                    // Same fail-closed reasoning as Type: a missing "primary" must not
+                    // default to true (syncable) — that would risk duplicating the real
+                    // primary balance's transactions onto this one, same as the Type bug.
+                    b.TryGetProperty("primary", out var primary)
+                        && primary.ValueKind == JsonValueKind.True
                 ))
                 .ToList();
             return Result.Ok<IReadOnlyList<WiseBalance>>(balances);
