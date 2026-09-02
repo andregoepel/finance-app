@@ -16,8 +16,16 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
 {
     internal const string HttpClientName = "wise";
 
-    /// <summary>Safety cap on cursor pagination — 100 activities per page.</summary>
-    private const int MaxActivityPages = 20;
+    /// <summary>Activities requested per page; Wise's maximum.</summary>
+    private const int ActivityPageSize = 100;
+
+    /// <summary>
+    /// Brake against a cursor that never terminates, not a limit on how much
+    /// history may be fetched: a full-history sync of a busy profile runs to
+    /// several thousand activities. Reaching it is treated as a failure rather
+    /// than quietly returning a partial feed — see <see cref="GetActivitiesAsync"/>.
+    /// </summary>
+    private const int MaxActivityPages = 200;
 
     private static string BaseUrl(ProviderEnvironment environment) =>
         environment == ProviderEnvironment.Sandbox
@@ -121,7 +129,7 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
             $"/v1/profiles/{profileId}/activities"
             + $"?since={since:yyyy-MM-dd}T00:00:00.000Z"
             + $"&until={until:yyyy-MM-dd}T23:59:59.999Z"
-            + "&size=100";
+            + $"&size={ActivityPageSize}";
 
         var activities = new List<WiseActivity>();
         string? cursor = null;
@@ -151,6 +159,20 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
             {
                 break;
             }
+        }
+
+        // A cursor still pending means the brake stopped us mid-feed. The feed is
+        // ordered newest first, so what would be dropped is the oldest history —
+        // and a partial ledger silently skews every balance the app reconstructs
+        // from it. Fail instead, and say what to do about it.
+        if (cursor is not null)
+        {
+            return Result.Fail<IReadOnlyList<WiseActivity>>(
+                $"Wise returned more than {MaxActivityPages * ActivityPageSize} activities for "
+                    + $"{since:yyyy-MM-dd}..{until:yyyy-MM-dd} and there are still more to read. "
+                    + "Importing this window would silently drop the oldest part of it — sync a "
+                    + "shorter period instead, and load anything older from a statement file."
+            );
         }
 
         return Result.Ok<IReadOnlyList<WiseActivity>>(activities);

@@ -169,6 +169,72 @@ public sealed class WiseApiClientTests
         Assert.Contains("401", result.Error);
     }
 
+    [Fact]
+    public async Task GetActivitiesAsync_FollowsTheCursorAcrossPages()
+    {
+        // Arrange — page one hands back a cursor, page two ends the feed.
+        var client = ClientReturningInOrder(
+            out var handler,
+            """
+            {"cursor":"page-2","activities":[
+              {"id":"a1","type":"TRANSFER","status":"COMPLETED","createdOn":"2026-07-04T10:00:00.000Z",
+               "primaryAmount":"<positive>+ 10 EUR</positive>","title":"One"}]}
+            """,
+            """
+            {"activities":[
+              {"id":"a2","type":"TRANSFER","status":"COMPLETED","createdOn":"2026-07-03T10:00:00.000Z",
+               "primaryAmount":"5 EUR","title":"Two"}]}
+            """
+        );
+
+        // Act
+        var result = await client.GetActivitiesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            new DateOnly(2026, 7, 1),
+            new DateOnly(2026, 7, 31),
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — both pages import, and the second request carried the cursor.
+        Assert.True(result.IsSuccess);
+        Assert.Equal(["a1", "a2"], result.Value!.Select(a => a.Id));
+        Assert.Equal(2, handler.RequestCount);
+        Assert.Contains("nextCursor=page-2", handler.LastRequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task GetActivitiesAsync_FeedLongerThanThePageBrake_FailsInsteadOfTruncating()
+    {
+        // Arrange — every page hands back another cursor, so the brake eventually
+        // stops the loop. Returning what was collected would silently drop the
+        // oldest history (the feed is newest first).
+        var client = ClientReturning(
+            """
+            {"cursor":"always-more","activities":[
+              {"id":"a1","type":"TRANSFER","status":"COMPLETED","createdOn":"2026-07-04T10:00:00.000Z",
+               "primaryAmount":"5 EUR","title":"One"}]}
+            """,
+            out _
+        );
+
+        // Act
+        var result = await client.GetActivitiesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            new DateOnly(2015, 1, 1),
+            new DateOnly(2026, 9, 2),
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — actionable failure, not a quietly shortened list.
+        Assert.True(result.IsFailure);
+        Assert.Contains("still more to read", result.Error);
+        Assert.Contains("shorter period", result.Error);
+    }
+
     private static WiseApiClient ClientReturning(
         string body,
         out StubHandler handler,
@@ -182,10 +248,33 @@ public sealed class WiseApiClientTests
         return new WiseApiClient(factory);
     }
 
-    private sealed class StubHandler(string body, HttpStatusCode status) : HttpMessageHandler
+    private static WiseApiClient ClientReturningInOrder(
+        out StubHandler handler,
+        params string[] bodies
+    )
     {
+        handler = new StubHandler(bodies);
+        var httpClient = new HttpClient(handler);
+        var factory = Substitute.For<IHttpClientFactory>();
+        factory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+        return new WiseApiClient(factory);
+    }
+
+    /// <summary>
+    /// Replies with <paramref name="bodies"/> in order, repeating the last one once
+    /// they run out — so a single body stands in for "every page looks like this".
+    /// </summary>
+    private sealed class StubHandler(string[] bodies, HttpStatusCode status) : HttpMessageHandler
+    {
+        public StubHandler(string body, HttpStatusCode status)
+            : this([body], status) { }
+
+        public StubHandler(string[] bodies)
+            : this(bodies, HttpStatusCode.OK) { }
+
         public Uri? LastRequestUri { get; private set; }
         public string? LastAuthorization { get; private set; }
+        public int RequestCount { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -194,6 +283,8 @@ public sealed class WiseApiClientTests
         {
             LastRequestUri = request.RequestUri;
             LastAuthorization = request.Headers.Authorization?.ToString();
+            var body = bodies[Math.Min(RequestCount, bodies.Length - 1)];
+            RequestCount++;
             return Task.FromResult(
                 new HttpResponseMessage(status)
                 {
