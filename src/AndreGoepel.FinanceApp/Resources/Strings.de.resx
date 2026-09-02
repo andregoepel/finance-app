@@ -156,6 +156,8 @@
   <data name="Sync.ColLastSync" xml:space="preserve"><value><![CDATA[Letzte Synchronisierung]]></value></data>
   <data name="Sync.NeverSynced" xml:space="preserve"><value><![CDATA[nie]]></value></data>
   <data name="Sync.SyncNowButton" xml:space="preserve"><value><![CDATA[Jetzt synchronisieren]]></value></data>
+  <data name="Sync.FullSyncButton" xml:space="preserve"><value><![CDATA[Komplett-Sync]]></value></data>
+  <data name="Sync.FullSyncTooltip" xml:space="preserve"><value><![CDATA[Lädt die komplette verfügbare Historie des Kontos neu, statt nur das Neue seit dem letzten Sync]]></value></data>
   <data name="Sync.InvalidScheduleTitle" xml:space="preserve"><value><![CDATA[Ungültiger Zeitplan]]></value></data>
   <data name="Sync.ScheduleSavedTitle" xml:space="preserve"><value><![CDATA[Zeitplan gespeichert]]></value></data>
   <data name="Sync.RescheduledMessage" xml:space="preserve"><value><![CDATA[Automatische Synchronisierung neu geplant.]]></value></data>
@@ -483,6 +485,13 @@
   <data name="Connections.ImportAccounts" xml:space="preserve"><value><![CDATA[Konten importieren]]></value></data>
   <data name="Connections.ImportAccountsTooltip" xml:space="preserve"><value><![CDATA[Erstellt für jedes noch nicht verknüpfte Wise-Guthaben und jeden Spartopf ein Konto]]></value></data>
   <data name="Connections.ImportFailedTitle" xml:space="preserve"><value><![CDATA[Import fehlgeschlagen]]></value></data>
+  <data name="Connections.FullSync" xml:space="preserve"><value><![CDATA[Komplett-Sync]]></value></data>
+  <data name="Connections.FullSyncTooltip" xml:space="preserve"><value><![CDATA[Lädt die komplette verfügbare Transaktionshistorie dieser Verbindung neu, unabhängig vom letzten Sync]]></value></data>
+  <data name="Connections.FullSyncConfirmTitle" xml:space="preserve"><value><![CDATA[Komplett-Sync]]></value></data>
+  <data name="Connections.FullSyncConfirm" xml:space="preserve"><value><![CDATA[Die komplette verfügbare Transaktionshistorie für alle Konten dieser Verbindung neu laden? Das kann länger dauern als ein normaler Sync und viele Daten erneut verarbeiten.]]></value></data>
+  <data name="Connections.FullSyncConfirmAction" xml:space="preserve"><value><![CDATA[Komplett-Sync starten]]></value></data>
+  <data name="Connections.FullSyncPartialTitle" xml:space="preserve"><value><![CDATA[Komplett-Sync mit Fehlern]]></value></data>
+  <data name="Connections.FullSyncDoneTitle" xml:space="preserve"><value><![CDATA[Komplett-Sync abgeschlossen]]></value></data>
   <data name="Connections.BalanceEntry" xml:space="preserve"><value><![CDATA[{0} {1} (ID {2})]]></value><comment>{0} = formatted amount, {1} = currency code, {2} = Wise balance id</comment></data>
   <data name="Connections.BalanceEntryNamed" xml:space="preserve"><value><![CDATA[{0} {1} {2} (ID {3})]]></value><comment>{0} = jar name, {1} = formatted amount, {2} = currency code, {3} = Wise balance id</comment></data>
   <data name="Connections.LinkedAccountsCount" xml:space="preserve"><value><![CDATA[{0} verknüpfte(s) Konto/Konten]]></value><comment>{0} = count</comment></data>

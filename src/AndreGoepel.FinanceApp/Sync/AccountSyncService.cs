@@ -24,15 +24,25 @@ internal sealed class AccountSyncService(
     ILogger<AccountSyncService> logger
 ) : IAccountSyncService
 {
-    // Restricted-mode PSD2 history is ~90 days; default the first window to that.
+    // Restricted-mode PSD2 history is ~90 days; default Enable Banking's first window to that.
+    // Wise has no such restriction, so its first sync goes straight to FullHistorySince.
     private static readonly int DefaultWindowDays = 90;
 
     // Re-fetch a few days before the last sync so late-posted bookings are not missed.
     private static readonly int OverlapDays = 3;
 
+    /// <summary>
+    /// "Since the beginning" anchor for a full-history sync — well before any
+    /// household account existed, so it is effectively "everything the provider
+    /// has". Not provider-specific: Enable Banking still only returns whatever its
+    /// live PSD2 consent actually allows, regardless of how far back this asks.
+    /// </summary>
+    internal static readonly DateOnly FullHistorySince = new(2015, 1, 1);
+
     public async Task<AccountSyncSummary> SyncAccountAsync(
         Guid accountId,
         string? triggeredBy,
+        bool fullHistory = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -111,7 +121,7 @@ internal sealed class AccountSyncService(
             return Failed(account.Id, account.Name, connectorResult.Error!);
         }
 
-        var request = await BuildRequestAsync(account, connection, cancellationToken);
+        var request = await BuildRequestAsync(account, connection, fullHistory, cancellationToken);
 
         var fetch = await connectorResult.Value!.FetchAsync(request, cancellationToken);
         if (fetch.IsFailure)
@@ -171,26 +181,36 @@ internal sealed class AccountSyncService(
 
     public async Task<IReadOnlyList<AccountSyncSummary>> SyncAllAsync(
         string? triggeredBy,
+        bool fullHistory = false,
+        Guid? connectionId = null,
         CancellationToken cancellationToken = default
     )
     {
-        var apiAccounts = await querySession
+        var query = querySession
             .Query<Account>()
-            .Where(a => a.SyncMethod == SyncMethod.Api && a.Status == AccountStatus.Active)
-            .ToListAsync(cancellationToken);
+            .Where(a => a.SyncMethod == SyncMethod.Api && a.Status == AccountStatus.Active);
+        if (connectionId is Guid id)
+        {
+            query = query.Where(a => a.ConnectionId == id);
+        }
+        var apiAccounts = await query.ToListAsync(cancellationToken);
 
         var summaries = new List<AccountSyncSummary>(apiAccounts.Count);
         foreach (var account in apiAccounts)
         {
-            summaries.Add(await SyncAccountAsync(account.Id, triggeredBy, cancellationToken));
+            summaries.Add(
+                await SyncAccountAsync(account.Id, triggeredBy, fullHistory, cancellationToken)
+            );
         }
         return summaries;
     }
 
-    // Builds the connector request: window start from the last sync (with overlap) or the default backfill, plus the Enable Banking session where the provider needs it.
+    // Builds the connector request: window start from the last sync (with overlap), the default
+    // backfill (Enable Banking only — PSD2), or full history on request / for Wise's first sync.
     private async Task<ProviderSyncRequest> BuildRequestAsync(
         Account account,
         ProviderConnection connection,
+        bool fullHistory,
         CancellationToken cancellationToken
     )
     {
@@ -200,9 +220,31 @@ internal sealed class AccountSyncService(
             .OrderByDescending(b => b.ImportedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var since = lastBatch is null
-            ? DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-DefaultWindowDays)
-            : DateOnly.FromDateTime(lastBatch.ImportedAt.UtcDateTime).AddDays(-OverlapDays);
+        string windowDescription;
+        DateOnly since;
+        if (fullHistory)
+        {
+            since = FullHistorySince;
+            windowDescription = "full history requested";
+        }
+        else if (lastBatch is not null)
+        {
+            since = DateOnly.FromDateTime(lastBatch.ImportedAt.UtcDateTime).AddDays(-OverlapDays);
+            windowDescription = $"{OverlapDays}d overlap on last batch";
+        }
+        else if (connection.UsesEnableBanking)
+        {
+            // PSD2 restricted-mode consent only exposes ~90 days of history anyway.
+            since = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-DefaultWindowDays);
+            windowDescription = $"first sync, {DefaultWindowDays}d backfill (Enable Banking)";
+        }
+        else
+        {
+            // Wise has no PSD2-style history cap, so its first sync goes straight to
+            // full history instead of arbitrarily truncating at the EB default.
+            since = FullHistorySince;
+            windowDescription = "first sync, full history (Wise)";
+        }
 
         // For Enable Banking, resolve the current session account uid from the
         // connection's linked accounts by the stable identification hash (uids
@@ -223,9 +265,7 @@ internal sealed class AccountSyncService(
             "Sync request for {Account}: since {Since} ({Window}), provider reference {Linked}.",
             account.Name,
             since,
-            lastBatch is null
-                ? $"first sync, {DefaultWindowDays}d backfill"
-                : $"{OverlapDays}d overlap on last batch",
+            windowDescription,
             providerAccountReference is null ? "unresolved" : "resolved"
         );
 

@@ -37,12 +37,16 @@ public sealed class WiseApiClientTests
     }
 
     [Fact]
-    public async Task GetBalancesAsync_ParsesAmountsTypesAndJarNames()
+    public async Task GetBalancesAsync_ParsesAmountsTypesJarNamesAndPrimary()
     {
-        // Arrange — a standard balance (name null) and a savings jar with a name.
+        // Arrange — a primary standard balance (name null), a savings jar with a
+        // name, and a second, non-primary standard balance sharing a currency
+        // with the first (Wise's "grouped balances" — real shape, id 158095158
+        // from a live account, trimmed to the fields this client reads).
         const string json = """
-            [{"id":306149,"currency":"EUR","amount":{"value":999334.00,"currency":"EUR"},"type":"STANDARD","name":null},
-             {"id":306999,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"},"type":"SAVINGS","name":"Vacation"}]
+            [{"id":306149,"currency":"EUR","amount":{"value":999334.00,"currency":"EUR"},"type":"STANDARD","name":null,"primary":true},
+             {"id":306999,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"},"type":"SAVINGS","name":"Vacation","primary":false},
+             {"id":158095158,"currency":"EUR","amount":{"value":0,"currency":"EUR"},"type":"STANDARD","name":"Family","primary":false}]
             """;
         var client = ClientReturning(json, out var handler);
 
@@ -65,6 +69,7 @@ public sealed class WiseApiClientTests
                 Assert.Equal(999334.00m, standard.Amount);
                 Assert.Equal("STANDARD", standard.Type);
                 Assert.Null(standard.Name);
+                Assert.True(standard.Primary);
             },
             jar =>
             {
@@ -72,12 +77,73 @@ public sealed class WiseApiClientTests
                 Assert.Equal(1000000.00m, jar.Amount);
                 Assert.Equal("SAVINGS", jar.Type);
                 Assert.Equal("Vacation", jar.Name);
+                Assert.False(jar.Primary);
+            },
+            grouped =>
+            {
+                Assert.Equal(158095158, grouped.Id);
+                Assert.Equal("EUR", grouped.Currency);
+                Assert.Equal("STANDARD", grouped.Type);
+                Assert.Equal("Family", grouped.Name);
+                Assert.False(grouped.Primary);
             }
         );
         Assert.Equal(
             "https://api.wise.com/v4/profiles/42/balances?types=STANDARD,SAVINGS",
             handler.LastRequestUri!.ToString()
         );
+    }
+
+    [Fact]
+    public async Task GetBalancesAsync_MissingPrimaryField_DoesNotDefaultToTrue()
+    {
+        // Arrange — no "primary" field at all. Defaulting this to true would risk
+        // syncing a balance's transactions when it isn't actually the one true
+        // primary balance for its currency, duplicating the real primary's history.
+        const string json = """
+            [{"id":306149,"currency":"EUR","amount":{"value":100.00,"currency":"EUR"},"type":"STANDARD"}]
+            """;
+        var client = ClientReturning(json, out _);
+
+        // Act
+        var result = await client.GetBalancesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var balance = Assert.Single(result.Value!);
+        Assert.False(balance.Primary);
+    }
+
+    [Fact]
+    public async Task GetBalancesAsync_MissingTypeField_DoesNotDefaultToStandard()
+    {
+        // Arrange — a balance object without a "type" field at all, e.g. a schema
+        // drift or a balance shape Wise didn't populate it for. Defaulting this to
+        // "STANDARD" previously let a jar's activity sync through undetected.
+        const string json = """
+            [{"id":306149,"currency":"EUR","amount":{"value":100.00,"currency":"EUR"}}]
+            """;
+        var client = ClientReturning(json, out _);
+
+        // Act
+        var result = await client.GetBalancesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — Type is neither "STANDARD" nor "SAVINGS", so downstream code
+        // (WiseConnector) fails loudly instead of guessing either way.
+        Assert.True(result.IsSuccess);
+        var balance = Assert.Single(result.Value!);
+        Assert.NotEqual("STANDARD", balance.Type);
+        Assert.NotEqual("SAVINGS", balance.Type);
     }
 
     [Fact]

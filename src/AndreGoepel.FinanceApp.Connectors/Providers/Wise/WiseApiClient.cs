@@ -83,10 +83,19 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
                     b.GetProperty("id").GetInt64(),
                     b.GetProperty("currency").GetString() ?? "",
                     b.GetProperty("amount").GetProperty("value").GetDecimal(),
+                    // Deliberately not defaulted to "STANDARD": a missing/unparseable type
+                    // must not silently masquerade as a normal balance — WiseConnector fails
+                    // loudly on anything it doesn't recognize as STANDARD or SAVINGS, rather
+                    // than risk syncing a jar's full transaction history onto the household.
                     b.TryGetProperty("type", out var type)
-                        ? type.GetString() ?? "STANDARD"
-                        : "STANDARD",
-                    b.TryGetProperty("name", out var name) ? name.GetString() : null
+                        ? type.GetString() ?? ""
+                        : "",
+                    b.TryGetProperty("name", out var name) ? name.GetString() : null,
+                    // Same fail-closed reasoning as Type: a missing "primary" must not
+                    // default to true (syncable) — that would risk duplicating the real
+                    // primary balance's transactions onto this one, same as the Type bug.
+                    b.TryGetProperty("primary", out var primary)
+                        && primary.ValueKind == JsonValueKind.True
                 ))
                 .ToList();
             return Result.Ok<IReadOnlyList<WiseBalance>>(balances);

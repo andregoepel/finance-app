@@ -157,6 +157,162 @@ public sealed class WiseConnectorTests
     }
 
     [Fact]
+    public async Task FetchAsync_NonPrimaryStandardBalance_ReturnsNoRows()
+    {
+        // Arrange — a real-world case (Wise "grouped balances"): a second STANDARD
+        // balance sharing a currency with the true primary one. Its type alone
+        // says "sync me", but the profile-wide, currency-filtered activity feed
+        // cannot tell it apart from the primary balance — syncing it too would
+        // duplicate the primary's whole history onto it.
+        var client = Substitute.For<IWiseApiClient>();
+        var store = Substitute.For<ICredentialStore>();
+        store
+            .GetSecretAsync(CredentialKeys.WiseApiToken(ConnectionId), Arg.Any<CancellationToken>())
+            .Returns("token");
+        client
+            .GetProfilesAsync("token", ProviderEnvironment.Sandbox, Arg.Any<CancellationToken>())
+            .Returns(Result.Ok<IReadOnlyList<WiseProfile>>([new WiseProfile(42, "personal")]));
+        client
+            .GetBalancesAsync(
+                "token",
+                ProviderEnvironment.Sandbox,
+                42,
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok<IReadOnlyList<WiseBalance>>([
+                    new WiseBalance(
+                        306149,
+                        "EUR",
+                        100m,
+                        Type: "STANDARD",
+                        Name: "Family",
+                        Primary: false
+                    ),
+                ])
+            );
+        var connector = new WiseConnector(client, store);
+
+        // Act
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert — success (scheduled runs stay quiet), zero rows, feed never fetched.
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Value!.Rows);
+        await client
+            .DidNotReceive()
+            .GetActivitiesAsync(
+                Arg.Any<string>(),
+                Arg.Any<ProviderEnvironment>(),
+                Arg.Any<long>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task FetchAsync_PrimaryStandardBalance_SyncsNormally()
+    {
+        // Arrange — the true primary balance for its currency must still sync
+        // fully; this is the one case Primary is meant to let through.
+        var client = Substitute.For<IWiseApiClient>();
+        var store = Substitute.For<ICredentialStore>();
+        store
+            .GetSecretAsync(CredentialKeys.WiseApiToken(ConnectionId), Arg.Any<CancellationToken>())
+            .Returns("token");
+        client
+            .GetProfilesAsync("token", ProviderEnvironment.Sandbox, Arg.Any<CancellationToken>())
+            .Returns(Result.Ok<IReadOnlyList<WiseProfile>>([new WiseProfile(42, "personal")]));
+        client
+            .GetBalancesAsync(
+                "token",
+                ProviderEnvironment.Sandbox,
+                42,
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok<IReadOnlyList<WiseBalance>>([
+                    new WiseBalance(306149, "EUR", 100m, Type: "STANDARD", Primary: true),
+                ])
+            );
+        client
+            .GetActivitiesAsync(
+                "token",
+                ProviderEnvironment.Sandbox,
+                42,
+                Arg.Any<DateOnly>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(Result.Ok<IReadOnlyList<WiseActivity>>([]));
+        var connector = new WiseConnector(client, store);
+
+        // Act
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert — proceeds to fetch activities instead of stopping early.
+        Assert.True(result.IsSuccess);
+        await client
+            .Received(1)
+            .GetActivitiesAsync(
+                "token",
+                ProviderEnvironment.Sandbox,
+                42,
+                Arg.Any<DateOnly>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task FetchAsync_UnrecognizedBalanceType_FailsInsteadOfSyncingEverything()
+    {
+        // Arrange — the linked balance's type is neither STANDARD nor SAVINGS (e.g.
+        // a missing/unparseable "type" field from a real API response). Silently
+        // treating this as STANDARD previously let a jar's activity sync through
+        // undetected, duplicating the standard balance's whole history onto it.
+        var client = Substitute.For<IWiseApiClient>();
+        var store = Substitute.For<ICredentialStore>();
+        store
+            .GetSecretAsync(CredentialKeys.WiseApiToken(ConnectionId), Arg.Any<CancellationToken>())
+            .Returns("token");
+        client
+            .GetProfilesAsync("token", ProviderEnvironment.Sandbox, Arg.Any<CancellationToken>())
+            .Returns(Result.Ok<IReadOnlyList<WiseProfile>>([new WiseProfile(42, "personal")]));
+        client
+            .GetBalancesAsync(
+                "token",
+                ProviderEnvironment.Sandbox,
+                42,
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                Result.Ok<IReadOnlyList<WiseBalance>>([
+                    new WiseBalance(306149, "EUR", 100m, Type: ""),
+                ])
+            );
+        var connector = new WiseConnector(client, store);
+
+        // Act
+        var result = await connector.FetchAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert — fails loudly, never reaches the activity feed.
+        Assert.True(result.IsFailure);
+        Assert.Contains("306149", result.Error);
+        await client
+            .DidNotReceive()
+            .GetActivitiesAsync(
+                Arg.Any<string>(),
+                Arg.Any<ProviderEnvironment>(),
+                Arg.Any<long>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<DateOnly>(),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
     public void MapForCurrency_SameCurrencyConversion_IsSkipped()
     {
         // Arrange — a jar shuffle: 25 EUR moved between the standard balance and a jar.

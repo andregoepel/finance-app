@@ -50,15 +50,21 @@ public sealed record WiseProfile(long Id, string Type);
 
 /// <summary>
 /// <paramref name="Id"/> is the Wise balance id used to link an account (its
-/// external id). <paramref name="Type"/> is STANDARD or SAVINGS (a jar);
-/// <paramref name="Name"/> is the jar's name (standard balances carry none).
+/// external id). <paramref name="Type"/> is STANDARD or SAVINGS (a jar).
+/// Wise allows several STANDARD balances per currency ("grouped" balances);
+/// <paramref name="Primary"/> distinguishes the one true default balance for
+/// that currency from the others — only it can be attributed from the
+/// profile-wide, currency-filtered activity feed. <paramref name="Name"/> is
+/// set for jars and non-primary grouped balances alike (the default primary
+/// balance of each currency carries none).
 /// </summary>
 public sealed record WiseBalance(
     long Id,
     string Currency,
     decimal Amount,
     string Type = "STANDARD",
-    string? Name = null
+    string? Name = null,
+    bool Primary = true
 );
 
 /// <summary>

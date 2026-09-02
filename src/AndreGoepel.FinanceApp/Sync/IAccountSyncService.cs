@@ -11,14 +11,25 @@ namespace AndreGoepel.FinanceApp.Sync;
 /// </summary>
 public interface IAccountSyncService
 {
+    /// <param name="fullHistory">
+    /// Ignore the account's last import batch and Wise's default backfill window,
+    /// and fetch from <see cref="AccountSyncService.FullHistorySince"/> instead — a
+    /// one-off deep sync, e.g. after a truncated first sync or a provider bug that
+    /// under-fetched history. Enable Banking accounts are still bound by whatever
+    /// the bank's PSD2 consent actually allows.
+    /// </param>
     Task<AccountSyncSummary> SyncAccountAsync(
         Guid accountId,
         string? triggeredBy,
+        bool fullHistory = false,
         CancellationToken cancellationToken = default
     );
 
+    /// <param name="connectionId">Restrict to accounts synced through this connection; null syncs every API account.</param>
     Task<IReadOnlyList<AccountSyncSummary>> SyncAllAsync(
         string? triggeredBy,
+        bool fullHistory = false,
+        Guid? connectionId = null,
         CancellationToken cancellationToken = default
     );
 }

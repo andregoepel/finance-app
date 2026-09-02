@@ -27,7 +27,10 @@ internal sealed class DailySyncJob(
     {
         try
         {
-            var summaries = await syncService.SyncAllAsync("scheduled", context.CancellationToken);
+            var summaries = await syncService.SyncAllAsync(
+                "scheduled",
+                cancellationToken: context.CancellationToken
+            );
             foreach (var summary in summaries.Where(s => !s.Success))
             {
                 logger.LogWarning(
