@@ -140,7 +140,7 @@
                 </FormField>
                 <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
                     <CategoryPicker Options="@categoryOptions" Name="Category" @bind-Value=@form.CategoryId
-                                    AllowFiltering="true" Placeholder="@L["Planning.NonePlaceholder"]" Style="min-width: 15rem;" />
+                                    Placeholder="@L["Planning.NonePlaceholder"]" Style="min-width: 15rem;" />
                 </FormField>
                 <FormField Label="@L["Planning.FrequencyLabel"]" For="Frequency">
                     <RadzenDropDown TValue="PlannedFrequency" @bind-Value=@form.Frequency Name="Frequency" Data=@Frequencies Style="min-width: 9rem;">

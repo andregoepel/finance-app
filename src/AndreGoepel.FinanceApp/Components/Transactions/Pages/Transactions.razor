@@ -55,7 +55,7 @@
                                 Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
-                <CategoryPicker Options="@categoryOptions" Name="Category"
+                <CategoryPicker Options="@categoryFilterOptions" Name="Category"
                                 Value="@categoryFilter"
                                 ValueChanged="@(v => { categoryFilter = v; return ReloadAsync(resetPage: true); })"
                                 Placeholder="@L["Common.AllPlaceholder"]" Style="min-width: 13rem;" />
@@ -162,7 +162,7 @@
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
                         <CategoryPicker Options="@categoryOptions" Name="SplitCategory"
                                         @bind-Value=@line.CategoryId
-                                        AllowFiltering="true" AllowClear="false"
+                                        AllowClear="false"
                                         Placeholder="@L["Dashboard.ColCategory"]" Style="min-width: 15rem;" />
                         <RadzenNumeric TValue="decimal" @bind-Value=@line.Amount Style="width: 9rem;" />
                         <IconButton Icon="delete" Title="@L["Common.Delete"]" Click=@(_ => splitLines.Remove(line)) />
@@ -187,6 +187,9 @@
 @code {
     private const int MaxRows = 1000;
 
+    /// <summary>Sentinel id for the "Uncategorized" entry in <see cref="categoryFilterOptions"/> — never a real category id, so it can't collide.</summary>
+    private static readonly Guid UncategorizedFilterId = Guid.Empty;
+
     private readonly CancellationTokenSource _cts = new();
 
     private RadzenDataGrid<TransactionView> grid = null!;
@@ -194,6 +197,7 @@
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
     private List<CategoryOption> categoryOptions = [];
+    private List<CategoryOption> categoryFilterOptions = [];
     private List<TransactionView> transactions = [];
     private IList<TransactionView> selected = [];
 
@@ -216,6 +220,11 @@
             .ToListAsync(_cts.Token);
         var categories = await QuerySession.Query<Category>().ToListAsync(_cts.Token);
         categoryOptions = CategoryPaths.Build(categories);
+        categoryFilterOptions =
+        [
+            new CategoryOption(UncategorizedFilterId, L["Transactions.CategoryFilterUncategorizedOption"]),
+            .. categoryOptions,
+        ];
         await ReloadAsync();
     }
 
@@ -225,7 +234,11 @@
 
         var accountIds = FilteredAccountIds();
         var query = QuerySession.Query<TransactionView>().Where(t => t.AccountId.IsOneOf(accountIds));
-        if (categoryFilter is Guid categoryId)
+        if (categoryFilter == UncategorizedFilterId)
+        {
+            query = query.Where(t => !t.IsCategorized);
+        }
+        else if (categoryFilter is Guid categoryId)
         {
             query = query.Where(t =>
                 t.CategoryId == categoryId || t.CategoryLines.Any(l => l.CategoryId == categoryId)

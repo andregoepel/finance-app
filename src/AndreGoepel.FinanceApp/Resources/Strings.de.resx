@@ -286,6 +286,7 @@
   <data name="Transactions.SearchPlaceholder" xml:space="preserve"><value><![CDATA[Beschreibung oder Zahlungspartner]]></value></data>
   <data name="Transactions.LinkAsTransfer" xml:space="preserve"><value><![CDATA[Als Umbuchung verknüpfen]]></value></data>
   <data name="Transactions.UncategorizedPlaceholder" xml:space="preserve"><value><![CDATA[Unkategorisiert]]></value></data>
+  <data name="Transactions.CategoryFilterUncategorizedOption" xml:space="preserve"><value><![CDATA[Unkategorisiert]]></value></data>
   <data name="Transactions.TransferBadge" xml:space="preserve"><value><![CDATA[Umbuchung]]></value></data>
   <data name="Transactions.UnlinkTransfer" xml:space="preserve"><value><![CDATA[Verknüpfung aufheben]]></value></data>
   <data name="Transactions.CategorizationFailedTitle" xml:space="preserve"><value><![CDATA[Kategorisierung fehlgeschlagen]]></value></data>

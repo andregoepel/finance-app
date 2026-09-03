@@ -152,7 +152,7 @@
                     <RadzenTextBox @bind-Value=@entry.Counterparty Name="EntryCounterparty" Disabled=@isSaving Style="width: 100%;" />
                 </FormField>
                 <FormField Label="@L["Dashboard.ColCategory"]" For="EntryCategory">
-                    <CategoryPicker Options="@categoryOptions" Name="EntryCategory" AllowFiltering="true"
+                    <CategoryPicker Options="@categoryOptions" Name="EntryCategory"
                                     Value="@entry.CategoryId"
                                     ValueChanged="@(v => entry.CategoryId = v)"
                                     Placeholder="@L["Cash.CategoryHint"]" />
