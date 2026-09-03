@@ -37,8 +37,12 @@ public static class MatchPlannedTransactionsCommandHandler
             return;
         }
 
+        // Auto-match only fills genuinely open occurrences — one match, from
+        // either auto or a prior manual pick, is enough to take an occurrence
+        // out of consideration here. Splitting across several transactions stays
+        // a deliberate manual action (see SetPlannedMatchCommand).
         var existing = await session.Query<PlannedMatch>().ToListAsync(cancellationToken);
-        var matchedKeys = existing.Select(m => m.Id).ToHashSet();
+        var matchedOccurrences = existing.Select(m => (m.PlannedItemId, m.DueDate)).ToHashSet();
 
         // Precompute the candidate window bounds — Marten can't translate
         // `from.AddDays(-window)` inline (a captured-variable negation/method call).
@@ -50,7 +54,7 @@ public static class MatchPlannedTransactionsCommandHandler
                 .Query<TransactionView>()
                 .Where(t =>
                     t.AmountEur != null
-                    && t.PlannedItemId == null
+                    && !t.IsPlanMatched
                     && t.BookingDate >= candidateFrom
                     && t.BookingDate <= candidateTo
                 )
@@ -71,8 +75,7 @@ public static class MatchPlannedTransactionsCommandHandler
         {
             foreach (var due in PlannedOccurrenceExpander.Expand(item.Schedule, from, to))
             {
-                var key = PlannedMatch.KeyFor(item.Id, due);
-                if (matchedKeys.Contains(key))
+                if (matchedOccurrences.Contains((item.Id, due)))
                 {
                     continue;
                 }
@@ -93,7 +96,7 @@ public static class MatchPlannedTransactionsCommandHandler
                 session.Store(
                     new PlannedMatch
                     {
-                        Id = key,
+                        Id = PlannedMatch.KeyFor(item.Id, due, transactionId),
                         PlannedItemId = item.Id,
                         DueDate = due,
                         TransactionId = transactionId,
@@ -104,13 +107,13 @@ public static class MatchPlannedTransactionsCommandHandler
                     transactionId,
                     cancellationToken
                 );
-                if (stream.Aggregate is { PlannedItemId: null })
+                if (stream.Aggregate is { IsPlanMatched: false })
                 {
                     stream.AppendOne(new TransactionMatchedToPlannedItem(item.Id, due));
                 }
 
                 pool.RemoveAll(c => c.Id == transactionId);
-                matchedKeys.Add(key);
+                matchedOccurrences.Add((item.Id, due));
                 matchedAny = true;
             }
         }

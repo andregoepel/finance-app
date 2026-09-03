@@ -76,6 +76,91 @@ public sealed class TransactionViewTests
     }
 
     [Fact]
+    public void Apply_MatchedToPlannedItem_AddsLink()
+    {
+        // Arrange
+        var view = Imported();
+        var plannedItemId = Guid.NewGuid();
+        var due = new DateOnly(2026, 6, 1);
+
+        // Act
+        view.Apply(new TransactionMatchedToPlannedItem(plannedItemId, due));
+
+        // Assert
+        Assert.True(view.IsPlanMatched);
+        Assert.Equal([new PlannedLink(plannedItemId, due)], view.PlannedLinks);
+    }
+
+    [Fact]
+    public void Apply_MatchedToPlannedItem_TwoDifferentOccurrences_KeepsBothLinks()
+    {
+        // Arrange — one transfer covering rent and a car payment: the same
+        // transaction satisfies two different planned occurrences.
+        var view = Imported();
+        var rent = new PlannedLink(Guid.NewGuid(), new DateOnly(2026, 6, 1));
+        var car = new PlannedLink(Guid.NewGuid(), new DateOnly(2026, 6, 1));
+
+        // Act
+        view.Apply(new TransactionMatchedToPlannedItem(rent.PlannedItemId, rent.DueDate));
+        view.Apply(new TransactionMatchedToPlannedItem(car.PlannedItemId, car.DueDate));
+
+        // Assert
+        Assert.Equal(2, view.PlannedLinks.Count);
+        Assert.Contains(rent, view.PlannedLinks);
+        Assert.Contains(car, view.PlannedLinks);
+    }
+
+    [Fact]
+    public void Apply_MatchedToPlannedItem_SameOccurrenceTwice_IsIdempotent()
+    {
+        // Arrange
+        var view = Imported();
+        var plannedItemId = Guid.NewGuid();
+        var due = new DateOnly(2026, 6, 1);
+        view.Apply(new TransactionMatchedToPlannedItem(plannedItemId, due));
+
+        // Act — a re-match (e.g. a repeated "Use" click) must not duplicate the link.
+        view.Apply(new TransactionMatchedToPlannedItem(plannedItemId, due));
+
+        // Assert
+        Assert.Single(view.PlannedLinks);
+    }
+
+    [Fact]
+    public void Apply_PlannedMatchCleared_RemovesOnlyTheNamedLink()
+    {
+        // Arrange
+        var view = Imported();
+        var rent = new PlannedLink(Guid.NewGuid(), new DateOnly(2026, 6, 1));
+        var car = new PlannedLink(Guid.NewGuid(), new DateOnly(2026, 6, 1));
+        view.Apply(new TransactionMatchedToPlannedItem(rent.PlannedItemId, rent.DueDate));
+        view.Apply(new TransactionMatchedToPlannedItem(car.PlannedItemId, car.DueDate));
+
+        // Act
+        view.Apply(new TransactionPlannedMatchCleared(rent.PlannedItemId, rent.DueDate));
+
+        // Assert
+        Assert.True(view.IsPlanMatched);
+        Assert.Equal([car], view.PlannedLinks);
+    }
+
+    [Fact]
+    public void Apply_PlannedMatchCleared_WithoutOccurrence_ClearsEverything()
+    {
+        // Arrange — the pre-multi-match event shape (no payload); still must work
+        // for history recorded before this feature existed.
+        var view = Imported();
+        view.Apply(new TransactionMatchedToPlannedItem(Guid.NewGuid(), new DateOnly(2026, 6, 1)));
+
+        // Act
+        view.Apply(new TransactionPlannedMatchCleared());
+
+        // Assert
+        Assert.False(view.IsPlanMatched);
+        Assert.Empty(view.PlannedLinks);
+    }
+
+    [Fact]
     public void Apply_Categorized_SetsIsCategorizedAndSingleLine()
     {
         // Arrange

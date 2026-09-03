@@ -421,7 +421,7 @@ public sealed class HardDeleteAccountCommandHandlerTests(FinanceMartenFixture fi
         var dueDate = new DateOnly(2026, month, 1);
         var match = new PlannedMatch
         {
-            Id = PlannedMatch.KeyFor(plannedItemId, dueDate),
+            Id = PlannedMatch.KeyFor(plannedItemId, dueDate, transactionId),
             PlannedItemId = plannedItemId,
             DueDate = dueDate,
             TransactionId = transactionId,

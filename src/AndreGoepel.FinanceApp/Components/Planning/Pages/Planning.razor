@@ -71,16 +71,16 @@
                         <RadzenDataGridColumn TItem="PlannedOccurrence" Property="Status" Title="@L["Common.Status"]" Width="100px">
                             <Template Context="o"><StatusBadge Variant="@StatusVariant(o.Status)" Text="@L[$"Enum.PlannedOccurrenceStatus.{o.Status}"]" /></Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="PlannedOccurrence" Title="" Width="90px" TextAlign="TextAlign.End">
+                        <RadzenDataGridColumn TItem="PlannedOccurrence" Title="" Width="140px" TextAlign="TextAlign.End">
                             <Template Context="o">
-                                @if (o.Status == PlannedOccurrenceStatus.Matched)
-                                {
-                                    <RadzenButton Text="@L["Planning.Unmatch"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" Click=@(() => UnmatchAsync(o)) />
-                                }
-                                else
-                                {
+                                <RadzenStack Gap="0.25rem" AlignItems="AlignItems.End">
+                                    @foreach (var m in o.Matches)
+                                    {
+                                        <RadzenButton Text="@L["Planning.Unmatch"]" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
+                                                      Click=@(() => UnmatchAsync(o, m.TransactionId)) />
+                                    }
                                     <RadzenButton Text="@L["Planning.Match"]" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.ExtraSmall" Click=@(() => StartMatchAsync(o)) />
-                                }
+                                </RadzenStack>
                             </Template>
                         </RadzenDataGridColumn>
                     </Columns>
@@ -288,7 +288,10 @@
     private async Task StartMatchAsync(PlannedOccurrence occurrence)
     {
         matchingOccurrence = occurrence;
-        candidates = (await PlanningService.GetMatchCandidatesAsync(occurrence.DueDate, _cts.Token)).ToList();
+        var alreadyLinked = occurrence.Matches.Select(m => m.TransactionId).ToHashSet();
+        candidates = (await PlanningService.GetMatchCandidatesAsync(occurrence.DueDate, _cts.Token))
+            .Where(t => !alreadyLinked.Contains(t.Id))
+            .ToList();
     }
 
     private async Task UseMatchAsync(TransactionView transaction)
@@ -311,10 +314,10 @@
         NotificationService.Success(L["Planning.MatchedTitle"]);
     }
 
-    private async Task UnmatchAsync(PlannedOccurrence occurrence)
+    private async Task UnmatchAsync(PlannedOccurrence occurrence, Guid transactionId)
     {
         var result = await MessageBus.InvokeAsync<Result>(
-            new ClearPlannedMatchCommand(occurrence.PlannedItemId, occurrence.DueDate),
+            new ClearPlannedMatchCommand(occurrence.PlannedItemId, occurrence.DueDate, transactionId),
             _cts.Token
         );
         if (result.IsFailure)
