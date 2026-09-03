@@ -49,18 +49,22 @@ public sealed class LocalizationTests(E2EAppFixture fixture) : FinanceE2ETestBas
         await Page.GotoAsync("/settings/accounts");
         await Page.WaitForBlazorAsync();
 
-        // Assert — the breadcrumb composes a localized frame with a localized page name, and the
-        // account-type dropdown renders enum members through the resx rather than as C# identifiers.
+        // Assert — the breadcrumb composes a localized frame with a localized page name.
         var content = await Page.ContentAsync();
         Assert.Contains("Einstellungen / Konten", content);
-        Assert.Contains("Girokonto", content);
-
-        // The negative check is on prose, not on the raw markup. Radzen derives a dropdown's
-        // aria-label from the bound value rather than from its Template, so the C# enum name
-        // ("Checking") legitimately survives in the HTML even though every visible occurrence is
-        // German. Asserting against the whole document would fail for a reason unrelated to
-        // localization — worth knowing, and worth a separate look at the accessible name.
         Assert.DoesNotContain("Settings / Accounts", content);
+
+        // Act — the account-type dropdown only renders inside the add/edit dialog (#166 moved it
+        // out of the always-visible inline form).
+        await Page.ClickButtonAsync("Konto hinzufügen");
+        await Expect(Page.Locator(".rz-dialog-content")).ToBeVisibleAsync();
+
+        // Assert — the account-type dropdown renders enum members through the resx rather than as
+        // C# identifiers. (Radzen derives a dropdown's aria-label from the bound value rather than
+        // from its Template, so the C# enum name ("Checking") legitimately survives in the HTML
+        // even though every visible occurrence is German — a whole-document negative check would
+        // fail for a reason unrelated to localization, so there isn't one here.)
+        Assert.Contains("Girokonto", await Page.ContentAsync());
     }
 
     [Fact]
