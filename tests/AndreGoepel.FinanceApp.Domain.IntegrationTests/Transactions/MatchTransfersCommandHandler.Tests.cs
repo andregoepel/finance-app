@@ -30,7 +30,7 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     public async Task Handle_ExactPair_IsLinkedOnBothLegs()
     {
         // Arrange
-        var (accountA, accountB) = await CreateAccountPairAsync();
+        var (accountA, accountB, _) = await CreateAccountsAsync();
         var outgoing = await ImportAsync(accountA, -100m, Today);
         var incoming = await ImportAsync(accountB, 100m, Today);
 
@@ -47,12 +47,36 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     }
 
     [Fact]
-    public async Task Handle_FuzzyPair_BecomesAPendingSuggestion()
+    public async Task Handle_OneDayApart_NeverMatches()
     {
-        // Arrange — 3 days apart, 1 EUR off.
-        var (accountA, accountB) = await CreateAccountPairAsync();
+        // Arrange — the day must be identical now; a one-day gap is no longer
+        // auto-linked, nor offered as a suggestion.
+        var (accountA, accountB, _) = await CreateAccountsAsync();
         var outgoing = await ImportAsync(accountA, -100m, Today);
-        var incoming = await ImportAsync(accountB, 99m, Today.AddDays(3));
+        var incoming = await ImportAsync(accountB, 100m, Today.AddDays(1));
+
+        // Act
+        await MatchAsync();
+
+        // Assert
+        await using var session = fixture.Store.QuerySession();
+        Assert.Null(
+            (await session.LoadAsync<TransactionView>(outgoing, Ct))!.TransferCounterpartId
+        );
+        Assert.Null(
+            (await session.LoadAsync<TransactionView>(incoming, Ct))!.TransferCounterpartId
+        );
+        Assert.Empty(await session.Query<TransferSuggestion>().ToListAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Handle_CrossCurrencyExactMatch_BecomesAPendingSuggestion()
+    {
+        // Arrange — same day, EUR amounts cancel out exactly, but the currencies
+        // differ, so it needs a human glance instead of auto-linking.
+        var (accountA, accountB, _) = await CreateAccountsAsync();
+        var outgoing = await ImportAsync(accountA, -100m, Today, currency: "USD");
+        var incoming = await ImportAsync(accountB, 100m, Today, currency: "EUR");
 
         // Act
         await MatchAsync();
@@ -72,7 +96,7 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     public async Task Handle_RunTwice_IsIdempotent()
     {
         // Arrange
-        var (accountA, accountB) = await CreateAccountPairAsync();
+        var (accountA, accountB, _) = await CreateAccountsAsync();
         await ImportAsync(accountA, -100m, Today);
         await ImportAsync(accountB, 100m, Today);
         await MatchAsync();
@@ -94,9 +118,9 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     public async Task Handle_DismissedSuggestion_IsNeverRecreated()
     {
         // Arrange
-        var (accountA, accountB) = await CreateAccountPairAsync();
-        var outgoing = await ImportAsync(accountA, -100m, Today);
-        var incoming = await ImportAsync(accountB, 99m, Today.AddDays(3));
+        var (accountA, accountB, _) = await CreateAccountsAsync();
+        var outgoing = await ImportAsync(accountA, -100m, Today, currency: "USD");
+        var incoming = await ImportAsync(accountB, 100m, Today, currency: "EUR");
         await MatchAsync();
         var suggestion = Assert.Single(await QuerySuggestionsAsync());
         await DismissAsync(suggestion.Id);
@@ -120,11 +144,12 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     [Fact]
     public async Task Handle_AcceptedSuggestion_LinksAndClearsCompetingSuggestions()
     {
-        // Arrange — one outgoing leg with two plausible incoming candidates.
-        var (accountA, accountB) = await CreateAccountPairAsync();
+        // Arrange — one outgoing leg with two exactly-matching incoming
+        // candidates on different accounts: ambiguous, so both go to review.
+        var (accountA, accountB, accountC) = await CreateAccountsAsync();
         var outgoing = await ImportAsync(accountA, -100m, Today);
-        var right = await ImportAsync(accountB, 99m, Today.AddDays(2));
-        var wrong = await ImportAsync(accountB, 98.5m, Today.AddDays(4));
+        var right = await ImportAsync(accountB, 100m, Today);
+        var wrong = await ImportAsync(accountC, 100m, Today);
         await MatchAsync();
         var suggestions = await QuerySuggestionsAsync();
         Assert.Equal(2, suggestions.Count);
@@ -187,7 +212,7 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
         return (await session.Query<TransferSuggestion>().ToListAsync(Ct)).ToList();
     }
 
-    private async Task<(Guid AccountA, Guid AccountB)> CreateAccountPairAsync()
+    private async Task<(Guid AccountA, Guid AccountB, Guid AccountC)> CreateAccountsAsync()
     {
         var a = new Account
         {
@@ -205,13 +230,26 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
             Currency = "EUR",
             SyncMethod = SyncMethod.CsvUpload,
         };
+        var c = new Account
+        {
+            Name = "EasyBank",
+            Provider = ProviderKind.EasyBank,
+            Type = AccountType.Checking,
+            Currency = "EUR",
+            SyncMethod = SyncMethod.CsvUpload,
+        };
         await using var session = fixture.Store.LightweightSession();
-        session.StoreObjects([a, b]);
+        session.StoreObjects([a, b, c]);
         await session.SaveChangesAsync(Ct);
-        return (a.Id, b.Id);
+        return (a.Id, b.Id, c.Id);
     }
 
-    private async Task<Guid> ImportAsync(Guid accountId, decimal amount, DateOnly bookingDate)
+    private async Task<Guid> ImportAsync(
+        Guid accountId,
+        decimal amount,
+        DateOnly bookingDate,
+        string currency = "EUR"
+    )
     {
         var batch = new ImportBatch
         {
@@ -231,7 +269,9 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
                 bookingDate,
                 null,
                 amount,
-                "EUR",
+                currency,
+                // AmountEur is set directly regardless of currency so the test can
+                // control the EUR-comparison value without a real FX conversion.
                 amount,
                 "Counterparty",
                 "transfer",
