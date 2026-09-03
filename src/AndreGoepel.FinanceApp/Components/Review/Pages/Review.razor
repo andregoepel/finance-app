@@ -79,6 +79,10 @@
                           Icon="sync_alt"
                           ButtonStyle="ButtonStyle.Light"
                           Click=@FindTransfersAsync />
+            <RadzenButton Text="@L["Review.RepairCategorizedFlags"]"
+                          Icon="healing"
+                          ButtonStyle="ButtonStyle.Light"
+                          Click=@RepairCategorizedFlagsAsync />
             <IconButton Icon="refresh" Title="@L["Review.Refresh"]" Click=@(_ => ReloadAsync()) />
         </RadzenStack>
     </RadzenCard>
@@ -304,6 +308,15 @@
         await MessageBus.PublishAsync(new MatchTransfersCommand());
         NotificationService.Success(L["Common.DoneTitle"], L["Review.FindTransfersStartedMessage"]);
     }
+
+    /// <summary>
+    /// One-time repair for documents written before <c>IsCategorized</c> existed
+    /// on <see cref="TransactionView"/> — see <see cref="RepairCategorizedFlagCommand"/>.
+    /// Runs inline rather than fire-and-forget: it is a plain DB pass, not an
+    /// external API call, so the list can reload as soon as it returns.
+    /// </summary>
+    private async Task RepairCategorizedFlagsAsync() =>
+        await RunAsync(new RepairCategorizedFlagCommand(), L["Review.RepairCategorizedFlagsMessage"]);
 
     private async Task AcceptTransferAsync(string suggestionId) =>
         await RunAsync(
