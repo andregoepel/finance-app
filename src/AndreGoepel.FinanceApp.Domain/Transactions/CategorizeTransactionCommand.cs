@@ -37,7 +37,13 @@ public static class CategorizeTransactionCommandHandler
             return Result.Fail(localizer["Error.TransactionNotFound"]);
         }
 
-        if (stream.Aggregate.CategoryId == command.CategoryId)
+        // Only a true no-op skips the event: same category *and* the read model
+        // already reflects it as categorized. A document written before
+        // IsCategorized existed on TransactionView can carry a CategoryId with
+        // IsCategorized still false/missing (a pre-split-feature deploy, for
+        // instance) — re-picking the same category from the review queue must
+        // still repair that instead of silently doing nothing.
+        if (stream.Aggregate.CategoryId == command.CategoryId && stream.Aggregate.IsCategorized)
         {
             return Result.Ok();
         }
