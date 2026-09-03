@@ -198,11 +198,11 @@
   <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Transfer suggestions]]></value></data>
   <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Outgoing]]></value></data>
   <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Incoming]]></value></data>
-  <data name="Review.ColDifference" xml:space="preserve"><value><![CDATA[Difference]]></value></data>
+  <data name="Review.ColReason" xml:space="preserve"><value><![CDATA[Reason]]></value></data>
   <data name="Review.LinkTransferTooltip" xml:space="preserve"><value><![CDATA[Link as transfer]]></value></data>
   <data name="Review.DismissTransferTooltip" xml:space="preserve"><value><![CDATA[Not a transfer]]></value></data>
-  <data name="Review.TransferDifferenceDaysOnly" xml:space="preserve"><value><![CDATA[{0} day(s) apart]]></value><comment>{0} = day difference; amount matches exactly</comment></data>
-  <data name="Review.TransferDifferenceDaysAndAmount" xml:space="preserve"><value><![CDATA[{0} day(s) apart, {1} off]]></value><comment>{0} = day difference, {1} = formatted EUR amount difference</comment></data>
+  <data name="Review.TransferReasonCrossCurrency" xml:space="preserve"><value><![CDATA[Different currencies — check the conversion]]></value></data>
+  <data name="Review.TransferReasonAmbiguous" xml:space="preserve"><value><![CDATA[Multiple matching transactions — pick the right pair]]></value></data>
   <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Transfer linked.]]></value></data>
   <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestion dismissed.]]></value></data>
   <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Type]]></value></data>

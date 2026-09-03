@@ -1,10 +1,11 @@
 namespace AndreGoepel.FinanceApp.Domain.Transactions;
 
 /// <summary>
-/// A transfer pairing that could not be auto-linked with full confidence —
-/// amount or date is close but not exact — awaiting a human decision in the
-/// review queue. One per unordered pair of transactions; <see cref="Id"/>
-/// encodes both so a re-match is idempotent.
+/// A transfer pairing that matches exactly (same day, same EUR amount) but
+/// could not be auto-linked with full confidence — either a cross-currency
+/// pair, whose FX leg always needs a human glance, or one of several
+/// candidates competing for the same counterpart. One per unordered pair of
+/// transactions; <see cref="Id"/> encodes both so a re-match is idempotent.
 /// </summary>
 public sealed class TransferSuggestion
 {
@@ -13,10 +14,6 @@ public sealed class TransferSuggestion
     public required Guid OutgoingTransactionId { get; init; }
 
     public required Guid IncomingTransactionId { get; init; }
-
-    public required int DayDifference { get; init; }
-
-    public required decimal AmountDifferenceEur { get; init; }
 
     /// <summary>
     /// True once dismissed as "not a transfer" — kept rather than deleted so the

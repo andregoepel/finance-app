@@ -5,13 +5,15 @@ using Microsoft.Extensions.Logging;
 namespace AndreGoepel.FinanceApp.Domain.Transactions;
 
 /// <summary>
-/// Auto-matches unlinked transactions across accounts as transfers: an exact
-/// pair (same EUR amount, opposite sign, different account, booking dates a
-/// day apart at most) is linked outright; anything less certain becomes a
-/// <see cref="TransferSuggestion"/> for the review queue. Idempotent — already
-/// linked transactions and already-suggested pairs are skipped, so it is safe
-/// to publish after every import/sync and to invoke on demand from the review
-/// page, mirroring <c>MatchPlannedTransactionsCommand</c>.
+/// Auto-matches unlinked transactions across accounts as transfers: a
+/// same-currency pair (exact EUR amount, opposite sign, different account,
+/// same booking date) is linked outright; a cross-currency exact match or an
+/// ambiguous duplicate becomes a <see cref="TransferSuggestion"/> for the
+/// review queue instead. No tolerance on date or amount — see
+/// <see cref="TransferMatcher"/>. Idempotent — already linked transactions
+/// and already-suggested pairs are skipped, so it is safe to publish after
+/// every import/sync and to invoke on demand from the review page, mirroring
+/// <c>MatchPlannedTransactionsCommand</c>.
 /// </summary>
 public sealed record MatchTransfersCommand;
 
@@ -84,8 +86,6 @@ public static class MatchTransfersCommandHandler
                     Id = key,
                     OutgoingTransactionId = pair.OutgoingId,
                     IncomingTransactionId = pair.IncomingId,
-                    DayDifference = pair.DayDifference,
-                    AmountDifferenceEur = pair.AmountDifferenceEur,
                 }
             );
             suggested++;
