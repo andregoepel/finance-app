@@ -268,15 +268,18 @@
             await QuerySession.Query<TransactionView>().Where(t => t.Id.IsOneOf(legIds)).ToListAsync()
         ).ToDictionary(t => t.Id);
 
-        // Legs that vanished (deleted) or were linked/dismissed another way in the
-        // meantime are skipped rather than shown broken; the next match run tidies
-        // the stale suggestion up.
+        // Legs that vanished (deleted), were linked/dismissed another way, or were
+        // categorized by hand in the meantime are skipped rather than shown stale;
+        // the next match run tidies the underlying suggestion up (see
+        // MatchTransfersCommandHandler.FindStaleSuggestionsAsync).
         transferSuggestions = pending
             .Select(s =>
                 legs.TryGetValue(s.OutgoingTransactionId, out var outgoing)
                 && legs.TryGetValue(s.IncomingTransactionId, out var incoming)
                 && !outgoing.IsTransfer
                 && !incoming.IsTransfer
+                && outgoing.CategorySource != CategorySource.Manual
+                && incoming.CategorySource != CategorySource.Manual
                     ? new TransferSuggestionRow(s, outgoing, incoming)
                     : null
             )

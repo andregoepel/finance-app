@@ -14,10 +14,14 @@ namespace AndreGoepel.FinanceApp.Domain.Transactions;
 /// categorized (<see cref="CategorySource.Manual"/>) is excluded from the
 /// candidate pool outright — that is a standing decision that it is not a
 /// transfer, and must survive even if the <see cref="TransferSuggestion"/>
-/// collection itself is ever cleared out. Idempotent — already linked
-/// transactions and already-suggested pairs are skipped, so it is safe to
-/// publish after every import/sync and to invoke on demand from the review
-/// page, mirroring <c>MatchPlannedTransactionsCommand</c>.
+/// collection itself is ever cleared out. Every run also sweeps existing
+/// pending suggestions and dismisses any whose leg was categorized by hand
+/// in the meantime (see <see cref="FindStaleSuggestionsAsync"/>), so a
+/// suggestion never outlives the decision the household already made about
+/// it. Idempotent — already linked transactions and already-suggested pairs
+/// are skipped, so it is safe to publish after every import/sync and to
+/// invoke on demand from the review page, mirroring
+/// <c>MatchPlannedTransactionsCommand</c>.
 /// </summary>
 public sealed record MatchTransfersCommand;
 
@@ -34,7 +38,16 @@ public static class MatchTransfersCommandHandler
             .Query<TransferSuggestion>()
             .Where(s => !s.Dismissed)
             .ToListAsync(cancellationToken);
-        var awaitingReview = pending
+
+        var stale = await FindStaleSuggestionsAsync(session, pending, cancellationToken);
+        foreach (var suggestion in stale)
+        {
+            suggestion.Dismissed = true;
+            session.Store(suggestion);
+        }
+        var stillPending = pending.Except(stale).ToList();
+
+        var awaitingReview = stillPending
             .SelectMany(s => new[] { s.OutgoingTransactionId, s.IncomingTransactionId })
             .ToHashSet();
         var suggestedPairIds = (
@@ -63,43 +76,42 @@ public static class MatchTransfersCommandHandler
                 t.AmountEur
             ))
             .ToList();
-        if (pool.Count < 2)
-        {
-            return;
-        }
-
-        var result = TransferMatcher.FindPairs(pool);
 
         var linked = 0;
-        foreach (var pair in result.Exact)
-        {
-            if (await TryLinkAsync(session, pair, cancellationToken))
-            {
-                linked++;
-            }
-        }
-
         var suggested = 0;
-        foreach (var pair in result.Fuzzy)
+        if (pool.Count >= 2)
         {
-            var key = TransferSuggestion.KeyFor(pair.OutgoingId, pair.IncomingId);
-            if (!suggestedPairIds.Add(key))
+            var result = TransferMatcher.FindPairs(pool);
+
+            foreach (var pair in result.Exact)
             {
-                continue; // already pending or previously dismissed
+                if (await TryLinkAsync(session, pair, cancellationToken))
+                {
+                    linked++;
+                }
             }
 
-            session.Store(
-                new TransferSuggestion
+            foreach (var pair in result.Fuzzy)
+            {
+                var key = TransferSuggestion.KeyFor(pair.OutgoingId, pair.IncomingId);
+                if (!suggestedPairIds.Add(key))
                 {
-                    Id = key,
-                    OutgoingTransactionId = pair.OutgoingId,
-                    IncomingTransactionId = pair.IncomingId,
+                    continue; // already pending or previously dismissed
                 }
-            );
-            suggested++;
+
+                session.Store(
+                    new TransferSuggestion
+                    {
+                        Id = key,
+                        OutgoingTransactionId = pair.OutgoingId,
+                        IncomingTransactionId = pair.IncomingId,
+                    }
+                );
+                suggested++;
+            }
         }
 
-        if (linked == 0 && suggested == 0)
+        if (linked == 0 && suggested == 0 && stale.Count == 0)
         {
             return;
         }
@@ -120,11 +132,50 @@ public static class MatchTransfersCommandHandler
         }
 
         logger.LogInformation(
-            "Transfer matching: {Linked} pairs auto-linked, {Suggested} pairs queued for review, {Pool} candidates considered.",
+            "Transfer matching: {Linked} pairs auto-linked, {Suggested} pairs queued for review, {Stale} stale suggestions dismissed, {Pool} candidates considered.",
             linked,
             suggested,
+            stale.Count,
             pool.Count
         );
+    }
+
+    /// <summary>
+    /// Pending suggestions whose leg was categorized by hand since the suggestion
+    /// was created — e.g. the household categorized it directly on the
+    /// Transactions page instead of reviewing the suggestion. These are dismissed
+    /// outright rather than left to clutter the review queue for a decision that
+    /// has already effectively been made.
+    /// </summary>
+    private static async Task<List<TransferSuggestion>> FindStaleSuggestionsAsync(
+        IDocumentSession session,
+        IReadOnlyList<TransferSuggestion> pending,
+        CancellationToken cancellationToken
+    )
+    {
+        if (pending.Count == 0)
+        {
+            return [];
+        }
+
+        var legIds = pending
+            .SelectMany(s => new[] { s.OutgoingTransactionId, s.IncomingTransactionId })
+            .Distinct()
+            .ToArray();
+        var manuallyCategorizedLegIds = (
+            await session
+                .Query<TransactionView>()
+                .Where(t => t.Id.IsOneOf(legIds) && t.CategorySource == CategorySource.Manual)
+                .Select(t => t.Id)
+                .ToListAsync(cancellationToken)
+        ).ToHashSet();
+
+        return pending
+            .Where(s =>
+                manuallyCategorizedLegIds.Contains(s.OutgoingTransactionId)
+                || manuallyCategorizedLegIds.Contains(s.IncomingTransactionId)
+            )
+            .ToList();
     }
 
     private static async Task<bool> TryLinkAsync(

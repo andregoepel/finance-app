@@ -164,6 +164,33 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     }
 
     [Fact]
+    public async Task Handle_PendingSuggestionLegCategorizedSince_IsSweptAndDismissed()
+    {
+        // Arrange — a pending suggestion already sits in the review queue; the
+        // household then categorizes one leg directly on the Transactions page
+        // instead of reviewing the suggestion (the exact bug report: the stale
+        // suggestion kept showing in Review afterwards).
+        var (accountA, accountB, _) = await CreateAccountsAsync();
+        var outgoing = await ImportAsync(accountA, -100m, Today, currency: "USD");
+        var incoming = await ImportAsync(accountB, 100m, Today, currency: "EUR");
+        await MatchAsync();
+        var suggestion = Assert.Single(await QuerySuggestionsAsync());
+        Assert.False(suggestion.Dismissed);
+        await CategorizeManuallyAsync(outgoing);
+
+        // Act — the next scheduled/on-demand run should notice and clean it up.
+        await MatchAsync();
+
+        // Assert
+        var stillDismissed = Assert.Single(await QuerySuggestionsAsync());
+        Assert.True(stillDismissed.Dismissed);
+        await using var session = fixture.Store.QuerySession();
+        Assert.Null(
+            (await session.LoadAsync<TransactionView>(incoming, Ct))!.TransferCounterpartId
+        );
+    }
+
+    [Fact]
     public async Task Handle_SuggestionCollectionCleared_DoesNotRecreateAManuallyCategorizedPair()
     {
         // Arrange — mirrors deleting all TransferSuggestion documents by hand:
