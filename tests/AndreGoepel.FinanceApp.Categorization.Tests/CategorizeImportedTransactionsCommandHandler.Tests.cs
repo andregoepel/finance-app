@@ -290,11 +290,13 @@ public sealed class CategorizeImportedTransactionsCommandHandlerTests(
         Assert.Contains("monthly", sent.RecurrenceHint);
         Assert.Contains("4 occurrences", sent.RecurrenceHint);
 
+        var forBatch = Assert.Single(claude.Examples.ForBatch);
+        Assert.Equal("Netflix", forBatch.Counterparty);
+        Assert.Equal("Rent", forBatch.CategoryPath);
         Assert.Equal(
             ["Netflix", "Billa"],
-            claude.Examples.Select(example => example.Counterparty).ToList()
+            claude.Examples.Recent.Select(example => example.Counterparty).ToList()
         );
-        Assert.Equal("Rent", claude.Examples[0].CategoryPath);
     }
 
     [Fact]
@@ -410,7 +412,7 @@ public sealed class CategorizeImportedTransactionsCommandHandlerTests(
     {
         public List<TransactionToCategorize> SentTransactions { get; } = [];
 
-        public List<FewShotExample> Examples { get; } = [];
+        public FewShotExamples Examples { get; private set; } = FewShotExamples.None;
 
         public IEnumerable<Guid> SentIds => SentTransactions.Select(t => t.TransactionId);
 
@@ -422,11 +424,7 @@ public sealed class CategorizeImportedTransactionsCommandHandlerTests(
                 .SuggestAsync(
                     Arg.Do<IReadOnlyList<TransactionToCategorize>>(SentTransactions.AddRange),
                     Arg.Any<IReadOnlyList<CategoryOption>>(),
-                    Arg.Do<IReadOnlyList<FewShotExample>>(examples =>
-                    {
-                        Examples.Clear();
-                        Examples.AddRange(examples);
-                    }),
+                    Arg.Do<FewShotExamples>(examples => Examples = examples),
                     Arg.Any<CancellationToken>()
                 )
                 .Returns(Result.Ok(answer));

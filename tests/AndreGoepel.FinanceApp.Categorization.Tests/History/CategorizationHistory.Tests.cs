@@ -112,10 +112,10 @@ public sealed class CategorizationHistoryTests
     #region ExamplesFor
 
     [Fact]
-    public void ExamplesFor_SameCounterpartyFirst_ThenMostRecentFill()
+    public void ExamplesFor_BatchCounterpartiesNewestFirst_RecentFillSeparately()
     {
-        // Arrange — three UNIQA confirmations, only two may be picked for it;
-        // the fill comes from the rest, newest first.
+        // Arrange — three UNIQA confirmations, only the two newest may be picked for
+        // the batch; the recent block is the rest of the history, newest first.
         var history = Build(
             Entry("UNIQA", Insurance, CategorySource.Manual, month: 1),
             Entry("UNIQA", Insurance, CategorySource.Manual, month: 2),
@@ -126,37 +126,57 @@ public sealed class CategorizationHistoryTests
         );
 
         // Act
-        var examples = history.ExamplesFor(["UNIQA"], maxTotal: 4);
+        var examples = history.ExamplesFor(["UNIQA"], recentCount: 3);
 
         // Assert
         Assert.Equal(
-            ["UNIQA", "UNIQA", "Hofer", "Spar"],
-            examples.Select(example => example.Counterparty).ToList()
+            ["UNIQA", "UNIQA"],
+            examples.ForBatch.Select(example => example.Counterparty).ToList()
         );
         Assert.All(
-            examples.Take(2),
+            examples.ForBatch,
             example => Assert.Equal("Health › Health insurance", example.CategoryPath)
+        );
+        Assert.Equal(
+            ["Hofer", "Spar", "Billa"],
+            examples.Recent.Select(example => example.Counterparty).ToList()
         );
     }
 
     [Fact]
-    public void ExamplesFor_CounterpartyExamplesAreNeverCutByMaxTotal()
+    public void ExamplesFor_RecentBlock_IsTheSameForEveryBatch()
     {
-        // Arrange
+        // Arrange — the recent block is the cached prompt prefix; the batch must not leak into it.
         var history = Build(
             Entry("UNIQA", Insurance, CategorySource.Manual, month: 1),
-            Entry("UNIQA", Insurance, CategorySource.Manual, month: 2),
-            Entry("Billa", Groceries, CategorySource.Manual, month: 3),
-            Entry("Billa", Groceries, CategorySource.Manual, month: 4),
-            Entry("Spar", Groceries, CategorySource.Manual, month: 5)
+            Entry("Billa", Groceries, CategorySource.Manual, month: 2),
+            Entry("Spar", Groceries, CategorySource.Manual, month: 3)
         );
 
         // Act
-        var examples = history.ExamplesFor(["UNIQA", "Billa"], maxTotal: 1);
+        var first = history.ExamplesFor(["UNIQA"], recentCount: 2);
+        var second = history.ExamplesFor(["Spar", "Billa"], recentCount: 2);
 
         // Assert
-        Assert.Equal(4, examples.Count);
-        Assert.DoesNotContain(examples, example => example.Counterparty == "Spar");
+        Assert.Equal(first.Recent, second.Recent);
+        Assert.Equal(["Spar", "Billa"], first.Recent.Select(example => example.Counterparty));
+        Assert.NotEqual(first.ForBatch, second.ForBatch);
+    }
+
+    [Fact]
+    public void ExamplesFor_RecentOrder_DoesNotDependOnInputOrderForSameDayEntries()
+    {
+        // Arrange — two confirmations on one day; whichever way the database returns
+        // them, the block must serialize identically or the cache never hits.
+        var billa = Entry("Billa", Groceries, CategorySource.Manual, month: 5);
+        var spar = Entry("Spar", Groceries, CategorySource.Manual, month: 5);
+
+        // Act
+        var oneWay = Build(billa, spar).ExamplesFor([], recentCount: 2).Recent;
+        var otherWay = Build(spar, billa).ExamplesFor([], recentCount: 2).Recent;
+
+        // Assert
+        Assert.Equal(oneWay, otherWay);
     }
 
     [Fact]
@@ -170,11 +190,11 @@ public sealed class CategorizationHistoryTests
         );
 
         // Act
-        var examples = history.ExamplesFor(["UNIQA", "uniqa", null], maxTotal: 10);
+        var examples = history.ExamplesFor(["UNIQA", "uniqa", null], recentCount: 10);
 
         // Assert
-        var example = Assert.Single(examples);
-        Assert.Equal("UNIQA", example.Counterparty);
+        Assert.Equal("UNIQA", Assert.Single(examples.ForBatch).Counterparty);
+        Assert.Equal("UNIQA", Assert.Single(examples.Recent).Counterparty);
     }
 
     #endregion

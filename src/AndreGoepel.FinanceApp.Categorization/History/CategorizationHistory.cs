@@ -35,9 +35,10 @@ public sealed class HistoryEntry
 /// <list type="bullet">
 /// <item><see cref="ConsistentCategoryFor"/>: a counterparty confirmed by hand
 /// at least twice, always with the same category, needs no model call.</item>
-/// <item><see cref="ExamplesFor"/>: few-shot examples chosen for the batch at
-/// hand (same counterparties first) instead of whatever was confirmed most
-/// recently.</item>
+/// <item><see cref="ExamplesFor"/>: few-shot examples in two parts — the
+/// batch's own counterparties, and a fixed block of the most recently
+/// confirmed transactions that is identical for every batch of a run (the
+/// cached part of the prompt).</item>
 /// <item><see cref="RecurrenceHintFor"/>: a recurring series on the counterparty
 /// (via <see cref="RecurringDetector"/>) — the difference between a monthly
 /// insurance premium and a one-off doctor's bill.</item>
@@ -63,17 +64,13 @@ public sealed class CategorizationHistory
     )
     {
         _paths = categories.ToDictionary(category => category.Id, category => category.Path);
+        // Ties on the booking date are broken by id: the order must not depend on how
+        // the database happened to return the rows, or the cached prompt prefix changes.
         _byCounterparty = entries
             .Where(entry => !string.IsNullOrWhiteSpace(entry.Counterparty))
             .GroupBy(entry => Normalize(entry.Counterparty!))
-            .ToDictionary(
-                group => group.Key,
-                group => group.OrderByDescending(entry => entry.BookingDate).ToList()
-            );
-        _confirmedNewestFirst = entries
-            .Where(IsConfirmed)
-            .OrderByDescending(entry => entry.BookingDate)
-            .ToList();
+            .ToDictionary(group => group.Key, group => NewestFirst(group).ToList());
+        _confirmedNewestFirst = NewestFirst(entries.Where(IsConfirmed)).ToList();
     }
 
     /// <summary>
@@ -100,20 +97,17 @@ public sealed class CategorizationHistory
     }
 
     /// <summary>
-    /// Few-shot examples for a batch: up to <see cref="MaxExamplesPerCounterparty"/>
-    /// confirmed examples for every counterparty in the batch, then the most
-    /// recently confirmed transactions overall until <paramref name="maxTotal"/>
-    /// is reached. Counterparty-specific examples are never cut in favour of
-    /// the recent fill.
+    /// Few-shot examples for a batch. <see cref="FewShotExamples.ForBatch"/>: up to
+    /// <see cref="MaxExamplesPerCounterparty"/> confirmed examples for every
+    /// counterparty in the batch. <see cref="FewShotExamples.Recent"/>: the
+    /// <paramref name="recentCount"/> most recently confirmed transactions overall,
+    /// in an order that is the same for every batch of a run so the block can be
+    /// served from the prompt cache. The two are not deduplicated against each other.
     /// </summary>
-    public IReadOnlyList<FewShotExample> ExamplesFor(
-        IEnumerable<string?> counterparties,
-        int maxTotal
-    )
+    public FewShotExamples ExamplesFor(IEnumerable<string?> counterparties, int recentCount)
     {
-        var picked = new List<HistoryEntry>();
+        var forBatch = new List<HistoryEntry>();
         var seen = new HashSet<Guid>();
-
         foreach (var counterparty in counterparties)
         {
             if (!TryGetEntries(counterparty, out var entries))
@@ -124,31 +118,15 @@ public sealed class CategorizationHistory
             {
                 if (seen.Add(entry.Id))
                 {
-                    picked.Add(entry);
+                    forBatch.Add(entry);
                 }
             }
         }
 
-        foreach (var entry in _confirmedNewestFirst)
-        {
-            if (picked.Count >= maxTotal)
-            {
-                break;
-            }
-            if (seen.Add(entry.Id))
-            {
-                picked.Add(entry);
-            }
-        }
-
-        return picked
-            .Select(entry => new FewShotExample(
-                entry.Counterparty,
-                entry.Description,
-                entry.Amount,
-                _paths[entry.CategoryId!.Value]
-            ))
-            .ToList();
+        return new FewShotExamples(
+            _confirmedNewestFirst.Take(recentCount).Select(ToExample).ToList(),
+            forBatch.Select(ToExample).ToList()
+        );
     }
 
     /// <summary>
@@ -186,6 +164,9 @@ public sealed class CategorizationHistory
         return hint;
     }
 
+    private FewShotExample ToExample(HistoryEntry entry) =>
+        new(entry.Counterparty, entry.Description, entry.Amount, _paths[entry.CategoryId!.Value]);
+
     private bool IsConfirmed(HistoryEntry entry) =>
         entry.CategorySource == Domain.Transactions.CategorySource.Manual
         && entry.CategoryId is Guid categoryId
@@ -197,6 +178,9 @@ public sealed class CategorizationHistory
         return !string.IsNullOrWhiteSpace(counterparty)
             && _byCounterparty.TryGetValue(Normalize(counterparty), out entries!);
     }
+
+    private static IEnumerable<HistoryEntry> NewestFirst(IEnumerable<HistoryEntry> entries) =>
+        entries.OrderByDescending(entry => entry.BookingDate).ThenByDescending(entry => entry.Id);
 
     private static string Normalize(string counterparty) =>
         TextNormalization.NormalizeWhitespace(counterparty);
