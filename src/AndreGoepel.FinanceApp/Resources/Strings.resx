@@ -305,10 +305,16 @@
   <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Set a monthly EUR limit per category. A limit on a parent category counts spending in that category and all of its subcategories. Progress shows on the dashboard.]]></value></data>
   <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Set a budget]]></value></data>
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monthly limit (€)]]></value></data>
+  <data name="Budgets.StartMonthLabel" xml:space="preserve"><value><![CDATA[Start month]]></value></data>
+  <data name="Budgets.EndMonthLabel" xml:space="preserve"><value><![CDATA[End month]]></value></data>
+  <data name="Budgets.EndMonthOngoingPlaceholder" xml:space="preserve"><value><![CDATA[Ongoing]]></value></data>
   <data name="Budgets.CurrentBudgetsHeading" xml:space="preserve"><value><![CDATA[Current budgets]]></value></data>
   <data name="Budgets.EmptyTitle" xml:space="preserve"><value><![CDATA[No budgets set yet]]></value></data>
   <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Set a monthly limit for a category above to start tracking it.]]></value></data>
   <data name="Budgets.ColMonthlyLimit" xml:space="preserve"><value><![CDATA[Monthly limit]]></value></data>
+  <data name="Budgets.ColStartMonth" xml:space="preserve"><value><![CDATA[From]]></value></data>
+  <data name="Budgets.ColEndMonth" xml:space="preserve"><value><![CDATA[To]]></value></data>
+  <data name="Budgets.Ongoing" xml:space="preserve"><value><![CDATA[Ongoing]]></value></data>
   <data name="Budgets.DeletedCategory" xml:space="preserve"><value><![CDATA[(deleted category)]]></value></data>
   <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget saved]]></value></data>
   <data name="Budgets.RemovedTitle" xml:space="preserve"><value><![CDATA[Budget removed]]></value></data>
