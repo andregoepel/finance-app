@@ -50,6 +50,17 @@ public sealed class DomainStringsResourceTests
     // Not-found guards — the single most repeated message in the layer.
     [InlineData("en", "Error.AccountNotFound", "Account not found.")]
     [InlineData("de", "Error.AccountNotFound", "Konto nicht gefunden.")]
+    // Manual entries (cash) — the guard that keeps hand-entry off imported accounts.
+    [InlineData(
+        "en",
+        "Error.ManualEntriesOnManualAccountsOnly",
+        "Transactions can only be entered by hand on manually maintained accounts (cash)."
+    )]
+    [InlineData(
+        "de",
+        "Error.ManualEntriesOnManualAccountsOnly",
+        "Transaktionen können nur auf manuell geführten Konten (Bargeld) von Hand erfasst werden."
+    )]
     // Accounts — a composed message, and one carrying a placeholder.
     [InlineData(
         "en",

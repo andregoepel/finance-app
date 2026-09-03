@@ -192,6 +192,63 @@ internal sealed record AccountPurgeTargets(
     }
 
     /// <summary>
+    /// The same blast radius for a single transaction — what taking back one manual
+    /// entry removes. Its import batch goes with it only when no other row shares it
+    /// (a manual entry's batch never does; an imported file's always does).
+    /// </summary>
+    public static async Task<AccountPurgeTargets> CollectForTransactionAsync(
+        IQuerySession session,
+        TransactionView transaction,
+        CancellationToken cancellationToken
+    )
+    {
+        Guid[] transactionIds = [transaction.Id];
+
+        IReadOnlyList<Guid> counterpartIds =
+            transaction.TransferCounterpartId is Guid counterpartId
+            && await session
+                .Query<TransactionView>()
+                .AnyAsync(
+                    t => t.Id == counterpartId && t.TransferCounterpartId != null,
+                    cancellationToken
+                )
+                ? [counterpartId]
+                : [];
+
+        var plannedMatchIds = await session
+            .Query<PlannedMatch>()
+            .Where(m => m.TransactionId == transaction.Id)
+            .Select(m => m.Id)
+            .ToListAsync(cancellationToken);
+
+        IReadOnlyList<Guid> reviewQueueIds = await session.LoadAsync<CategorySuggestion>(
+            transaction.Id,
+            cancellationToken
+        )
+            is null
+            ? []
+            : transactionIds;
+
+        var batchShared = await session
+            .Query<TransactionView>()
+            .AnyAsync(
+                t => t.ImportBatchId == transaction.ImportBatchId && t.Id != transaction.Id,
+                cancellationToken
+            );
+        IReadOnlyList<Guid> importBatchIds = batchShared ? [] : [transaction.ImportBatchId];
+
+        return new AccountPurgeTargets(
+            transactionIds,
+            counterpartIds,
+            [.. plannedMatchIds],
+            reviewQueueIds,
+            importBatchIds,
+            [],
+            []
+        );
+    }
+
+    /// <summary>
     /// The still-linked transfer legs on other accounts. Legs that are themselves
     /// being deleted are skipped — both sides disappear, so nothing dangles.
     /// </summary>

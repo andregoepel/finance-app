@@ -544,4 +544,47 @@
   <data name="Sync.ConnectionGone" xml:space="preserve"><value><![CDATA[Die Verbindung des Kontos existiert nicht mehr — bitte neu verknüpfen (Einstellungen → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
   <data name="Sync.ConsentExpiredOn" xml:space="preserve"><value><![CDATA[Die {0}-Einwilligung ist am {1} abgelaufen — bitte unter Einstellungen → {2} neu verbinden.]]></value><comment>{0} = provider, {1} = expiry date, {2} = Nav.Connections</comment></data>
   <data name="Sync.ConsentNotAuthorized" xml:space="preserve"><value><![CDATA[Die {0}-Einwilligung ist nicht autorisiert — bitte unter Einstellungen → {1} verbinden.]]></value><comment>{0} = provider, {1} = Nav.Connections</comment></data>
+  <!-- Cash — the per-user cash account with hand-entered transactions. -->
+  <data name="Nav.Cash" xml:space="preserve"><value><![CDATA[Bargeld]]></value></data>
+  <data name="Enum.AccountType.Cash" xml:space="preserve"><value><![CDATA[Bargeld]]></value></data>
+  <data name="Enum.SyncMethod.Manual" xml:space="preserve"><value><![CDATA[Manuell]]></value></data>
+  <data name="Cash.Subtitle" xml:space="preserve"><value><![CDATA[Dein eigenes Bargeld: jede Transaktion wird von Hand erfasst und zählt wie jede andere.]]></value></data>
+  <data name="Cash.NoAccountTitle" xml:space="preserve"><value><![CDATA[Noch keine Bargeld-Kasse]]></value></data>
+  <data name="Cash.NoAccountText" xml:space="preserve"><value><![CDATA[Lege deine persönliche Bargeld-Kasse an, um Barausgaben und -einnahmen zu erfassen. Jedes Haushaltsmitglied führt seine eigene.]]></value></data>
+  <data name="Cash.CreateTitle" xml:space="preserve"><value><![CDATA[Bargeld-Kasse anlegen]]></value></data>
+  <data name="Cash.DefaultName" xml:space="preserve"><value><![CDATA[Bargeld]]></value><comment>Default name of a newly created cash account; the owner's user name is appended</comment></data>
+  <data name="Cash.OpeningBalanceLabel" xml:space="preserve"><value><![CDATA[Anfangsbestand ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.CreateButton" xml:space="preserve"><value><![CDATA[Anlegen]]></value></data>
+  <data name="Cash.CreatingBusyText" xml:space="preserve"><value><![CDATA[Wird angelegt…]]></value></data>
+  <data name="Cash.CreatedMessage" xml:space="preserve"><value><![CDATA[Bargeld-Kasse angelegt]]></value></data>
+  <data name="Cash.CreateFailedTitle" xml:space="preserve"><value><![CDATA[Bargeld-Kasse konnte nicht angelegt werden]]></value></data>
+  <data name="Cash.AddAccountTooltip" xml:space="preserve"><value><![CDATA[Weitere Bargeld-Kasse anlegen…]]></value></data>
+  <data name="Cash.BalanceTitle" xml:space="preserve"><value><![CDATA[Kassenbestand]]></value></data>
+  <data name="Cash.SpentThisMonth" xml:space="preserve"><value><![CDATA[Ausgaben diesen Monat]]></value></data>
+  <data name="Cash.ReceivedThisMonth" xml:space="preserve"><value><![CDATA[Einnahmen diesen Monat]]></value></data>
+  <data name="Cash.AdjustHint" xml:space="preserve"><value><![CDATA[Bargeld gezählt? Betrag eingeben – die Differenz wird als Bestandskorrektur erfasst.]]></value></data>
+  <data name="Cash.CountedBalanceLabel" xml:space="preserve"><value><![CDATA[Gezählter Bestand ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.AdjustButton" xml:space="preserve"><value><![CDATA[Anpassen]]></value></data>
+  <data name="Cash.AdjustmentDescription" xml:space="preserve"><value><![CDATA[Bestandskorrektur]]></value><comment>Description of the transaction recorded for the difference after counting</comment></data>
+  <data name="Cash.AdjustNoDifference" xml:space="preserve"><value><![CDATA[Der gezählte Bestand stimmt überein – nichts anzupassen.]]></value></data>
+  <data name="Cash.EntryTitle" xml:space="preserve"><value><![CDATA[Transaktion erfassen]]></value></data>
+  <data name="Cash.KindLabel" xml:space="preserve"><value><![CDATA[Art]]></value></data>
+  <data name="Cash.KindExpense" xml:space="preserve"><value><![CDATA[Ausgabe]]></value></data>
+  <data name="Cash.KindIncome" xml:space="preserve"><value><![CDATA[Einnahme]]></value></data>
+  <data name="Cash.AmountLabel" xml:space="preserve"><value><![CDATA[Betrag ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.DescriptionPlaceholder" xml:space="preserve"><value><![CDATA[z. B. Bäcker, Trinkgeld, Markt]]></value></data>
+  <data name="Cash.CounterpartyLabel" xml:space="preserve"><value><![CDATA[Zahlungspartner (optional)]]></value></data>
+  <data name="Cash.CategoryHint" xml:space="preserve"><value><![CDATA[Leer lassen, dann kategorisieren die Regeln bzw. die KI.]]></value></data>
+  <data name="Cash.SaveEntry" xml:space="preserve"><value><![CDATA[Erfassen]]></value></data>
+  <data name="Cash.SavingBusyText" xml:space="preserve"><value><![CDATA[Wird gespeichert…]]></value></data>
+  <data name="Cash.EntrySavedMessage" xml:space="preserve"><value><![CDATA[Transaktion erfasst]]></value></data>
+  <data name="Cash.EntryFailedTitle" xml:space="preserve"><value><![CDATA[Transaktion konnte nicht erfasst werden]]></value></data>
+  <data name="Cash.NoEntries" xml:space="preserve"><value><![CDATA[Noch keine Bargeld-Transaktionen.]]></value></data>
+  <data name="Cash.DeleteEntryTooltip" xml:space="preserve"><value><![CDATA[Transaktion löschen…]]></value></data>
+  <data name="Cash.DeleteEntryTitle" xml:space="preserve"><value><![CDATA[Transaktion löschen]]></value></data>
+  <data name="Cash.EntryDeletedMessage" xml:space="preserve"><value><![CDATA[Transaktion gelöscht]]></value></data>
+  <data name="Cash.RateUnavailableTitle" xml:space="preserve"><value><![CDATA[Ohne EUR-Wert erfasst]]></value></data>
+  <data name="Cash.RateUnavailableMessage" xml:space="preserve"><value><![CDATA[Der Wechselkurs war nicht verfügbar; der EUR-Wert wird beim nächsten Umrechnungslauf ergänzt.]]></value></data>
+  <data name="Cash.OwnerUnknownHint" xml:space="preserve"><value><![CDATA[Du konntest keinem Haushaltsbenutzer zugeordnet werden, daher werden alle Bargeld-Kassen angezeigt.]]></value></data>
+  <data name="Cash.TransferHint" xml:space="preserve"><value><![CDATA[Bargeld vom Bankkonto abgehoben? Verknüpfe beide Transaktionen auf der Seite „{0}“ als Umbuchung, damit die Abhebung nicht als Ausgabe zählt.]]></value><comment>{0} = Nav.Transactions, so the pointer matches the menu entry it names</comment></data>
 </root>

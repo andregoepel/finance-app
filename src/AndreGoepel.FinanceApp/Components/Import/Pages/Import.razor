@@ -161,7 +161,7 @@
         accounts = (
             await QuerySession
                 .Query<Account>()
-                .Where(a => a.Status == AccountStatus.Active)
+                .Where(a => a.Status == AccountStatus.Active && a.SyncMethod != SyncMethod.Manual)
                 .ToListAsync(_cts.Token)
         )
             .OrderBy(a => a.Name)

@@ -544,4 +544,47 @@
   <data name="Sync.ConnectionGone" xml:space="preserve"><value><![CDATA[The account's connection no longer exists — re-link it (Settings → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
   <data name="Sync.ConsentExpiredOn" xml:space="preserve"><value><![CDATA[The {0} consent expired on {1} — reconnect it under Settings → {2}.]]></value><comment>{0} = provider, {1} = expiry date, {2} = Nav.Connections</comment></data>
   <data name="Sync.ConsentNotAuthorized" xml:space="preserve"><value><![CDATA[The {0} consent is not authorized — connect it under Settings → {1}.]]></value><comment>{0} = provider, {1} = Nav.Connections</comment></data>
+  <!-- Cash — the per-user cash account with hand-entered transactions. -->
+  <data name="Nav.Cash" xml:space="preserve"><value><![CDATA[Cash]]></value></data>
+  <data name="Enum.AccountType.Cash" xml:space="preserve"><value><![CDATA[Cash]]></value></data>
+  <data name="Enum.SyncMethod.Manual" xml:space="preserve"><value><![CDATA[Manual]]></value></data>
+  <data name="Cash.Subtitle" xml:space="preserve"><value><![CDATA[Your own cash: every transaction is typed in by hand and counts like any other.]]></value></data>
+  <data name="Cash.NoAccountTitle" xml:space="preserve"><value><![CDATA[No cash account yet]]></value></data>
+  <data name="Cash.NoAccountText" xml:space="preserve"><value><![CDATA[Create your personal cash account to record what you spend and receive in cash. Each household member keeps their own.]]></value></data>
+  <data name="Cash.CreateTitle" xml:space="preserve"><value><![CDATA[Create cash account]]></value></data>
+  <data name="Cash.DefaultName" xml:space="preserve"><value><![CDATA[Cash]]></value><comment>Default name of a newly created cash account; the owner's user name is appended</comment></data>
+  <data name="Cash.OpeningBalanceLabel" xml:space="preserve"><value><![CDATA[Opening balance ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.CreateButton" xml:space="preserve"><value><![CDATA[Create]]></value></data>
+  <data name="Cash.CreatingBusyText" xml:space="preserve"><value><![CDATA[Creating…]]></value></data>
+  <data name="Cash.CreatedMessage" xml:space="preserve"><value><![CDATA[Cash account created]]></value></data>
+  <data name="Cash.CreateFailedTitle" xml:space="preserve"><value><![CDATA[Could not create the cash account]]></value></data>
+  <data name="Cash.AddAccountTooltip" xml:space="preserve"><value><![CDATA[Add another cash account…]]></value></data>
+  <data name="Cash.BalanceTitle" xml:space="preserve"><value><![CDATA[Cash on hand]]></value></data>
+  <data name="Cash.SpentThisMonth" xml:space="preserve"><value><![CDATA[Spent this month]]></value></data>
+  <data name="Cash.ReceivedThisMonth" xml:space="preserve"><value><![CDATA[Received this month]]></value></data>
+  <data name="Cash.AdjustHint" xml:space="preserve"><value><![CDATA[Counted your cash? Enter the amount and the difference is recorded as an adjustment.]]></value></data>
+  <data name="Cash.CountedBalanceLabel" xml:space="preserve"><value><![CDATA[Counted balance ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.AdjustButton" xml:space="preserve"><value><![CDATA[Adjust]]></value></data>
+  <data name="Cash.AdjustmentDescription" xml:space="preserve"><value><![CDATA[Balance adjustment]]></value><comment>Description of the transaction recorded for the difference after counting</comment></data>
+  <data name="Cash.AdjustNoDifference" xml:space="preserve"><value><![CDATA[The counted balance matches — nothing to adjust.]]></value></data>
+  <data name="Cash.EntryTitle" xml:space="preserve"><value><![CDATA[Record transaction]]></value></data>
+  <data name="Cash.KindLabel" xml:space="preserve"><value><![CDATA[Kind]]></value></data>
+  <data name="Cash.KindExpense" xml:space="preserve"><value><![CDATA[Expense]]></value></data>
+  <data name="Cash.KindIncome" xml:space="preserve"><value><![CDATA[Income]]></value></data>
+  <data name="Cash.AmountLabel" xml:space="preserve"><value><![CDATA[Amount ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.DescriptionPlaceholder" xml:space="preserve"><value><![CDATA[e.g. bakery, tip, market]]></value></data>
+  <data name="Cash.CounterpartyLabel" xml:space="preserve"><value><![CDATA[Counterparty (optional)]]></value></data>
+  <data name="Cash.CategoryHint" xml:space="preserve"><value><![CDATA[Leave empty and the rules or the AI categorize it.]]></value></data>
+  <data name="Cash.SaveEntry" xml:space="preserve"><value><![CDATA[Record]]></value></data>
+  <data name="Cash.SavingBusyText" xml:space="preserve"><value><![CDATA[Saving…]]></value></data>
+  <data name="Cash.EntrySavedMessage" xml:space="preserve"><value><![CDATA[Transaction recorded]]></value></data>
+  <data name="Cash.EntryFailedTitle" xml:space="preserve"><value><![CDATA[Could not record the transaction]]></value></data>
+  <data name="Cash.NoEntries" xml:space="preserve"><value><![CDATA[No cash transactions yet.]]></value></data>
+  <data name="Cash.DeleteEntryTooltip" xml:space="preserve"><value><![CDATA[Delete transaction…]]></value></data>
+  <data name="Cash.DeleteEntryTitle" xml:space="preserve"><value><![CDATA[Delete transaction]]></value></data>
+  <data name="Cash.EntryDeletedMessage" xml:space="preserve"><value><![CDATA[Transaction deleted]]></value></data>
+  <data name="Cash.RateUnavailableTitle" xml:space="preserve"><value><![CDATA[Recorded without EUR value]]></value></data>
+  <data name="Cash.RateUnavailableMessage" xml:space="preserve"><value><![CDATA[The exchange rate was not available; the EUR value is filled in by the next conversion run.]]></value></data>
+  <data name="Cash.OwnerUnknownHint" xml:space="preserve"><value><![CDATA[You could not be matched to a household user, so every cash account is shown.]]></value></data>
+  <data name="Cash.TransferHint" xml:space="preserve"><value><![CDATA[Withdrew cash from a bank account? Link both transactions as a transfer on the {0} page so the withdrawal does not count as spending.]]></value><comment>{0} = Nav.Transactions, so the pointer matches the menu entry it names</comment></data>
 </root>
