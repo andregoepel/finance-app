@@ -117,6 +117,10 @@
   <data name="Error.SecretMustNotBeEmpty" xml:space="preserve"><value><![CDATA[The secret must not be empty.]]></value></data>
   <!-- Categorization -->
   <data name="Error.NoPendingSuggestions" xml:space="preserve"><value><![CDATA[No pending suggestions found for the selected transactions.]]></value></data>
+  <data name="Error.SplitNeedsAtLeastTwoLines" xml:space="preserve"><value><![CDATA[A split needs at least two categories.]]></value></data>
+  <data name="Error.SplitLineAmountZero" xml:space="preserve"><value><![CDATA[Each split amount must not be zero.]]></value></data>
+  <data name="Error.SplitLineWrongSign" xml:space="preserve"><value><![CDATA[Each split amount must have the same sign as the transaction (negative = expense, positive = income).]]></value></data>
+  <data name="Error.SplitAmountsMustSumToTotal" xml:space="preserve"><value><![CDATA[The split amounts must add up to the transaction's total amount.]]></value></data>
   <!-- Connectors — the three messages from that layer a user can actually act on. -->
   <data name="Error.NoParserForProvider" xml:space="preserve"><value><![CDATA[No statement parser is registered for {0}.]]></value><comment>{0} = provider name</comment></data>
   <data name="Error.UnrecognizedExportFormat" xml:space="preserve"><value><![CDATA[Unrecognized {0} export format. Supported formats: {1}. The provider may have changed its export — a new parser version is needed.]]></value><comment>{0} = provider, {1} = comma-separated parser ids</comment></data>

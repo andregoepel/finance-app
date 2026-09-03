@@ -278,6 +278,15 @@
   <data name="Transactions.LinkedTitle" xml:space="preserve"><value><![CDATA[Verknüpft]]></value></data>
   <data name="Transactions.LinkedMessage" xml:space="preserve"><value><![CDATA[Transaktionen als Umbuchung verknüpft.]]></value></data>
   <data name="Transactions.UnlinkingFailedTitle" xml:space="preserve"><value><![CDATA[Aufheben der Verknüpfung fehlgeschlagen]]></value></data>
+  <data name="Transactions.SplitBadge" xml:space="preserve"><value><![CDATA[Aufgeteilt ({0})]]></value><comment>{0} = number of category lines</comment></data>
+  <data name="Transactions.SplitTooltip" xml:space="preserve"><value><![CDATA[Auf Kategorien aufteilen]]></value></data>
+  <data name="Transactions.EditSplitTooltip" xml:space="preserve"><value><![CDATA[Aufteilung bearbeiten]]></value></data>
+  <data name="Transactions.SplitTitle" xml:space="preserve"><value><![CDATA[Auf Kategorien aufteilen]]></value></data>
+  <data name="Transactions.AddSplitLine" xml:space="preserve"><value><![CDATA[Kategorie hinzufügen]]></value></data>
+  <data name="Transactions.SplitRemaining" xml:space="preserve"><value><![CDATA[Verbleibend]]></value></data>
+  <data name="Transactions.SplitFailedTitle" xml:space="preserve"><value><![CDATA[Aufteilen fehlgeschlagen]]></value></data>
+  <data name="Transactions.SplitSavedTitle" xml:space="preserve"><value><![CDATA[Gespeichert]]></value></data>
+  <data name="Transactions.SplitSavedMessage" xml:space="preserve"><value><![CDATA[Transaktion auf Kategorien aufgeteilt.]]></value></data>
   <data name="Enum.CategorySource.Provider" xml:space="preserve"><value><![CDATA[Anbieter]]></value></data>
   <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Regel]]></value></data>
   <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[KI]]></value><comment>Matches the „KI“ wording referenced in Review.Subtitle</comment></data>

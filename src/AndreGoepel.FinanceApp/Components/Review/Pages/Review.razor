@@ -114,7 +114,7 @@
         items = (
             await QuerySession
                 .Query<TransactionView>()
-                .Where(t => t.CategoryId == null && t.TransferCounterpartId == null)
+                .Where(t => !t.IsCategorized && t.TransferCounterpartId == null)
                 .OrderByDescending(t => t.BookingDate)
                 .Take(MaxRows)
                 .ToListAsync()
