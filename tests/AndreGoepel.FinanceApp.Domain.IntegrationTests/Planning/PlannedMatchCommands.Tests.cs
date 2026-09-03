@@ -72,7 +72,10 @@ public sealed class PlannedMatchCommandsTests(FinanceMartenFixture fixture) : IA
             .Query<PlannedMatch>()
             .Where(m => m.PlannedItemId == itemId && m.DueDate == Due)
             .ToListAsync(Ct);
-        Assert.Equal([first, second], matches.Select(m => m.TransactionId).OrderBy(id => id));
+        var transactionIds = matches.Select(m => m.TransactionId).ToList();
+        Assert.Equal(2, transactionIds.Count);
+        Assert.Contains(first, transactionIds);
+        Assert.Contains(second, transactionIds);
         var firstView = await session.LoadAsync<TransactionView>(first, Ct);
         Assert.True(firstView!.IsPlanMatched);
         Assert.Equal([new PlannedLink(itemId, Due)], firstView.PlannedLinks);
