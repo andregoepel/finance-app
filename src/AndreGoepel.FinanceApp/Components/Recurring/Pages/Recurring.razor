@@ -7,6 +7,7 @@
 @inject IRecurringService RecurringService
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
+@inject ConfirmService ConfirmService
 @inject IStringLocalizer<Strings> L
 
 <AppPageTitle Title="@L["Nav.Recurring"]" />
@@ -45,7 +46,7 @@
                     <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="@L["Recurring.ColNextExpected"]" Width="150px">
                         <Template Context="row">@Dates.Short(row.NextExpected)</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="160px" TextAlign="TextAlign.End" Sortable="false">
+                    <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="210px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
                                 @if (row.AlreadyPlanned)
@@ -58,6 +59,8 @@
                                                   ButtonStyle="ButtonStyle.Secondary" Disabled=@adding
                                                   Click=@(() => AddAsPlannedAsync(row)) />
                                 }
+                                <IconButton Icon="delete" Title="@L["Recurring.DismissTooltip"]"
+                                            Click=@(_ => DismissAsync(row)) />
                             </RowActions>
                         </Template>
                     </RadzenDataGridColumn>
@@ -125,6 +128,18 @@
             L["Recurring.AddedToPlanningTitle"],
             L["Recurring.AddedToPlanningMessage", s.Counterparty]
         );
+        series = await RecurringService.GetAsync();
+    }
+
+    private async Task DismissAsync(RecurringSeries s)
+    {
+        if (!await ConfirmService.ConfirmDeleteAsync(s.Counterparty, L["Recurring.DismissTitle"]))
+        {
+            return;
+        }
+
+        await MessageBus.InvokeAsync(new DismissRecurringSeriesCommand(s.Counterparty));
+        NotificationService.Success(L["Recurring.DismissedMessage", s.Counterparty]);
         series = await RecurringService.GetAsync();
     }
 }

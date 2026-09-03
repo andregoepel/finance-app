@@ -127,6 +127,9 @@
   <data name="Recurring.CouldNotAddTitle" xml:space="preserve"><value><![CDATA[Could not add]]></value></data>
   <data name="Recurring.AddedToPlanningTitle" xml:space="preserve"><value><![CDATA[Added to planning]]></value></data>
   <data name="Recurring.AddedToPlanningMessage" xml:space="preserve"><value><![CDATA[“{0}” — adjust it on the Planning page.]]></value><comment>{0} = the counterparty name</comment></data>
+  <data name="Recurring.DismissTooltip" xml:space="preserve"><value><![CDATA[Not actually recurring — remove]]></value></data>
+  <data name="Recurring.DismissTitle" xml:space="preserve"><value><![CDATA[Remove recurring series]]></value></data>
+  <data name="Recurring.DismissedMessage" xml:space="preserve"><value><![CDATA[“{0}” removed — it won't be detected again.]]></value><comment>{0} = the counterparty name</comment></data>
   <data name="Enum.RecurrenceInterval.Weekly" xml:space="preserve"><value><![CDATA[Weekly]]></value></data>
   <data name="Enum.RecurrenceInterval.Biweekly" xml:space="preserve"><value><![CDATA[Biweekly]]></value></data>
   <data name="Enum.RecurrenceInterval.Monthly" xml:space="preserve"><value><![CDATA[Monthly]]></value></data>
