@@ -18,9 +18,14 @@ public interface IPlanningService
         CancellationToken cancellationToken = default
     );
 
-    /// <summary>Unmatched transactions near a due date, offered for a manual match.</summary>
+    /// <summary>
+    /// Transactions near a due date offered for a manual match, restricted to the
+    /// occurrence's own direction — income (<paramref name="plannedAmount"/> &gt; 0)
+    /// only offers incoming transactions, an expense only outgoing ones.
+    /// </summary>
     Task<IReadOnlyList<TransactionView>> GetMatchCandidatesAsync(
         DateOnly dueDate,
+        decimal plannedAmount,
         CancellationToken cancellationToken = default
     );
 

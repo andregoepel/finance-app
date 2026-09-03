@@ -289,7 +289,13 @@
     {
         matchingOccurrence = occurrence;
         var alreadyLinked = occurrence.Matches.Select(m => m.TransactionId).ToHashSet();
-        candidates = (await PlanningService.GetMatchCandidatesAsync(occurrence.DueDate, _cts.Token))
+        candidates = (
+            await PlanningService.GetMatchCandidatesAsync(
+                occurrence.DueDate,
+                occurrence.Amount,
+                _cts.Token
+            )
+        )
             .Where(t => !alreadyLinked.Contains(t.Id))
             .ToList();
     }
