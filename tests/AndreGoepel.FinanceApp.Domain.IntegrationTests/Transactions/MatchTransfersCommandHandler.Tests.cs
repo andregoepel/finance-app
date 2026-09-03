@@ -142,6 +142,49 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     }
 
     [Fact]
+    public async Task Handle_ManuallyCategorizedTransaction_IsNeverSuggestedAsATransfer()
+    {
+        // Arrange — an exact-matching pair, but the household has already
+        // assigned a real category to one leg by hand.
+        var (accountA, accountB, _) = await CreateAccountsAsync();
+        var outgoing = await ImportAsync(accountA, -100m, Today, currency: "USD");
+        var incoming = await ImportAsync(accountB, 100m, Today, currency: "EUR");
+        await CategorizeManuallyAsync(outgoing);
+
+        // Act
+        await MatchAsync();
+
+        // Assert — no suggestion is created, even though the amounts and date
+        // line up exactly like Handle_CrossCurrencyExactMatch_BecomesAPendingSuggestion.
+        Assert.Empty(await QuerySuggestionsAsync());
+        await using var session = fixture.Store.QuerySession();
+        Assert.Null(
+            (await session.LoadAsync<TransactionView>(incoming, Ct))!.TransferCounterpartId
+        );
+    }
+
+    [Fact]
+    public async Task Handle_SuggestionCollectionCleared_DoesNotRecreateAManuallyCategorizedPair()
+    {
+        // Arrange — mirrors deleting all TransferSuggestion documents by hand:
+        // the matcher's only memory of "already decided" is gone, but the
+        // manual categorization on the transaction itself is not.
+        var (accountA, accountB, _) = await CreateAccountsAsync();
+        var outgoing = await ImportAsync(accountA, -100m, Today, currency: "USD");
+        var incoming = await ImportAsync(accountB, 100m, Today, currency: "EUR");
+        await MatchAsync();
+        Assert.Single(await QuerySuggestionsAsync());
+        await CategorizeManuallyAsync(outgoing);
+        await ClearSuggestionsAsync();
+
+        // Act — re-run, as would happen after the next import/sync.
+        await MatchAsync();
+
+        // Assert
+        Assert.Empty(await QuerySuggestionsAsync());
+    }
+
+    [Fact]
     public async Task Handle_AcceptedSuggestion_LinksAndClearsCompetingSuggestions()
     {
         // Arrange — one outgoing leg with two exactly-matching incoming
@@ -210,6 +253,23 @@ public sealed class MatchTransfersCommandHandlerTests(FinanceMartenFixture fixtu
     {
         await using var session = fixture.Store.QuerySession();
         return (await session.Query<TransferSuggestion>().ToListAsync(Ct)).ToList();
+    }
+
+    private async Task CategorizeManuallyAsync(Guid transactionId)
+    {
+        await using var session = fixture.Store.LightweightSession();
+        session.Events.Append(
+            transactionId,
+            new TransactionCategoryCorrected(null, Guid.CreateVersion7())
+        );
+        await session.SaveChangesAsync(Ct);
+    }
+
+    private async Task ClearSuggestionsAsync()
+    {
+        await using var session = fixture.Store.LightweightSession();
+        session.DeleteWhere<TransferSuggestion>(_ => true);
+        await session.SaveChangesAsync(Ct);
     }
 
     private async Task<(Guid AccountA, Guid AccountB, Guid AccountC)> CreateAccountsAsync()
