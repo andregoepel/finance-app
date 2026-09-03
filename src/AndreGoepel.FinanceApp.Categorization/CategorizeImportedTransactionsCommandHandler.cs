@@ -72,7 +72,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             .Query<TransactionView>()
             .Where(t =>
                 t.ImportBatchId == command.ImportBatchId
-                && t.CategoryId == null
+                && !t.IsCategorized
                 && t.TransferCounterpartId == null
             )
             .ToListAsync(cancellationToken);
@@ -101,7 +101,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
     {
         var uncategorized = await session
             .Query<TransactionView>()
-            .Where(t => t.CategoryId == null && t.TransferCounterpartId == null)
+            .Where(t => !t.IsCategorized && t.TransferCounterpartId == null)
             .ToListAsync(cancellationToken);
 
         var awaitingReview = (
@@ -143,7 +143,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
         var ids = command.TransactionIds.ToArray();
         var batch = await session
             .Query<TransactionView>()
-            .Where(t => t.Id.IsOneOf(ids) && t.CategoryId == null)
+            .Where(t => t.Id.IsOneOf(ids) && !t.IsCategorized)
             .ToListAsync(cancellationToken);
         if (batch.Count == 0)
         {
@@ -330,7 +330,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             transactionId,
             cancellationToken
         );
-        if (stream.Aggregate is { CategoryId: null })
+        if (stream.Aggregate is { IsCategorized: false })
         {
             stream.AppendOne(categorized);
         }

@@ -39,8 +39,16 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
         var expenseTransactions = transactions.Where(t => t.AmountEur < 0).ToList();
 
         var spending = expenseTransactions
-            .GroupBy(t => TopLevelName(t.CategoryId, categoriesById))
-            .Select(g => new CategorySpend(g.Key, -g.Sum(t => t.AmountEur!.Value)))
+            .SelectMany(t =>
+                t.EffectiveCategoryLines.Select(line =>
+                    (
+                        Category: TopLevelName(line.CategoryId, categoriesById),
+                        AmountEur: t.EurAmountFor(line)!.Value
+                    )
+                )
+            )
+            .GroupBy(x => x.Category)
+            .Select(g => new CategorySpend(g.Key, -g.Sum(x => x.AmountEur)))
             .OrderByDescending(s => s.Amount)
             .ToList();
 
@@ -58,7 +66,7 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
             spending,
             budgets,
             UnconvertedCount: transactions.Count(t => t.AmountEur is null),
-            UncategorizedCount: transactions.Count(t => t.CategoryId is null)
+            UncategorizedCount: transactions.Count(t => !t.IsCategorized)
         );
     }
 
@@ -78,7 +86,11 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
 
         var parents = categoriesById.Values.ToDictionary(c => c.Id, c => c.ParentId);
         var expenses = expenseTransactions
-            .Select(t => (t.CategoryId, Amount: -t.AmountEur!.Value))
+            .SelectMany(t =>
+                t.EffectiveCategoryLines.Select(line =>
+                    ((Guid?)line.CategoryId, Amount: -t.EurAmountFor(line)!.Value)
+                )
+            )
             .ToList();
         var limits = active
             .GroupBy(b => b.CategoryId)

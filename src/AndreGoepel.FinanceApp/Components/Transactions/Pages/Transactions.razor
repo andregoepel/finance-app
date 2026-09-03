@@ -108,13 +108,26 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="220px" Sortable="false">
+            <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="260px" Sortable="false">
                 <Template Context="transaction">
-                    <CategoryPicker Options="@categoryOptions"
-                                    Value="@transaction.CategoryId"
-                                    ValueChanged="@(v => CategorizeAsync(transaction, v))"
-                                    AllowClear="false"
-                                    Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" AlignItems="AlignItems.Center">
+                        @if (transaction.CategoryLines.Count > 1)
+                        {
+                            <StatusBadge Variant="BadgeVariant.Neutral"
+                                         Text="@L["Transactions.SplitBadge", transaction.CategoryLines.Count]" />
+                        }
+                        else
+                        {
+                            <CategoryPicker Options="@categoryOptions"
+                                            Value="@transaction.CategoryId"
+                                            ValueChanged="@(v => CategorizeAsync(transaction, v))"
+                                            AllowClear="false"
+                                            Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
+                        }
+                        <IconButton Icon="call_split"
+                                    Title="@(transaction.CategoryLines.Count > 1 ? L["Transactions.EditSplitTooltip"] : L["Transactions.SplitTooltip"])"
+                                    Click=@(_ => StartSplit(transaction)) />
+                    </RadzenStack>
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="TransactionView" Title="" Width="110px" Sortable="false">
@@ -136,6 +149,39 @@
         </Columns>
     </RadzenDataGrid>
 
+    @if (splitting is not null)
+    {
+        <SectionCard Title="@L["Transactions.SplitTitle"]">
+            <RadzenStack Gap="0.75rem">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <span>@splitting.Description</span>
+                    <AmountText Amount="splitting.Amount" Currency="@splitting.Currency" />
+                </RadzenStack>
+                @foreach (var line in splitLines)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <CategoryPicker Options="@categoryOptions" Name="SplitCategory"
+                                        @bind-Value=@line.CategoryId
+                                        AllowFiltering="true" AllowClear="false"
+                                        Placeholder="@L["Dashboard.ColCategory"]" Style="min-width: 15rem;" />
+                        <RadzenNumeric TValue="decimal" @bind-Value=@line.Amount Style="width: 9rem;" />
+                        <IconButton Icon="delete" Title="@L["Common.Delete"]" Click=@(_ => splitLines.Remove(line)) />
+                    </RadzenStack>
+                }
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                    <RadzenButton Text="@L["Transactions.AddSplitLine"]" Icon="add" ButtonStyle="ButtonStyle.Light"
+                                  Click=@(() => splitLines.Add(new SplitLine())) />
+                    <span>@L["Transactions.SplitRemaining"]: <AmountText Amount="SplitRemaining" Currency="@splitting.Currency" /></span>
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenButton Text="@L["Common.Save"]" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                  Disabled="@(!CanSaveSplit)" Click=@SaveSplitAsync />
+                    <RadzenButton Text="@L["Common.Cancel"]" ButtonStyle="ButtonStyle.Light" Click=@(() => splitting = null) />
+                </RadzenStack>
+            </RadzenStack>
+        </SectionCard>
+    }
+
 </PageBody>
 
 @code {
@@ -152,6 +198,8 @@
     private IList<TransactionView> selected = [];
 
     private RuleOffer? ruleOffer;
+    private TransactionView? splitting;
+    private List<SplitLine> splitLines = [];
     private Guid? accountFilter;
     private Guid? ownerFilter;
     private Guid? categoryFilter;
@@ -179,7 +227,9 @@
         var query = QuerySession.Query<TransactionView>().Where(t => t.AccountId.IsOneOf(accountIds));
         if (categoryFilter is Guid categoryId)
         {
-            query = query.Where(t => t.CategoryId == categoryId);
+            query = query.Where(t =>
+                t.CategoryId == categoryId || t.CategoryLines.Any(l => l.CategoryId == categoryId)
+            );
         }
         if (fromFilter is DateOnly from)
         {
@@ -254,6 +304,60 @@
         }
 
         await ReloadAsync();
+    }
+
+    private void StartSplit(TransactionView transaction)
+    {
+        splitting = transaction;
+        splitLines =
+            transaction.CategoryLines.Count > 1
+                ? transaction
+                    .CategoryLines.Select(l => new SplitLine
+                    {
+                        CategoryId = l.CategoryId,
+                        Amount = l.Amount,
+                    })
+                    .ToList()
+                : [new SplitLine { CategoryId = transaction.CategoryId, Amount = transaction.Amount }, new()];
+    }
+
+    private decimal SplitRemaining => (splitting?.Amount ?? 0) - splitLines.Sum(l => l.Amount);
+
+    private bool CanSaveSplit =>
+        splitting is not null
+        && splitLines.Count >= 2
+        && splitLines.All(l => l.CategoryId is not null && l.Amount != 0)
+        && SplitRemaining == 0;
+
+    private async Task SaveSplitAsync()
+    {
+        if (splitting is null || !CanSaveSplit)
+        {
+            return;
+        }
+
+        var lines = splitLines
+            .Select(l => new CategoryLine(l.CategoryId!.Value, l.Amount))
+            .ToList();
+        var result = await MessageBus.InvokeAsync<Result>(
+            new SplitTransactionCategoryCommand(splitting.Id, lines),
+            _cts.Token
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Error(L["Transactions.SplitFailedTitle"], result.Error);
+            return;
+        }
+
+        NotificationService.Success(L["Transactions.SplitSavedTitle"], L["Transactions.SplitSavedMessage"]);
+        splitting = null;
+        await ReloadAsync();
+    }
+
+    private sealed class SplitLine
+    {
+        public Guid? CategoryId { get; set; }
+        public decimal Amount { get; set; }
     }
 
     private async Task CreateRuleFromOfferAsync()

@@ -76,6 +76,85 @@ public sealed class TransactionViewTests
     }
 
     [Fact]
+    public void Apply_Categorized_SetsIsCategorizedAndSingleLine()
+    {
+        // Arrange
+        var view = Imported();
+        var categoryId = Guid.NewGuid();
+
+        // Act
+        view.Apply(new TransactionCategorized(categoryId, CategorySource.Manual, null));
+
+        // Assert
+        Assert.True(view.IsCategorized);
+        Assert.Equal([new CategoryLine(categoryId, view.Amount)], view.CategoryLines);
+    }
+
+    [Fact]
+    public void Apply_CategorySplit_ClearsScalarCategoryIdAndSetsLines()
+    {
+        // Arrange
+        var view = Imported();
+        var groceries = Guid.NewGuid();
+        var electronics = Guid.NewGuid();
+        var lines = new[]
+        {
+            new CategoryLine(groceries, -20.00m),
+            new CategoryLine(electronics, -3.45m),
+        };
+
+        // Act
+        view.Apply(new TransactionCategorySplit(lines, CategorySource.Manual));
+
+        // Assert
+        Assert.Null(view.CategoryId);
+        Assert.True(view.IsCategorized);
+        Assert.Equal(lines, view.CategoryLines);
+        Assert.Equal(lines, view.EffectiveCategoryLines);
+    }
+
+    [Fact]
+    public void EffectiveCategoryLines_SingleCategory_FallsBackToCategoryIdAndFullAmount()
+    {
+        // Arrange
+        var view = Imported();
+        var categoryId = Guid.NewGuid();
+        view.Apply(new TransactionCategorized(categoryId, CategorySource.Manual, null));
+
+        // Act
+        var lines = view.EffectiveCategoryLines;
+
+        // Assert
+        Assert.Equal([new CategoryLine(categoryId, view.Amount)], lines);
+    }
+
+    [Fact]
+    public void EffectiveCategoryLines_Uncategorized_IsEmpty()
+    {
+        // Arrange
+        var view = Imported();
+
+        // Act + Assert
+        Assert.Empty(view.EffectiveCategoryLines);
+        Assert.False(view.IsCategorized);
+    }
+
+    [Fact]
+    public void EurAmountFor_SplitLine_IsProportionalToTheTransactionsEurAmount()
+    {
+        // Arrange — original amount -27.30 USD converts to -23.45 EUR; a line
+        // covering half the original amount should convert to half the EUR value.
+        var view = Imported();
+        var line = new CategoryLine(Guid.NewGuid(), view.Amount / 2);
+
+        // Act
+        var eur = view.EurAmountFor(line);
+
+        // Assert
+        Assert.Equal(view.AmountEur!.Value / 2, eur);
+    }
+
+    [Fact]
     public void Apply_LinkAndUnlinkTransfer_TogglesTransferState()
     {
         // Arrange

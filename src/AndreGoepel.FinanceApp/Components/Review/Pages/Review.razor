@@ -205,7 +205,7 @@
 
         var query = QuerySession
             .Query<TransactionView>()
-            .Where(t => t.CategoryId == null && t.TransferCounterpartId == null);
+            .Where(t => !t.IsCategorized && t.TransferCounterpartId == null);
 
         if (accountFilter is Guid accountId)
         {
