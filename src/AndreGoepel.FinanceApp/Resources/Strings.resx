@@ -376,6 +376,7 @@
   <data name="Planning.Use" xml:space="preserve"><value><![CDATA[Use]]></value></data>
   <data name="Planning.MatchHeading" xml:space="preserve"><value><![CDATA[Match “{0}” ({1})]]></value><comment>{0} = occurrence description, {1} = formatted due date</comment></data>
   <data name="Planning.NoCandidates" xml:space="preserve"><value><![CDATA[No unmatched transactions near this date.]]></value></data>
+  <data name="Planning.ManageItemsTitle" xml:space="preserve"><value><![CDATA[Planned items]]></value></data>
   <data name="Planning.AddItemTitle" xml:space="preserve"><value><![CDATA[Add planned item]]></value></data>
   <data name="Planning.EditItemTitle" xml:space="preserve"><value><![CDATA[Edit planned item]]></value></data>
   <data name="Planning.TypeLabel" xml:space="preserve"><value><![CDATA[Type]]></value></data>

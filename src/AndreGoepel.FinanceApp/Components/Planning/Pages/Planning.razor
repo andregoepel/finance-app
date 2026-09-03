@@ -1,6 +1,7 @@
 @page "/planning"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using AndreGoepel.FinanceApp.Components.Planning.Dialogs
 @using AndreGoepel.FinanceApp.Planning
 
 @inject IQuerySession QuerySession
@@ -8,6 +9,7 @@
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject DialogService DialogService
 @inject IStringLocalizer<Strings> L
 @implements IDisposable
 
@@ -126,62 +128,10 @@
     </SectionCard>
 
     @* ---------- Manage planned items ---------- *@
-    <SectionCard Title="@(editingId is null ? L["Planning.AddItemTitle"] : L["Planning.EditItemTitle"])">
+    <SectionCard Title="@L["Planning.ManageItemsTitle"]">
         <RadzenStack Gap="1rem">
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-                <FormField Label="@L["Common.Description"]" For="Description">
-                    <RadzenTextBox @bind-Value=@form.Description Name="Description" Style="min-width: 14rem;" />
-                </FormField>
-                <FormField Label="@L["Planning.TypeLabel"]" For="Type">
-                    <RadzenDropDown TValue="bool" @bind-Value=@form.IsExpense Name="Type" Data=@TypeChoices TextProperty="Label" ValueProperty="IsExpense" Style="min-width: 8rem;" />
-                </FormField>
-                <FormField Label="@L["Planning.AmountLabel"]" For="Amount">
-                    <RadzenNumeric TValue="decimal" @bind-Value=@form.Amount Name="Amount" Min="0" Style="width: 9rem;" />
-                </FormField>
-                <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
-                    <CategoryPicker Options="@categoryOptions" Name="Category" @bind-Value=@form.CategoryId
-                                    Placeholder="@L["Planning.NonePlaceholder"]" Style="min-width: 15rem;" />
-                </FormField>
-                <FormField Label="@L["Planning.FrequencyLabel"]" For="Frequency">
-                    <RadzenDropDown TValue="PlannedFrequency" @bind-Value=@form.Frequency Name="Frequency" Data=@Frequencies Style="min-width: 9rem;">
-                        <Template>@L[$"Enum.PlannedFrequency.{context}"]</Template>
-                    </RadzenDropDown>
-                </FormField>
-                <FormField Label="@L["Planning.StartDateLabel"]" For="StartDate">
-                    <RadzenDatePicker TValue="DateTime" @bind-Value=@form.StartDate Name="StartDate" DateFormat="@Dates.ShortFormat" Style="width: 11rem;" />
-                </FormField>
-                @if (form.Frequency != PlannedFrequency.OneTime)
-                {
-                    <FormField Label="@L["Planning.EndDateLabel"]" For="EndDate">
-                        <RadzenDatePicker TValue="DateTime?" @bind-Value=@form.EndDate Name="EndDate" DateFormat="@Dates.ShortFormat" AllowClear="true" Style="width: 11rem;" />
-                    </FormField>
-                }
-                <FormField Label="@L["Planning.ExpectedAccountLabel"]" For="ExpectedAccount">
-                    <RadzenDropDown TValue="Guid?" @bind-Value=@form.ExpectedAccountId Name="ExpectedAccount" Data=@accounts ValueProperty="Id" TextProperty="Name"
-                                    AllowClear="true" Placeholder="@L["Planning.AnyPlaceholder"]" Style="min-width: 12rem;" />
-                </FormField>
-                <FormField Label="@L["Rules.ColCounterpartyContains"]" For="CounterpartyPattern">
-                    <RadzenTextBox @bind-Value=@form.CounterpartyPattern Name="CounterpartyPattern" Placeholder="@L["Planning.MatchHintPlaceholder"]" Style="min-width: 12rem;" />
-                </FormField>
-                <FormField Label="@L["Planning.ToleranceLabel"]" For="Tolerance">
-                    <RadzenNumeric TValue="decimal" @bind-Value=@form.TolerancePercent Name="Tolerance" Min="0" Max="100" Style="width: 7rem;" />
-                </FormField>
-                <FormField Label="@L["Planning.DateWindowLabel"]" For="DateWindow">
-                    <RadzenNumeric TValue="int" @bind-Value=@form.DateWindowDays Name="DateWindow" Min="0" Style="width: 8rem;" />
-                </FormField>
-                @if (editingId is not null)
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                        <RadzenSwitch @bind-Value=@form.Active />
-                        <RadzenLabel Text="@L["Planning.ActiveLabel"]" />
-                    </RadzenStack>
-                }
-                <RadzenButton Text="@(editingId is null ? L["Common.Add"] : L["Common.Save"])" Icon="save" ButtonStyle="ButtonStyle.Primary"
-                              Disabled=@(string.IsNullOrWhiteSpace(form.Description) || form.Amount <= 0) Click=@SaveAsync />
-                @if (editingId is not null)
-                {
-                    <RadzenButton Text="@L["Common.Cancel"]" ButtonStyle="ButtonStyle.Light" Click=@ResetForm />
-                }
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                <RadzenButton Text="@L["Planning.AddItemTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@AddAsync />
             </RadzenStack>
 
             @if (items.Count > 0)
@@ -201,7 +151,7 @@
                         <RadzenDataGridColumn TItem="PlannedItem" Title="" Width="110px" TextAlign="TextAlign.End" Sortable="false">
                             <Template Context="i">
                                 <RowActions>
-                                    <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => StartEdit(i)) />
+                                    <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => EditAsync(i)) />
                                     <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true" Click=@(_ => DeleteAsync(i)) />
                                 </RowActions>
                             </Template>
@@ -215,15 +165,6 @@
 </PageBody>
 
 @code {
-    private sealed record AccountOption(Guid Id, string Name);
-    private sealed record TypeChoice(string Label, bool IsExpense);
-
-    private static readonly PlannedFrequency[] Frequencies = Enum.GetValues<PlannedFrequency>();
-
-    // Instance property (not static) since the labels are localized via the injected L.
-    private TypeChoice[] TypeChoices =>
-        [new(L["Planning.TypeExpense"], true), new(L["Planning.TypeIncome"], false)];
-
     private readonly CancellationTokenSource _cts = new();
 
     private DateOnly monthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -231,9 +172,7 @@
     private List<PlannedItem> items = [];
     private List<CategoryOption> categoryOptions = [];
     private Dictionary<Guid, string> categoryNames = [];
-    private List<AccountOption> accounts = [];
-    private Guid? editingId;
-    private ItemForm form = new();
+    private List<Account> accounts = [];
     private bool matching;
 
     private PlannedOccurrence? matchingOccurrence;
@@ -251,7 +190,6 @@
                 .ToListAsync(_cts.Token)
         )
             .OrderBy(a => a.Name)
-            .Select(a => new AccountOption(a.Id, a.Name))
             .ToList();
         await LoadAsync();
     }
@@ -334,61 +272,21 @@
         await LoadAsync();
     }
 
-    private void StartEdit(PlannedItem item)
+    private Task AddAsync() => OpenFormAsync(null);
+
+    private Task EditAsync(PlannedItem item) => OpenFormAsync(item);
+
+    private async Task OpenFormAsync(PlannedItem? item)
     {
-        editingId = item.Id;
-        form = new ItemForm
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@(item is null ? L["Planning.AddItemTitle"] : L["Planning.EditItemTitle"])" />,
+            childContent: _ => @<PlannedItemFormDialog Item="@item" CategoryOptions="@categoryOptions" Accounts="@accounts" />
+        );
+        if (result is true)
         {
-            Description = item.Description,
-            IsExpense = item.Amount < 0,
-            Amount = Math.Abs(item.Amount),
-            CategoryId = item.CategoryId,
-            Frequency = item.Schedule.Frequency,
-            StartDate = item.Schedule.StartDate.ToDateTime(TimeOnly.MinValue),
-            EndDate = item.Schedule.EndDate?.ToDateTime(TimeOnly.MinValue),
-            ExpectedAccountId = item.ExpectedAccountId,
-            CounterpartyPattern = item.CounterpartyPattern ?? "",
-            TolerancePercent = item.AmountTolerance * 100,
-            DateWindowDays = item.DateWindowDays,
-            Active = item.Active,
-        };
-    }
-
-    private void ResetForm()
-    {
-        editingId = null;
-        form = new ItemForm();
-    }
-
-    private async Task SaveAsync()
-    {
-        var amount = form.IsExpense ? -form.Amount : form.Amount;
-        var start = DateOnly.FromDateTime(form.StartDate);
-        DateOnly? end = form.Frequency != PlannedFrequency.OneTime && form.EndDate is DateTime e
-            ? DateOnly.FromDateTime(e)
-            : null;
-        var tolerance = form.TolerancePercent / 100m;
-
-        Result result = editingId is Guid id
-            ? await MessageBus.InvokeAsync<Result<PlannedItem>>(
-                new UpdatePlannedItemCommand(
-                    id, form.Description, amount, form.CategoryId, form.Frequency, start, end,
-                    form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays, form.Active),
-                _cts.Token)
-            : await MessageBus.InvokeAsync<Result<PlannedItem>>(
-                new CreatePlannedItemCommand(
-                    form.Description, amount, form.CategoryId, form.Frequency, start, end,
-                    form.ExpectedAccountId, form.CounterpartyPattern, tolerance, form.DateWindowDays),
-                _cts.Token);
-
-        if (result.IsFailure)
-        {
-            NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
-            return;
+            await LoadAsync();
+            NotificationService.Success(L["Planning.ItemSavedTitle"]);
         }
-        ResetForm();
-        await LoadAsync();
-        NotificationService.Success(L["Planning.ItemSavedTitle"]);
     }
 
     private async Task DeleteAsync(PlannedItem item)
@@ -409,10 +307,6 @@
         {
             NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);
             return;
-        }
-        if (editingId == item.Id)
-        {
-            ResetForm();
         }
         await LoadAsync();
         NotificationService.Success(L["Planning.ItemRemovedTitle"]);
@@ -439,22 +333,6 @@
         PlannedOccurrenceStatus.Skipped => BadgeVariant.Neutral,
         _ => BadgeVariant.Info,
     };
-
-    private sealed class ItemForm
-    {
-        public string Description { get; set; } = "";
-        public bool IsExpense { get; set; } = true;
-        public decimal Amount { get; set; }
-        public Guid? CategoryId { get; set; }
-        public PlannedFrequency Frequency { get; set; } = PlannedFrequency.Monthly;
-        public DateTime StartDate { get; set; } = DateTime.Today;
-        public DateTime? EndDate { get; set; }
-        public Guid? ExpectedAccountId { get; set; }
-        public string CounterpartyPattern { get; set; } = "";
-        public decimal TolerancePercent { get; set; } = 10;
-        public int DateWindowDays { get; set; } = 7;
-        public bool Active { get; set; } = true;
-    }
 
     public void Dispose()
     {
