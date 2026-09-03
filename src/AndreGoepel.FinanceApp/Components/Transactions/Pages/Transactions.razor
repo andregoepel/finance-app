@@ -30,7 +30,7 @@
         </RadzenAlert>
     }
 
-    <FilterBar OnApply="@(() => ReloadAsync(resetPage: true))" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Secondary">
+    <FilterBar OnApply="@(() => ReloadAsync(resetPage: true))" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Primary">
         <ChildContent>
             <FormField Label="@L["Common.Account"]" For="Account">
                 <RadzenDropDown TValue="Guid?"
@@ -67,7 +67,8 @@
                 <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Common.Search"]" For="Search">
-                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;" />
+                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;"
+                               Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
         </ChildContent>
         <Actions>
