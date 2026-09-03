@@ -6,6 +6,7 @@ using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
 using Microsoft.Extensions.Logging;
+using Wolverine;
 using Wolverine.Attributes;
 
 namespace AndreGoepel.FinanceApp.Categorization;
@@ -23,7 +24,11 @@ namespace AndreGoepel.FinanceApp.Categorization;
 /// <remarks>
 /// Two entry points share the pipeline: the per-import follow-up published
 /// after every upload or sync, and the backfill over everything still
-/// uncategorized, triggered from the review page.
+/// uncategorized, triggered from the review page. Both run the two database
+/// stages inline and cascade one <see cref="CategorizeTransactionBatchCommand"/>
+/// per Claude batch instead of calling Claude in a loop: a single Claude call
+/// takes tens of seconds, and Wolverine cancels a handler after 60 seconds, so
+/// a backfill of thousands of rows would otherwise die on its second batch.
 /// <para>
 /// Must stay <c>public</c>: Wolverine's handler discovery skips non-public
 /// types (the generated handler code has to reference the class), and the
@@ -36,14 +41,20 @@ namespace AndreGoepel.FinanceApp.Categorization;
 public sealed class CategorizeImportedTransactionsCommandHandler
 {
     internal const decimal HighConfidenceThreshold = 0.8m;
-    private const int BatchSize = 50;
+    internal const int BatchSize = 50;
     private const int FewShotExampleCount = 30;
 
+    /// <summary>
+    /// Room for one slow Claude round trip (observed: ~40s per batch) plus the
+    /// history load, above Wolverine's 60s default; the HTTP client's own 90s
+    /// timeout still fires first on a hung connection.
+    /// </summary>
+    internal const int ClaudeBatchTimeoutSeconds = 120;
+
     /// <summary>Import follow-up: the batch's rows that are still uncategorized.</summary>
-    public async Task Handle(
+    public async Task<OutgoingMessages> Handle(
         CategorizeImportedTransactionsCommand command,
         IDocumentSession session,
-        IClaudeCategorizer claudeCategorizer,
         ILogger<CategorizeImportedTransactionsCommandHandler> logger,
         CancellationToken cancellationToken
     )
@@ -53,11 +64,10 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             .Where(t => t.ImportBatchId == command.ImportBatchId && t.CategoryId == null)
             .ToListAsync(cancellationToken);
 
-        await CategorizeAsync(
+        return await CategorizeLocallyAsync(
             pending.ToList(),
             $"import batch {command.ImportBatchId}",
             session,
-            claudeCategorizer,
             logger,
             cancellationToken
         );
@@ -69,10 +79,9 @@ public sealed class CategorizeImportedTransactionsCommandHandler
     /// pending suggestion (the reviewer has not decided yet; asking again would
     /// only burn tokens for the same answer).
     /// </summary>
-    public async Task Handle(
+    public async Task<OutgoingMessages> Handle(
         CategorizeUncategorizedTransactionsCommand command,
         IDocumentSession session,
-        IClaudeCategorizer claudeCategorizer,
         ILogger<CategorizeImportedTransactionsCommandHandler> logger,
         CancellationToken cancellationToken
     )
@@ -96,28 +105,127 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             uncategorized.Count
         );
 
-        await CategorizeAsync(
+        return await CategorizeLocallyAsync(
             pending,
             "backfill",
             session,
-            claudeCategorizer,
             logger,
             cancellationToken
         );
     }
 
-    private static async Task CategorizeAsync(
-        List<TransactionView> pending,
-        string scope,
+    /// <summary>
+    /// Stage 3, one batch per message. Rows categorized while the message waited
+    /// in the queue (a manual pick, an overlapping run) are left out again here.
+    /// </summary>
+    [MessageTimeout(ClaudeBatchTimeoutSeconds)]
+    public async Task Handle(
+        CategorizeTransactionBatchCommand command,
         IDocumentSession session,
         IClaudeCategorizer claudeCategorizer,
         ILogger<CategorizeImportedTransactionsCommandHandler> logger,
         CancellationToken cancellationToken
     )
     {
-        if (pending.Count == 0)
+        var ids = command.TransactionIds.ToArray();
+        var batch = await session
+            .Query<TransactionView>()
+            .Where(t => t.Id.IsOneOf(ids) && t.CategoryId == null)
+            .ToListAsync(cancellationToken);
+        if (batch.Count == 0)
         {
             return;
+        }
+
+        var categories = await session.Query<Category>().ToListAsync(cancellationToken);
+        var options = CategoryPaths.Build(categories.ToList());
+        var history = new CategorizationHistory(
+            await LoadHistoryAsync(session, cancellationToken),
+            options
+        );
+
+        var toCategorize = batch
+            .Select(t => new TransactionToCategorize(
+                t.Id,
+                t.Counterparty,
+                t.Description,
+                t.Amount,
+                t.Currency,
+                t.BookingDate,
+                history.RecurrenceHintFor(t.Counterparty)
+            ))
+            .ToList();
+        var examples = history.ExamplesFor(batch.Select(t => t.Counterparty), FewShotExampleCount);
+
+        var result = await claudeCategorizer.SuggestAsync(
+            toCategorize,
+            options,
+            examples,
+            cancellationToken
+        );
+        if (result.IsFailure)
+        {
+            // Graceful degradation: stay uncategorized → review queue.
+            logger.LogWarning(
+                "AI categorization skipped for {Scope} ({Count} transactions): {Reason}",
+                command.Scope,
+                batch.Count,
+                result.Error
+            );
+            return;
+        }
+
+        foreach (var suggestion in result.Value!)
+        {
+            if (suggestion.CategoryId is not Guid categoryId)
+            {
+                continue; // model declined — stays in the review queue
+            }
+
+            if (suggestion.Confidence >= HighConfidenceThreshold)
+            {
+                await AppendCategorizedAsync(
+                    session,
+                    suggestion.TransactionId,
+                    new TransactionCategorized(
+                        categoryId,
+                        CategorySource.Ai,
+                        suggestion.Confidence
+                    ),
+                    cancellationToken
+                );
+            }
+            else
+            {
+                session.Store(
+                    new CategorySuggestion
+                    {
+                        Id = suggestion.TransactionId,
+                        CategoryId = categoryId,
+                        Confidence = suggestion.Confidence,
+                    }
+                );
+            }
+        }
+        await session.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Stages 1 and 2 (rules, history) inline; whatever is left is handed to
+    /// Claude as cascading batch messages.
+    /// </summary>
+    private static async Task<OutgoingMessages> CategorizeLocallyAsync(
+        List<TransactionView> pending,
+        string scope,
+        IDocumentSession session,
+        ILogger<CategorizeImportedTransactionsCommandHandler> logger,
+        CancellationToken cancellationToken
+    )
+    {
+        var messages = new OutgoingMessages();
+        if (pending.Count == 0)
+        {
+            return messages;
         }
 
         // Stage 1: learned rules.
@@ -148,7 +256,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
 
         if (unmatched.Count == 0)
         {
-            return;
+            return messages;
         }
 
         // Stage 2: the household's own confirmed history.
@@ -185,81 +293,13 @@ public sealed class CategorizeImportedTransactionsCommandHandler
             forClaude.Count
         );
 
-        if (forClaude.Count == 0)
-        {
-            return;
-        }
-
-        // Stage 3: Claude, with examples and recurrence notes from the same history.
         foreach (var batch in forClaude.Chunk(BatchSize))
         {
-            var toCategorize = batch
-                .Select(t => new TransactionToCategorize(
-                    t.Id,
-                    t.Counterparty,
-                    t.Description,
-                    t.Amount,
-                    t.Currency,
-                    t.BookingDate,
-                    history.RecurrenceHintFor(t.Counterparty)
-                ))
-                .ToList();
-            var examples = history.ExamplesFor(
-                batch.Select(t => t.Counterparty),
-                FewShotExampleCount
+            messages.Add(
+                new CategorizeTransactionBatchCommand(batch.Select(t => t.Id).ToList(), scope)
             );
-
-            var result = await claudeCategorizer.SuggestAsync(
-                toCategorize,
-                options,
-                examples,
-                cancellationToken
-            );
-            if (result.IsFailure)
-            {
-                // Graceful degradation: stay uncategorized → review queue.
-                logger.LogWarning(
-                    "AI categorization skipped for {Scope}: {Reason}",
-                    scope,
-                    result.Error
-                );
-                return;
-            }
-
-            foreach (var suggestion in result.Value!)
-            {
-                if (suggestion.CategoryId is not Guid categoryId)
-                {
-                    continue; // model declined — stays in the review queue
-                }
-
-                if (suggestion.Confidence >= HighConfidenceThreshold)
-                {
-                    await AppendCategorizedAsync(
-                        session,
-                        suggestion.TransactionId,
-                        new TransactionCategorized(
-                            categoryId,
-                            CategorySource.Ai,
-                            suggestion.Confidence
-                        ),
-                        cancellationToken
-                    );
-                }
-                else
-                {
-                    session.Store(
-                        new CategorySuggestion
-                        {
-                            Id = suggestion.TransactionId,
-                            CategoryId = categoryId,
-                            Confidence = suggestion.Confidence,
-                        }
-                    );
-                }
-            }
-            await session.SaveChangesAsync(cancellationToken);
         }
+        return messages;
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using Wolverine;
 using IntegrationCollection = AndreGoepel.FinanceApp.Categorization.Tests.Infrastructure.IntegrationCollection;
 
 namespace AndreGoepel.FinanceApp.Categorization.Tests;
@@ -99,17 +100,52 @@ public sealed class CategorizeImportedTransactionsCommandHandlerTests(
         var claude = ClaudeAnswering([]);
 
         // Act
-        await using var session = fixture.Store.LightweightSession();
-        await new CategorizeImportedTransactionsCommandHandler().Handle(
-            new CategorizeImportedTransactionsCommand(batchId),
-            session,
-            claude.Categorizer,
-            NullLogger<CategorizeImportedTransactionsCommandHandler>.Instance,
-            Ct
-        );
+        await ImportFollowUpAsync(batchId, claude.Categorizer);
 
         // Assert
         Assert.Equal(inBatch, Assert.Single(claude.SentIds));
+    }
+
+    [Fact]
+    public async Task Handle_Backfill_CascadesOneMessagePerClaudeBatch()
+    {
+        // Arrange — one more than a batch: two messages, the second carrying a single id.
+        var ids = new List<Guid>();
+        for (var i = 0; i <= CategorizeImportedTransactionsCommandHandler.BatchSize; i++)
+        {
+            ids.Add(await ImportAsync($"Shop {i}"));
+        }
+
+        // Act
+        var batches = await PlanBackfillAsync();
+
+        // Assert
+        var commands = batches.OfType<CategorizeTransactionBatchCommand>().ToList();
+        Assert.Equal(2, commands.Count);
+        Assert.Equal(
+            CategorizeImportedTransactionsCommandHandler.BatchSize,
+            commands[0].TransactionIds.Count
+        );
+        Assert.Single(commands[1].TransactionIds);
+        Assert.Equal(ids.ToHashSet(), commands.SelectMany(c => c.TransactionIds).ToHashSet());
+        Assert.All(commands, command => Assert.Equal("backfill", command.Scope));
+    }
+
+    [Fact]
+    public async Task Handle_Batch_SkipsRowsCategorizedWhileItWaitedInTheQueue()
+    {
+        // Arrange — a manual pick lands between planning the batches and the Claude call.
+        var picked = await ImportAsync("Billa");
+        var open = await ImportAsync("Spar");
+        var batches = await PlanBackfillAsync();
+        await CategorizeAsync(picked, Groceries, CategorySource.Manual);
+        var claude = ClaudeAnswering([]);
+
+        // Act
+        await RunBatchesAsync(batches, claude.Categorizer);
+
+        // Assert
+        Assert.Equal(open, Assert.Single(claude.SentIds));
     }
 
     #endregion
@@ -317,16 +353,53 @@ public sealed class CategorizeImportedTransactionsCommandHandlerTests(
 
     #region Helpers
 
-    private async Task BackfillAsync(IClaudeCategorizer categorizer)
+    private static readonly NullLogger<CategorizeImportedTransactionsCommandHandler> Logger =
+        NullLogger<CategorizeImportedTransactionsCommandHandler>.Instance;
+
+    private async Task BackfillAsync(IClaudeCategorizer categorizer) =>
+        await RunBatchesAsync(await PlanBackfillAsync(), categorizer);
+
+    private async Task ImportFollowUpAsync(Guid importBatchId, IClaudeCategorizer categorizer)
+    {
+        OutgoingMessages batches;
+        await using (var session = fixture.Store.LightweightSession())
+        {
+            batches = await new CategorizeImportedTransactionsCommandHandler().Handle(
+                new CategorizeImportedTransactionsCommand(importBatchId),
+                session,
+                Logger,
+                Ct
+            );
+        }
+        await RunBatchesAsync(batches, categorizer);
+    }
+
+    /// <summary>Stages 1 and 2, returning the Claude batches the handler cascades.</summary>
+    private async Task<OutgoingMessages> PlanBackfillAsync()
     {
         await using var session = fixture.Store.LightweightSession();
-        await new CategorizeImportedTransactionsCommandHandler().Handle(
+        return await new CategorizeImportedTransactionsCommandHandler().Handle(
             new CategorizeUncategorizedTransactionsCommand(),
             session,
-            categorizer,
-            NullLogger<CategorizeImportedTransactionsCommandHandler>.Instance,
+            Logger,
             Ct
         );
+    }
+
+    /// <summary>Stage 3 the way Wolverine runs it: one session per batch, in order.</summary>
+    private async Task RunBatchesAsync(OutgoingMessages batches, IClaudeCategorizer categorizer)
+    {
+        foreach (var batch in batches.OfType<CategorizeTransactionBatchCommand>())
+        {
+            await using var session = fixture.Store.LightweightSession();
+            await new CategorizeImportedTransactionsCommandHandler().Handle(
+                batch,
+                session,
+                categorizer,
+                Logger,
+                Ct
+            );
+        }
     }
 
     /// <summary>

@@ -5,6 +5,7 @@ using AndreGoepel.FinanceApp;
 using AndreGoepel.FinanceApp.Categorization.Claude;
 using AndreGoepel.FinanceApp.Components;
 using AndreGoepel.FinanceApp.Connections;
+using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.Marten.Identity.Blazor.Components.Account;
 
@@ -20,6 +21,10 @@ builder.AddAppFoundation(options =>
     {
         wolverine.Discovery.IncludeAssembly(typeof(ImportStatementCommand).Assembly);
         wolverine.Discovery.IncludeAssembly(typeof(IClaudeCategorizer).Assembly);
+
+        // One Claude request at a time: a backfill cascades dozens of batches, and
+        // running them in parallel would only trade the timeout for rate limits.
+        wolverine.LocalQueueFor<CategorizeTransactionBatchCommand>().Sequential();
     };
 });
 
