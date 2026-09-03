@@ -194,6 +194,8 @@
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Vorschläge übernommen.]]></value></data>
   <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Umbuchungen suchen]]></value></data>
   <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Die Umbuchungssuche läuft im Hintergrund. Liste in Kürze aktualisieren.]]></value></data>
+  <data name="Review.RepairCategorizedFlags" xml:space="preserve"><value><![CDATA[Kategorisierungs-Flag reparieren]]></value></data>
+  <data name="Review.RepairCategorizedFlagsMessage" xml:space="preserve"><value><![CDATA[Transaktionen repariert, die vor Einführung dieses Flags kategorisiert wurden.]]></value></data>
   <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Umbuchungsvorschläge]]></value></data>
   <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Abgang]]></value></data>
   <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Eingang]]></value></data>

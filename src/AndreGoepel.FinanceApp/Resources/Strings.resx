@@ -195,6 +195,8 @@
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestions dismissed.]]></value></data>
   <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Find transfers]]></value></data>
   <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Transfer matching is running in the background. Refresh the list in a moment.]]></value></data>
+  <data name="Review.RepairCategorizedFlags" xml:space="preserve"><value><![CDATA[Repair categorized flags]]></value></data>
+  <data name="Review.RepairCategorizedFlagsMessage" xml:space="preserve"><value><![CDATA[Fixed transactions categorized before this flag existed.]]></value></data>
   <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Transfer suggestions]]></value></data>
   <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Outgoing]]></value></data>
   <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Incoming]]></value></data>
