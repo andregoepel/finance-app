@@ -205,6 +205,9 @@
   <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Umbuchung verknüpft.]]></value></data>
   <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Vorschlag verworfen.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Vorschläge verworfen.]]></value></data>
+  <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Art]]></value></data>
+  <data name="Review.TypeIncome" xml:space="preserve"><value><![CDATA[Einnahme]]></value></data>
+  <data name="Review.TypeExpense" xml:space="preserve"><value><![CDATA[Ausgabe]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Konto auswählen]]></value></data>
@@ -317,10 +320,16 @@
   <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Ein monatliches EUR-Limit pro Kategorie festlegen. Ein Limit auf einer übergeordneten Kategorie zählt die Ausgaben dieser Kategorie und aller ihrer Unterkategorien. Der Fortschritt wird auf der Übersicht angezeigt.]]></value></data>
   <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Budget festlegen]]></value></data>
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monatliches Limit (€)]]></value></data>
+  <data name="Budgets.StartMonthLabel" xml:space="preserve"><value><![CDATA[Startmonat]]></value></data>
+  <data name="Budgets.EndMonthLabel" xml:space="preserve"><value><![CDATA[Endmonat]]></value></data>
+  <data name="Budgets.EndMonthOngoingPlaceholder" xml:space="preserve"><value><![CDATA[Laufend]]></value></data>
   <data name="Budgets.CurrentBudgetsHeading" xml:space="preserve"><value><![CDATA[Aktuelle Budgets]]></value></data>
   <data name="Budgets.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Budgets festgelegt]]></value></data>
   <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Oben ein monatliches Limit für eine Kategorie festlegen, um deren Ausgaben zu verfolgen.]]></value></data>
   <data name="Budgets.ColMonthlyLimit" xml:space="preserve"><value><![CDATA[Monatliches Limit]]></value></data>
+  <data name="Budgets.ColStartMonth" xml:space="preserve"><value><![CDATA[Von]]></value></data>
+  <data name="Budgets.ColEndMonth" xml:space="preserve"><value><![CDATA[Bis]]></value></data>
+  <data name="Budgets.Ongoing" xml:space="preserve"><value><![CDATA[Laufend]]></value></data>
   <data name="Budgets.DeletedCategory" xml:space="preserve"><value><![CDATA[(gelöschte Kategorie)]]></value></data>
   <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget gespeichert]]></value></data>
   <data name="Budgets.RemovedTitle" xml:space="preserve"><value><![CDATA[Budget entfernt]]></value></data>

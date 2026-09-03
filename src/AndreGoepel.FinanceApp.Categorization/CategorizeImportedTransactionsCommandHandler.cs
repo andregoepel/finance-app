@@ -42,7 +42,16 @@ public sealed class CategorizeImportedTransactionsCommandHandler
 {
     internal const decimal HighConfidenceThreshold = 0.8m;
     internal const int BatchSize = 50;
-    private const int FewShotExampleCount = 30;
+
+    /// <summary>
+    /// Recently confirmed examples in the cached part of the prompt. Sized so the
+    /// prefix (tool, instructions, ~45 categories, examples) clears Haiku 4.5's
+    /// 4096-token cache minimum once the household has confirmed that many
+    /// transactions; below it the marker is silently ignored and nothing is lost.
+    /// Cache reads cost a tenth of uncached input, so the larger block is still
+    /// cheaper than the previous 30 uncached examples.
+    /// </summary>
+    internal const int RecentExampleCount = 120;
 
     /// <summary>
     /// Room for one slow Claude round trip (observed: ~40s per batch) plus the
@@ -159,7 +168,7 @@ public sealed class CategorizeImportedTransactionsCommandHandler
                 history.RecurrenceHintFor(t.Counterparty)
             ))
             .ToList();
-        var examples = history.ExamplesFor(batch.Select(t => t.Counterparty), FewShotExampleCount);
+        var examples = history.ExamplesFor(batch.Select(t => t.Counterparty), RecentExampleCount);
 
         var result = await claudeCategorizer.SuggestAsync(
             toCategorize,

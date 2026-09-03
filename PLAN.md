@@ -52,7 +52,7 @@ Event-sourced where history matters, documents where it doesn't.
   currency, owner (André/wife/joint), sync method, external ids
 - `Category` — hierarchical (e.g. Living > Groceries), seed with a sensible default tree
 - `CategoryRule` — matcher (merchant/counterparty/description pattern, amount range) → category; source: manual | learned-from-correction
-- `Budget` — category, monthly limit
+- `Budget` — category, monthly limit, start/end month (a category can have several budget periods over time)
 - `ImportBatch` — file/API sync run: source, hash, row count, result (audit + idempotency)
 - `ProviderCredential` — provider, credential payload (DataProtection-encrypted), created/rotated timestamps, consent expiry
 - `PlannedItem` — description, amount (± income/expense), category, schedule (one-time date | monthly/quarterly/yearly recurrence), expected account, matching hints (counterparty pattern, amount tolerance)
