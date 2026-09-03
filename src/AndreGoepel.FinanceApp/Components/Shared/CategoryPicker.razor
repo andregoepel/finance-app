@@ -11,6 +11,7 @@
                 TextProperty="Path"
                 AllowClear="@AllowClear"
                 AllowFiltering="@AllowFiltering"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                 Name="@Name"
                 Placeholder="@Placeholder"
                 Style="@Style" />
@@ -36,9 +37,9 @@
     [Parameter]
     public bool AllowClear { get; set; } = true;
 
-    /// <summary>Whether the options can be filtered by typing.</summary>
+    /// <summary>Whether the options can be filtered by typing. Defaults to <c>true</c> — every category picker should be searchable.</summary>
     [Parameter]
-    public bool AllowFiltering { get; set; }
+    public bool AllowFiltering { get; set; } = true;
 
     /// <summary>The control name (links a <c>FormField</c> label to it).</summary>
     [Parameter]
