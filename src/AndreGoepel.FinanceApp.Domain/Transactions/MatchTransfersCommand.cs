@@ -10,10 +10,14 @@ namespace AndreGoepel.FinanceApp.Domain.Transactions;
 /// same booking date) is linked outright; a cross-currency exact match or an
 /// ambiguous duplicate becomes a <see cref="TransferSuggestion"/> for the
 /// review queue instead. No tolerance on date or amount — see
-/// <see cref="TransferMatcher"/>. Idempotent — already linked transactions
-/// and already-suggested pairs are skipped, so it is safe to publish after
-/// every import/sync and to invoke on demand from the review page, mirroring
-/// <c>MatchPlannedTransactionsCommand</c>.
+/// <see cref="TransferMatcher"/>. A transaction the household has manually
+/// categorized (<see cref="CategorySource.Manual"/>) is excluded from the
+/// candidate pool outright — that is a standing decision that it is not a
+/// transfer, and must survive even if the <see cref="TransferSuggestion"/>
+/// collection itself is ever cleared out. Idempotent — already linked
+/// transactions and already-suggested pairs are skipped, so it is safe to
+/// publish after every import/sync and to invoke on demand from the review
+/// page, mirroring <c>MatchPlannedTransactionsCommand</c>.
 /// </summary>
 public sealed record MatchTransfersCommand;
 
@@ -43,7 +47,11 @@ public static class MatchTransfersCommandHandler
         var pool = (
             await session
                 .Query<TransactionView>()
-                .Where(t => t.AmountEur != null && t.TransferCounterpartId == null)
+                .Where(t =>
+                    t.AmountEur != null
+                    && t.TransferCounterpartId == null
+                    && (t.CategorySource == null || t.CategorySource != CategorySource.Manual)
+                )
                 .ToListAsync(cancellationToken)
         )
             .Where(t => !awaitingReview.Contains(t.Id))
