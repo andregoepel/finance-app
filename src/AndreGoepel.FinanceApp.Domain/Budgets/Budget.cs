@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AndreGoepel.FinanceApp.Domain.Budgets;
 
 /// <summary>
@@ -7,6 +9,11 @@ namespace AndreGoepel.FinanceApp.Domain.Budgets;
 /// enforces by rejecting overlapping periods. A budget on a parent category is
 /// measured against spending in that category and all its descendants.
 /// </summary>
+/// <remarks>
+/// <see cref="BudgetJsonConverter"/> lets rows written before <see cref="CategoryId"/>/
+/// <see cref="StartMonth"/> existed keep deserializing — see its doc comment.
+/// </remarks>
+[JsonConverter(typeof(BudgetJsonConverter))]
 public sealed class Budget
 {
     /// <summary>Document identity — one row per budget period, not per category.</summary>
