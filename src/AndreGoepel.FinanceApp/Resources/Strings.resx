@@ -193,6 +193,21 @@
   <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestion accepted.]]></value></data>
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestions accepted.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestions dismissed.]]></value></data>
+  <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Find transfers]]></value></data>
+  <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Transfer matching is running in the background. Refresh the list in a moment.]]></value></data>
+  <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Transfer suggestions]]></value></data>
+  <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Outgoing]]></value></data>
+  <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Incoming]]></value></data>
+  <data name="Review.ColDifference" xml:space="preserve"><value><![CDATA[Difference]]></value></data>
+  <data name="Review.LinkTransferTooltip" xml:space="preserve"><value><![CDATA[Link as transfer]]></value></data>
+  <data name="Review.DismissTransferTooltip" xml:space="preserve"><value><![CDATA[Not a transfer]]></value></data>
+  <data name="Review.TransferDifferenceDaysOnly" xml:space="preserve"><value><![CDATA[{0} day(s) apart]]></value><comment>{0} = day difference; amount matches exactly</comment></data>
+  <data name="Review.TransferDifferenceDaysAndAmount" xml:space="preserve"><value><![CDATA[{0} day(s) apart, {1} off]]></value><comment>{0} = day difference, {1} = formatted EUR amount difference</comment></data>
+  <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Transfer linked.]]></value></data>
+  <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestion dismissed.]]></value></data>
+  <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Type]]></value></data>
+  <data name="Review.TypeIncome" xml:space="preserve"><value><![CDATA[Income]]></value></data>
+  <data name="Review.TypeExpense" xml:space="preserve"><value><![CDATA[Expense]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Select account]]></value></data>
@@ -278,6 +293,15 @@
   <data name="Transactions.LinkedTitle" xml:space="preserve"><value><![CDATA[Linked]]></value></data>
   <data name="Transactions.LinkedMessage" xml:space="preserve"><value><![CDATA[Transactions linked as transfer.]]></value></data>
   <data name="Transactions.UnlinkingFailedTitle" xml:space="preserve"><value><![CDATA[Unlinking failed]]></value></data>
+  <data name="Transactions.SplitBadge" xml:space="preserve"><value><![CDATA[Split ({0})]]></value><comment>{0} = number of category lines</comment></data>
+  <data name="Transactions.SplitTooltip" xml:space="preserve"><value><![CDATA[Split across categories]]></value></data>
+  <data name="Transactions.EditSplitTooltip" xml:space="preserve"><value><![CDATA[Edit split]]></value></data>
+  <data name="Transactions.SplitTitle" xml:space="preserve"><value><![CDATA[Split into categories]]></value></data>
+  <data name="Transactions.AddSplitLine" xml:space="preserve"><value><![CDATA[Add category]]></value></data>
+  <data name="Transactions.SplitRemaining" xml:space="preserve"><value><![CDATA[Remaining]]></value></data>
+  <data name="Transactions.SplitFailedTitle" xml:space="preserve"><value><![CDATA[Split failed]]></value></data>
+  <data name="Transactions.SplitSavedTitle" xml:space="preserve"><value><![CDATA[Saved]]></value></data>
+  <data name="Transactions.SplitSavedMessage" xml:space="preserve"><value><![CDATA[Transaction split across categories.]]></value></data>
   <data name="Enum.CategorySource.Provider" xml:space="preserve"><value><![CDATA[Provider]]></value></data>
   <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Rule]]></value></data>
   <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[Ai]]></value><comment>Matches the "Ai" wording referenced in Review.Subtitle</comment></data>

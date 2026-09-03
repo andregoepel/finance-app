@@ -96,6 +96,7 @@
   <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Eine der Transaktionen ist bereits als Umbuchung verknüpft.]]></value></data>
   <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Die Transaktion ist nicht als Umbuchung verknüpft.]]></value></data>
   <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Die beiden Seiten einer Umbuchung müssen zu verschiedenen Konten gehören.]]></value></data>
+  <data name="Error.TransferSuggestionNotFound" xml:space="preserve"><value><![CDATA[Umbuchungsvorschlag nicht gefunden.]]></value></data>
 
   <!-- Planning -->
   <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[Eine Beschreibung ist erforderlich.]]></value></data>
@@ -119,6 +120,10 @@
   <data name="Error.SecretMustNotBeEmpty" xml:space="preserve"><value><![CDATA[Das Secret darf nicht leer sein.]]></value></data>
   <!-- Categorization -->
   <data name="Error.NoPendingSuggestions" xml:space="preserve"><value><![CDATA[Keine offenen Vorschläge für die ausgewählten Transaktionen gefunden.]]></value></data>
+  <data name="Error.SplitNeedsAtLeastTwoLines" xml:space="preserve"><value><![CDATA[Eine Aufteilung benötigt mindestens zwei Kategorien.]]></value></data>
+  <data name="Error.SplitLineAmountZero" xml:space="preserve"><value><![CDATA[Jeder Teilbetrag darf nicht null sein.]]></value></data>
+  <data name="Error.SplitLineWrongSign" xml:space="preserve"><value><![CDATA[Jeder Teilbetrag muss dasselbe Vorzeichen wie die Transaktion haben (negativ = Ausgabe, positiv = Einnahme).]]></value></data>
+  <data name="Error.SplitAmountsMustSumToTotal" xml:space="preserve"><value><![CDATA[Die Teilbeträge müssen in Summe dem Gesamtbetrag der Transaktion entsprechen.]]></value></data>
   <!-- Connectors — the three messages from that layer a user can actually act on. -->
   <data name="Error.NoParserForProvider" xml:space="preserve"><value><![CDATA[Für {0} ist kein Kontoauszugs-Parser registriert.]]></value><comment>{0} = provider name</comment></data>
   <data name="Error.UnrecognizedExportFormat" xml:space="preserve"><value><![CDATA[Unbekanntes {0}-Exportformat. Unterstützte Formate: {1}. Möglicherweise hat der Anbieter sein Exportformat geändert — dann wird eine neue Parser-Version benötigt.]]></value><comment>{0} = provider, {1} = comma-separated parser ids</comment></data>

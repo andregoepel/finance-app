@@ -5,6 +5,7 @@ using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Imports;
 using AndreGoepel.FinanceApp.Domain.Planning;
 using AndreGoepel.FinanceApp.Domain.Providers;
+using AndreGoepel.FinanceApp.Domain.Transactions;
 using AndreGoepel.FinanceApp.Resources;
 using Marten;
 using Microsoft.Extensions.Localization;
@@ -155,6 +156,7 @@ internal sealed class AccountSyncService(
         if (import.Value!.ImportedCount > 0)
         {
             await messageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
+            await messageBus.PublishAsync(new MatchTransfersCommand());
             await messageBus.PublishAsync(
                 new CategorizeImportedTransactionsCommand(import.Value.Id)
             );

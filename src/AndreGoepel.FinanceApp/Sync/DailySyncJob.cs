@@ -1,6 +1,7 @@
 using AndreGoepel.FinanceApp.Domain.Crypto;
 using AndreGoepel.FinanceApp.Domain.Exchange;
 using AndreGoepel.FinanceApp.Domain.Planning;
+using AndreGoepel.FinanceApp.Domain.Transactions;
 using Quartz;
 using Wolverine;
 
@@ -46,6 +47,7 @@ internal sealed class DailySyncJob(
             );
 
             await messageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
+            await messageBus.PublishAsync(new MatchTransfersCommand());
             await messageBus.PublishAsync(new MatchPlannedTransactionsCommand());
             await messageBus.PublishAsync(new RefreshCryptoValuationsCommand());
         }

@@ -37,6 +37,10 @@ internal static class AccountTransactionPurge
         {
             session.Delete<CategorySuggestion>(suggestionId);
         }
+        foreach (var transferSuggestionId in targets.TransferSuggestionIds)
+        {
+            session.Delete<TransferSuggestion>(transferSuggestionId);
+        }
         foreach (var batchId in targets.ImportBatchIds)
         {
             session.Delete<ImportBatch>(batchId);

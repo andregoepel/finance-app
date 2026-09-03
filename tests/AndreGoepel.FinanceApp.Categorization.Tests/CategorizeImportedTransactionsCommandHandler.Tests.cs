@@ -74,6 +74,27 @@ public sealed class CategorizeImportedTransactionsCommandHandlerTests(
     }
 
     [Fact]
+    public async Task Handle_Backfill_SplitTransaction_IsExcluded()
+    {
+        // Arrange — a manual split has CategoryId == null (like an uncategorized
+        // row) but must not be re-offered to rules/history/Claude and silently
+        // downgraded back to a single category.
+        var split = await ImportAsync("Rewe");
+        await SplitAsync(split, (Groceries, -10m), (Insurance, -2.30m));
+        var eligible = await ImportAsync("Billa");
+
+        var claude = ClaudeAnswering([]);
+
+        // Act
+        await BackfillAsync(claude.Categorizer);
+
+        // Assert
+        Assert.Equal([eligible], claude.SentIds);
+        var view = await LoadAsync(split);
+        Assert.Equal(2, view.CategoryLines.Count);
+    }
+
+    [Fact]
     public async Task Handle_Backfill_NothingEligible_NeverCallsClaude()
     {
         // Arrange
@@ -484,6 +505,22 @@ public sealed class CategorizeImportedTransactionsCommandHandlerTests(
         await using var session = fixture.Store.LightweightSession();
         var stream = await session.Events.FetchForWriting<TransactionView>(transactionId, Ct);
         stream.AppendOne(new TransactionCategorized(categoryId, source, confidence));
+        await session.SaveChangesAsync(Ct);
+    }
+
+    private async Task SplitAsync(
+        Guid transactionId,
+        params (Guid CategoryId, decimal Amount)[] lines
+    )
+    {
+        await using var session = fixture.Store.LightweightSession();
+        var stream = await session.Events.FetchForWriting<TransactionView>(transactionId, Ct);
+        stream.AppendOne(
+            new TransactionCategorySplit(
+                lines.Select(l => new CategoryLine(l.CategoryId, l.Amount)).ToList(),
+                CategorySource.Manual
+            )
+        );
         await session.SaveChangesAsync(Ct);
     }
 

@@ -51,6 +51,20 @@ public sealed record TransactionCategorized(
 /// </summary>
 public sealed record TransactionCategoryCorrected(Guid? PreviousCategoryId, Guid CategoryId);
 
+/// <summary>One category's share of a split transaction's amount.</summary>
+public sealed record CategoryLine(Guid CategoryId, decimal Amount);
+
+/// <summary>
+/// Splits a transaction across two or more categories, each with its own share
+/// of the amount (shares sum to the transaction's total amount). Replaces
+/// whatever single-category or prior split state existed — never an in-place
+/// update. Not currently produced by rules/history/AI; a manual action only.
+/// </summary>
+public sealed record TransactionCategorySplit(
+    IReadOnlyList<CategoryLine> Lines,
+    CategorySource Source
+);
+
 /// <summary>
 /// Marks this transaction as one leg of a transfer between own accounts —
 /// excluded from spending aggregations.

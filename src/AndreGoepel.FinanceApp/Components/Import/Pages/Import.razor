@@ -287,6 +287,7 @@
             if (result.Value!.ImportedCount > 0)
             {
                 await MessageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
+                await MessageBus.PublishAsync(new MatchTransfersCommand());
                 await MessageBus.PublishAsync(
                     new CategorizeImportedTransactionsCommand(result.Value.Id)
                 );

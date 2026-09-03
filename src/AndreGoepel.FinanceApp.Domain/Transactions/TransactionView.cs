@@ -42,6 +42,42 @@ public sealed class TransactionView
 
     public decimal? CategoryConfidence { get; set; }
 
+    /// <summary>
+    /// Non-empty only for a split transaction (two or more categories). A
+    /// single-category transaction carries its category in <see cref="CategoryId"/>
+    /// instead; use <see cref="EffectiveCategoryLines"/> to read either shape
+    /// uniformly.
+    /// </summary>
+    public IReadOnlyList<CategoryLine> CategoryLines { get; set; } = [];
+
+    /// <summary>
+    /// True once any categorization event has applied, single or split. Distinct
+    /// from testing <see cref="CategoryId"/> for null, which is also null while
+    /// split (see <see cref="CategoryLines"/>).
+    /// </summary>
+    public bool IsCategorized { get; set; }
+
+    /// <summary>
+    /// <see cref="CategoryLines"/> when split, otherwise a single line built
+    /// from <see cref="CategoryId"/> covering the full amount — the shape every
+    /// per-category aggregation should read instead of <see cref="CategoryId"/>
+    /// directly, so split shares are counted correctly.
+    /// </summary>
+    public IReadOnlyList<CategoryLine> EffectiveCategoryLines =>
+        CategoryLines.Count > 0 ? CategoryLines
+        : CategoryId is Guid id ? [new CategoryLine(id, Amount)]
+        : [];
+
+    /// <summary>
+    /// This line's share of <see cref="AmountEur"/>, in proportion to its share
+    /// of <see cref="Amount"/>. Null when the transaction itself has no EUR
+    /// amount yet (unconverted).
+    /// </summary>
+    public decimal? EurAmountFor(CategoryLine line) =>
+        AmountEur is not decimal eur ? null
+        : Amount == 0 ? eur
+        : line.Amount / Amount * eur;
+
     public Guid? TransferCounterpartId { get; set; }
 
     public bool IsTransfer => TransferCounterpartId is not null;
@@ -91,6 +127,8 @@ public sealed class TransactionView
         CategoryId = categorized.CategoryId;
         CategorySource = categorized.Source;
         CategoryConfidence = categorized.Confidence;
+        CategoryLines = [new CategoryLine(categorized.CategoryId, Amount)];
+        IsCategorized = true;
     }
 
     public void Apply(TransactionCategoryCorrected corrected)
@@ -98,6 +136,17 @@ public sealed class TransactionView
         CategoryId = corrected.CategoryId;
         CategorySource = Transactions.CategorySource.Manual;
         CategoryConfidence = null;
+        CategoryLines = [new CategoryLine(corrected.CategoryId, Amount)];
+        IsCategorized = true;
+    }
+
+    public void Apply(TransactionCategorySplit split)
+    {
+        CategoryId = null;
+        CategorySource = split.Source;
+        CategoryConfidence = null;
+        CategoryLines = split.Lines;
+        IsCategorized = true;
     }
 
     public void Apply(TransactionLinkedAsTransfer linked)

@@ -192,7 +192,22 @@
   <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Vorschlag übernehmen]]></value></data>
   <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Vorschlag übernommen.]]></value></data>
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Vorschläge übernommen.]]></value></data>
+  <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Umbuchungen suchen]]></value></data>
+  <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Die Umbuchungssuche läuft im Hintergrund. Liste in Kürze aktualisieren.]]></value></data>
+  <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Umbuchungsvorschläge]]></value></data>
+  <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Abgang]]></value></data>
+  <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Eingang]]></value></data>
+  <data name="Review.ColDifference" xml:space="preserve"><value><![CDATA[Abweichung]]></value></data>
+  <data name="Review.LinkTransferTooltip" xml:space="preserve"><value><![CDATA[Als Umbuchung verknüpfen]]></value></data>
+  <data name="Review.DismissTransferTooltip" xml:space="preserve"><value><![CDATA[Keine Umbuchung]]></value></data>
+  <data name="Review.TransferDifferenceDaysOnly" xml:space="preserve"><value><![CDATA[{0} Tag(e) auseinander]]></value><comment>{0} = day difference; amount matches exactly</comment></data>
+  <data name="Review.TransferDifferenceDaysAndAmount" xml:space="preserve"><value><![CDATA[{0} Tag(e) auseinander, {1} Abweichung]]></value><comment>{0} = day difference, {1} = formatted EUR amount difference</comment></data>
+  <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Umbuchung verknüpft.]]></value></data>
+  <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Vorschlag verworfen.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Vorschläge verworfen.]]></value></data>
+  <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Art]]></value></data>
+  <data name="Review.TypeIncome" xml:space="preserve"><value><![CDATA[Einnahme]]></value></data>
+  <data name="Review.TypeExpense" xml:space="preserve"><value><![CDATA[Ausgabe]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Konto auswählen]]></value></data>
@@ -278,6 +293,15 @@
   <data name="Transactions.LinkedTitle" xml:space="preserve"><value><![CDATA[Verknüpft]]></value></data>
   <data name="Transactions.LinkedMessage" xml:space="preserve"><value><![CDATA[Transaktionen als Umbuchung verknüpft.]]></value></data>
   <data name="Transactions.UnlinkingFailedTitle" xml:space="preserve"><value><![CDATA[Aufheben der Verknüpfung fehlgeschlagen]]></value></data>
+  <data name="Transactions.SplitBadge" xml:space="preserve"><value><![CDATA[Aufgeteilt ({0})]]></value><comment>{0} = number of category lines</comment></data>
+  <data name="Transactions.SplitTooltip" xml:space="preserve"><value><![CDATA[Auf Kategorien aufteilen]]></value></data>
+  <data name="Transactions.EditSplitTooltip" xml:space="preserve"><value><![CDATA[Aufteilung bearbeiten]]></value></data>
+  <data name="Transactions.SplitTitle" xml:space="preserve"><value><![CDATA[Auf Kategorien aufteilen]]></value></data>
+  <data name="Transactions.AddSplitLine" xml:space="preserve"><value><![CDATA[Kategorie hinzufügen]]></value></data>
+  <data name="Transactions.SplitRemaining" xml:space="preserve"><value><![CDATA[Verbleibend]]></value></data>
+  <data name="Transactions.SplitFailedTitle" xml:space="preserve"><value><![CDATA[Aufteilen fehlgeschlagen]]></value></data>
+  <data name="Transactions.SplitSavedTitle" xml:space="preserve"><value><![CDATA[Gespeichert]]></value></data>
+  <data name="Transactions.SplitSavedMessage" xml:space="preserve"><value><![CDATA[Transaktion auf Kategorien aufgeteilt.]]></value></data>
   <data name="Enum.CategorySource.Provider" xml:space="preserve"><value><![CDATA[Anbieter]]></value></data>
   <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Regel]]></value></data>
   <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[KI]]></value><comment>Matches the „KI“ wording referenced in Review.Subtitle</comment></data>
