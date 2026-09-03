@@ -339,7 +339,8 @@
 
   <!-- Budgets.razor -->
   <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Set a monthly EUR limit per category. A limit on a parent category counts spending in that category and all of its subcategories. Progress shows on the dashboard.]]></value></data>
-  <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Set a budget]]></value></data>
+  <data name="Budgets.AddTitle" xml:space="preserve"><value><![CDATA[Add budget]]></value></data>
+  <data name="Budgets.EditTitle" xml:space="preserve"><value><![CDATA[Edit budget]]></value></data>
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monthly limit (€)]]></value></data>
   <data name="Budgets.StartMonthLabel" xml:space="preserve"><value><![CDATA[Start month]]></value></data>
   <data name="Budgets.EndMonthLabel" xml:space="preserve"><value><![CDATA[End month]]></value></data>

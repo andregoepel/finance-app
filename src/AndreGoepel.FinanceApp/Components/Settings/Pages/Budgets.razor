@@ -1,48 +1,26 @@
 @page "/settings/budgets"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using AndreGoepel.FinanceApp.Categorization
+@using AndreGoepel.FinanceApp.Components.Settings.Dialogs
 @using AndreGoepel.FinanceApp.Domain.Budgets
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject DialogService DialogService
 @inject IStringLocalizer<Strings> L
 
 <AppPageTitle Title="@L["Nav.Budgets"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Budgets"]]" />
 
 <PageBody>
 
-    <PageHeader Title="@L["Nav.Budgets"]" Subtitle="@L["Budgets.Subtitle"]" />
-
-    <SectionCard Title="@L["Budgets.SetBudgetTitle"]">
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-            <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
-                <RadzenDropDown TValue="Guid?" @bind-Value=@selectedCategoryId Name="Category"
-                                Data=@categoryOptions ValueProperty="Id" TextProperty="Path"
-                                AllowClear="true" AllowFiltering="true" Placeholder="@L["Common.SelectCategoryPlaceholder"]"
-                                Style="min-width: 18rem;" />
-            </FormField>
-            <FormField Label="@L["Budgets.MonthlyLimitLabel"]" For="Limit">
-                <RadzenNumeric TValue="decimal" @bind-Value=@limitInput Name="Limit" Min="0" Style="width: 9rem;" />
-            </FormField>
-            <FormField Label="@L["Budgets.StartMonthLabel"]" For="StartMonth">
-                <RadzenDatePicker TValue="DateTime" @bind-Value=@startMonthInput Name="StartMonth"
-                                  DateFormat="@Dates.MonthFormat" Style="width: 10rem;" />
-            </FormField>
-            <FormField Label="@L["Budgets.EndMonthLabel"]" For="EndMonth">
-                <RadzenDatePicker TValue="DateTime?" @bind-Value=@endMonthInput Name="EndMonth"
-                                  DateFormat="@Dates.MonthFormat" AllowClear="true"
-                                  Placeholder="@L["Budgets.EndMonthOngoingPlaceholder"]" Style="width: 10rem;" />
-            </FormField>
-            <RadzenButton Text="@(editingBudgetId is null ? L["Common.Add"] : L["Common.Save"])" Icon="save" ButtonStyle="ButtonStyle.Primary"
-                          Disabled=@(!CanSave) Click=@SaveAsync />
-            @if (editingBudgetId is not null)
-            {
-                <RadzenButton Text="@L["Common.Cancel"]" ButtonStyle="ButtonStyle.Light" Click=@ResetForm />
-            }
-        </RadzenStack>
-    </SectionCard>
+    <PageHeader Title="@L["Nav.Budgets"]" Subtitle="@L["Budgets.Subtitle"]">
+        <Actions>
+            <RadzenButton Text="@L["Budgets.AddTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@AddAsync />
+        </Actions>
+    </PageHeader>
 
     <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@L["Budgets.CurrentBudgetsHeading"]</RadzenText>
     @if (budgetRows.Count == 0)
@@ -67,7 +45,7 @@
                     <RadzenDataGridColumn TItem="BudgetRow" Title="" Width="110px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
-                                <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => StartEdit(row)) />
+                                <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => EditAsync(row)) />
                                 <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true" Click=@(_ => DeleteAsync(row)) />
                             </RowActions>
                         </Template>
@@ -80,8 +58,6 @@
 </PageBody>
 
 @code {
-    private sealed record CategoryOption(Guid Id, string Path);
-
     private sealed record BudgetRow(
         Guid Id,
         Guid CategoryId,
@@ -92,44 +68,18 @@
     );
 
     private List<CategoryOption> categoryOptions = [];
+    private List<Budget> budgets = [];
     private List<BudgetRow> budgetRows = [];
-    private Guid? selectedCategoryId;
-    private Guid? editingBudgetId;
-    private decimal limitInput;
-    private DateTime startMonthInput = new(DateTime.Today.Year, DateTime.Today.Month, 1);
-    private DateTime? endMonthInput;
-
-    private bool CanSave =>
-        selectedCategoryId is not null
-        && limitInput > 0
-        && (endMonthInput is null || endMonthInput >= startMonthInput);
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
     private async Task LoadAsync()
     {
-        var categories = (await QuerySession.Query<Category>().ToListAsync()).ToList();
-        var byId = categories.ToDictionary(c => c.Id);
-        string Path(Category c)
-        {
-            var parts = new List<string>();
-            var current = c;
-            var guard = 0;
-            while (current is not null && guard++ < 64)
-            {
-                parts.Insert(0, current.Name);
-                current = current.ParentId is Guid p && byId.TryGetValue(p, out var parent) ? parent : null;
-            }
-            return string.Join(" › ", parts);
-        }
-
-        categoryOptions = categories
-            .Select(c => new CategoryOption(c.Id, Path(c)))
-            .OrderBy(o => o.Path)
-            .ToList();
-
+        var categories = await QuerySession.Query<Category>().ToListAsync();
+        categoryOptions = CategoryPaths.Build(categories);
         var pathById = categoryOptions.ToDictionary(o => o.Id, o => o.Path);
-        var budgets = await QuerySession.Query<Budget>().ToListAsync();
+
+        budgets = (await QuerySession.Query<Budget>().ToListAsync()).ToList();
         budgetRows = budgets
             .Select(b => new BudgetRow(
                 b.Id,
@@ -143,45 +93,22 @@
             .ToList();
     }
 
-    private void StartEdit(BudgetRow row)
-    {
-        editingBudgetId = row.Id;
-        selectedCategoryId = row.CategoryId;
-        limitInput = row.Limit;
-        startMonthInput = row.StartMonth.ToDateTime(TimeOnly.MinValue);
-        endMonthInput = row.EndMonth?.ToDateTime(TimeOnly.MinValue);
-    }
+    private Task AddAsync() => OpenFormAsync(null);
 
-    private void ResetForm()
-    {
-        editingBudgetId = null;
-        selectedCategoryId = null;
-        limitInput = 0;
-        startMonthInput = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        endMonthInput = null;
-    }
+    private Task EditAsync(BudgetRow row) =>
+        OpenFormAsync(budgets.FirstOrDefault(b => b.Id == row.Id));
 
-    private async Task SaveAsync()
+    private async Task OpenFormAsync(Budget? budget)
     {
-        if (selectedCategoryId is not Guid categoryId)
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@(budget is null ? L["Budgets.AddTitle"] : L["Budgets.EditTitle"])" />,
+            childContent: _ => @<BudgetFormDialog Budget="@budget" CategoryOptions="@categoryOptions" />
+        );
+        if (result is true)
         {
-            return;
+            await LoadAsync();
+            NotificationService.Success(L["Budgets.SavedTitle"]);
         }
-        var result = await MessageBus.InvokeAsync<Result<Budget>>(
-            new SetBudgetCommand(
-                editingBudgetId,
-                categoryId,
-                limitInput,
-                DateOnly.FromDateTime(startMonthInput),
-                endMonthInput is DateTime end ? DateOnly.FromDateTime(end) : null));
-        if (result.IsFailure)
-        {
-            NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
-            return;
-        }
-        ResetForm();
-        await LoadAsync();
-        NotificationService.Success(L["Budgets.SavedTitle"]);
     }
 
     private async Task DeleteAsync(BudgetRow row)
@@ -198,10 +125,6 @@
         {
             NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);
             return;
-        }
-        if (editingBudgetId == row.Id)
-        {
-            ResetForm();
         }
         await LoadAsync();
         NotificationService.Success(L["Budgets.RemovedTitle"]);
