@@ -158,6 +158,80 @@
             </RadzenColumn>
         </RadzenRow>
 
+        @* ---------- Accounts with current balances ---------- *@
+        <SectionCard Title="@L["Dashboard.Accounts"]">
+            <Actions>
+                <RadzenLink Path="settings/accounts" Text="@L["Nav.Accounts"]" />
+            </Actions>
+            <ChildContent>
+                <RadzenStack Gap="0.75rem">
+                    @if (netWorth is null)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">@L["Common.Loading"]</RadzenText>
+                    }
+                    else if (netWorth.Accounts.Count == 0)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                            @L["Dashboard.NoAccounts"] <RadzenLink Path="settings/accounts" Text="@L["Dashboard.AddOneLink"]" />.
+                        </RadzenText>
+                    }
+                    else
+                    {
+                        @foreach (var group in netWorth.Accounts.GroupBy(a => a.Type))
+                        {
+                            <div>
+                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center"
+                                             Style="border-bottom: 1px solid var(--rz-border-color, rgba(128,128,128,0.25)); padding-bottom: 0.25rem; margin-bottom: 0.25rem;">
+                                    <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">@L[$"Enum.AccountType.{group.Key}"]</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">
+                                        @Money.Eur(group.Sum(a => a.BalanceEur ?? 0m))
+                                    </RadzenText>
+                                </RadzenStack>
+                                @foreach (var account in group)
+                                {
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Style="padding: 0.2rem 0;">
+                                        <RadzenStack Gap="0" Style="flex: 1; min-width: 0;">
+                                            <RadzenLink Path="@($"transactions?account={account.AccountId}")" Text="@account.Name" />
+                                            <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
+                                                @account.Provider
+                                                @if (account.AsOf is DateTimeOffset asOf)
+                                                {
+                                                    <text> · @L["Dashboard.BalanceAsOf", Dates.Short(asOf.LocalDateTime)]</text>
+                                                }
+                                            </RadzenText>
+                                        </RadzenStack>
+                                        @if (account.BalanceEur is decimal balanceEur)
+                                        {
+                                            <RadzenStack Gap="0" AlignItems="AlignItems.End">
+                                                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">@Money.Eur(balanceEur)</RadzenText>
+                                                @if (account.IsForeignCurrency && account.Balance is decimal native)
+                                                {
+                                                    <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
+                                                        @Money.Format(native, account.Currency)
+                                                    </RadzenText>
+                                                }
+                                            </RadzenStack>
+                                        }
+                                        else
+                                        {
+                                            <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
+                                                @L["Dashboard.NoBalanceYet"] <RadzenLink Path="settings/accounts" Text="@L["Dashboard.SetOneLink"]" />
+                                            </RadzenText>
+                                        }
+                                    </RadzenStack>
+                                }
+                            </div>
+                        }
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center"
+                                     Style="border-top: 1px solid var(--rz-border-color, rgba(128,128,128,0.25)); padding-top: 0.5rem;">
+                            <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">@L["Dashboard.AccountsTotal"]</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">@Money.Eur(netWorth.Current)</RadzenText>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </ChildContent>
+        </SectionCard>
+
         @* ---------- Crypto holdings ---------- *@
         @if (crypto is { Positions.Count: > 0 })
         {

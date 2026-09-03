@@ -255,6 +255,11 @@
   <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[Bei {0} Konto/Konten fehlt der Kontostand —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
   <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[jetzt festlegen]]></value></data>
   <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[ und sie werden mitgezählt.]]></value><comment>Leading space is deliberate — the Razor puts none before this fragment</comment></data>
+  <data name="Dashboard.Accounts" xml:space="preserve"><value><![CDATA[Konten]]></value></data>
+  <data name="Dashboard.NoAccounts" xml:space="preserve"><value><![CDATA[Noch keine Konten —]]></value><comment>An "add one" link follows</comment></data>
+  <data name="Dashboard.BalanceAsOf" xml:space="preserve"><value><![CDATA[Stand {0}]]></value><comment>{0} = date the balance was last set</comment></data>
+  <data name="Dashboard.NoBalanceYet" xml:space="preserve"><value><![CDATA[noch kein Kontostand —]]></value><comment>A "set one" link follows</comment></data>
+  <data name="Dashboard.AccountsTotal" xml:space="preserve"><value><![CDATA[Gesamt]]></value></data>
   <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[Keine Budgets festgelegt —]]></value><comment>An "add one" link follows</comment></data>
   <data name="Dashboard.AddOneLink" xml:space="preserve"><value><![CDATA[eines hinzufügen]]></value></data>
   <data name="Dashboard.HoldingsLink" xml:space="preserve"><value><![CDATA[Bestände]]></value></data>

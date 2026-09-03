@@ -1,4 +1,6 @@
 using AndreGoepel.FinanceApp.Components.Pages;
+using AndreGoepel.FinanceApp.Domain.Accounts;
+using AndreGoepel.FinanceApp.Domain.Providers;
 using AndreGoepel.FinanceApp.Insights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -12,7 +14,8 @@ public sealed class DashboardTests : LocalizedTestContext
 {
     private void RegisterDashboardService(
         MonthlyOverview overview,
-        CryptoOverview? cryptoOverview = null
+        CryptoOverview? cryptoOverview = null,
+        NetWorthOverview? netWorthOverview = null
     )
     {
         var service = Substitute.For<IDashboardService>();
@@ -24,7 +27,7 @@ public sealed class DashboardTests : LocalizedTestContext
         var netWorth = Substitute.For<INetWorthService>();
         netWorth
             .GetAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new NetWorthOverview(0m, [], 0)));
+            .Returns(Task.FromResult(netWorthOverview ?? new NetWorthOverview(0m, [], 0, [])));
         Services.AddSingleton(netWorth);
 
         var planning = Substitute.For<AndreGoepel.FinanceApp.Planning.IPlanningService>();
@@ -139,6 +142,118 @@ public sealed class DashboardTests : LocalizedTestContext
         Assert.Contains("Crypto", cut.Markup);
         Assert.Contains("BTC", cut.Markup);
         Assert.Contains($"{47_500m:N2} €", cut.Markup); // same format the page uses
+    }
+
+    [Fact]
+    public void Render_WithAccounts_GroupsByTypeWithSubtotalsAndLinksToTransactions()
+    {
+        // Arrange — two checking accounts (one in PHP) and a cash account; the
+        // total is the net-worth figure, the group subtotals add up the EUR balances.
+        var checkingId = Guid.NewGuid();
+        var overview = new NetWorthOverview(
+            Current: 1_650m,
+            Series: [],
+            AccountsWithoutBalance: 0,
+            Accounts:
+            [
+                new AccountBalance(
+                    checkingId,
+                    "Main EUR",
+                    ProviderKind.Wise,
+                    AccountType.Checking,
+                    "EUR",
+                    Balance: 1_000m,
+                    BalanceEur: 1_000m,
+                    AsOf: new DateTimeOffset(2026, 8, 30, 12, 0, 0, TimeSpan.Zero)
+                ),
+                new AccountBalance(
+                    Guid.NewGuid(),
+                    "Pesos",
+                    ProviderKind.Wise,
+                    AccountType.Checking,
+                    "PHP",
+                    Balance: 33_000m,
+                    BalanceEur: 500m,
+                    AsOf: new DateTimeOffset(2026, 8, 30, 12, 0, 0, TimeSpan.Zero)
+                ),
+                new AccountBalance(
+                    Guid.NewGuid(),
+                    "Wallet",
+                    ProviderKind.Cash,
+                    AccountType.Cash,
+                    "EUR",
+                    Balance: 150m,
+                    BalanceEur: 150m,
+                    AsOf: new DateTimeOffset(2026, 9, 1, 12, 0, 0, TimeSpan.Zero)
+                ),
+            ]
+        );
+        RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            netWorthOverview: overview
+        );
+
+        // Act
+        var cut = Render<Dashboard>();
+
+        // Assert — group headings, per-account rows, the foreign-currency figure,
+        // the checking subtotal, the total, and a link into the filtered list.
+        Assert.Contains("Checking", cut.Markup);
+        Assert.Contains("Cash", cut.Markup);
+        Assert.Contains("Main EUR", cut.Markup);
+        Assert.Contains("Pesos", cut.Markup);
+        Assert.Contains($"{33_000m:N2} PHP", cut.Markup);
+        Assert.Contains($"{1_500m:N2} €", cut.Markup);
+        Assert.Contains($"{1_650m:N2} €", cut.Markup);
+        Assert.Contains($"transactions?account={checkingId}", cut.Markup);
+    }
+
+    [Fact]
+    public void Render_WithAccountWithoutBalance_ListsItWithSetOneHint()
+    {
+        // Arrange
+        var overview = new NetWorthOverview(
+            Current: 0m,
+            Series: [],
+            AccountsWithoutBalance: 1,
+            Accounts:
+            [
+                new AccountBalance(
+                    Guid.NewGuid(),
+                    "DKB Giro",
+                    ProviderKind.Dkb,
+                    AccountType.Checking,
+                    "EUR",
+                    Balance: null,
+                    BalanceEur: null,
+                    AsOf: null
+                ),
+            ]
+        );
+        RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            netWorthOverview: overview
+        );
+
+        // Act
+        var cut = Render<Dashboard>();
+
+        // Assert — the account is not hidden; it carries the hint instead of a figure.
+        Assert.Contains("DKB Giro", cut.Markup);
+        Assert.Contains("no balance yet", cut.Markup);
+    }
+
+    [Fact]
+    public void Render_WithoutAccounts_ShowsAddOneHint()
+    {
+        // Arrange
+        RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
+
+        // Act
+        var cut = Render<Dashboard>();
+
+        // Assert
+        Assert.Contains("No accounts yet", cut.Markup);
     }
 
     [Fact]

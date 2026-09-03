@@ -207,8 +207,16 @@
     private DateOnly? toFilter;
     private string textFilter = "";
 
+    /// <summary>
+    /// Pre-selects the account filter when the page is opened from a link such as
+    /// the dashboard's account list (<c>transactions?account=…</c>).
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "account")]
+    public Guid? AccountFromQuery { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        accountFilter = AccountFromQuery;
         accounts = (await QuerySession.Query<Account>().ToListAsync(_cts.Token)).OrderBy(a => a.Name).ToList();
         users = await UserManager
             .Users.Where(u => !u.Deleted)
