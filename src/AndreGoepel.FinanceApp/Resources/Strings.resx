@@ -193,6 +193,9 @@
   <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestion accepted.]]></value></data>
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestions accepted.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestions dismissed.]]></value></data>
+  <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Type]]></value></data>
+  <data name="Review.TypeIncome" xml:space="preserve"><value><![CDATA[Income]]></value></data>
+  <data name="Review.TypeExpense" xml:space="preserve"><value><![CDATA[Expense]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Select account]]></value></data>
