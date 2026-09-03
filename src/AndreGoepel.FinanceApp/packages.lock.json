@@ -48,9 +48,9 @@
       },
       "AndreGoepel.Design.Blazor": {
         "type": "Direct",
-        "requested": "[1.6.5, )",
-        "resolved": "1.6.5",
-        "contentHash": "b2qp/WtyxF1PF5JsbAdBdYCnbjnv/zS6GQQxQHQG2XksSP1WVrQl5yUmOtve1NoUkyIR4g2XXDQIc7+AfflpGQ==",
+        "requested": "[1.6.6, )",
+        "resolved": "1.6.6",
+        "contentHash": "XNMtB/9cZcET5VTDu1ruL49Ueb9YfH2SfWDwY9BwlQS87DwgL9QW+tJfN4wNE/lwbT2fs9Y0PQNB9nb6OPa++Q==",
         "dependencies": {
           "Radzen.Blazor": "11.2.8"
         }
