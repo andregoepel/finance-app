@@ -29,12 +29,47 @@ public static class LinkTransactionsAsTransferCommandHandler
             return Result.Fail(localizer["Error.CannotLinkToItself"]);
         }
 
-        var first = await session.Events.FetchForWriting<TransactionView>(
+        var result = await TransferLinking.LinkAsync(
+            session,
             command.FirstTransactionId,
+            command.SecondTransactionId,
+            localizer,
+            cancellationToken
+        );
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        await session.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+}
+
+/// <summary>
+/// The validation and event-appending shared by every path that links two
+/// transactions as a transfer — a direct manual pick
+/// (<see cref="LinkTransactionsAsTransferCommandHandler"/>) and accepting a
+/// suggestion (<see cref="AcceptTransferSuggestionCommandHandler"/>). Neither
+/// caller commits here — that stays with the caller so it can save other
+/// changes (like clearing competing suggestions) in the same unit of work.
+/// </summary>
+internal static class TransferLinking
+{
+    public static async Task<Result> LinkAsync(
+        IDocumentSession session,
+        Guid firstTransactionId,
+        Guid secondTransactionId,
+        IStringLocalizer<DomainStrings> localizer,
+        CancellationToken cancellationToken
+    )
+    {
+        var first = await session.Events.FetchForWriting<TransactionView>(
+            firstTransactionId,
             cancellationToken
         );
         var second = await session.Events.FetchForWriting<TransactionView>(
-            command.SecondTransactionId,
+            secondTransactionId,
             cancellationToken
         );
         if (first.Aggregate is null || second.Aggregate is null)
@@ -52,10 +87,8 @@ public static class LinkTransactionsAsTransferCommandHandler
             return Result.Fail(localizer["Error.TransferLegsSameAccount"]);
         }
 
-        first.AppendOne(new TransactionLinkedAsTransfer(command.SecondTransactionId));
-        second.AppendOne(new TransactionLinkedAsTransfer(command.FirstTransactionId));
-
-        await session.SaveChangesAsync(cancellationToken);
+        first.AppendOne(new TransactionLinkedAsTransfer(secondTransactionId));
+        second.AppendOne(new TransactionLinkedAsTransfer(firstTransactionId));
         return Result.Ok();
     }
 }

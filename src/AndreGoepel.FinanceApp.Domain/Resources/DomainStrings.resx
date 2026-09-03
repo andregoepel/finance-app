@@ -97,6 +97,7 @@
   <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[One of the transactions is already linked as a transfer.]]></value></data>
   <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Transaction is not linked as a transfer.]]></value></data>
   <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Transfer legs must belong to different accounts.]]></value></data>
+  <data name="Error.TransferSuggestionNotFound" xml:space="preserve"><value><![CDATA[Transfer suggestion not found.]]></value></data>
 
   <!-- Planning -->
   <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[A description is required.]]></value></data>
