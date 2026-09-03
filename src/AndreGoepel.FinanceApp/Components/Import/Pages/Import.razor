@@ -31,7 +31,7 @@
                                     Change=@(_ => OnAccountChangedAsync()) />
                 </FormField>
                 <div>
-                    <InputFile OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(selectedAccountId is null) />
+                    <InputFile class="import-file-input" OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(selectedAccountId is null) />
                 </div>
             </RadzenStack>
             @if (SelectedAccount is not null)

@@ -1,0 +1,39 @@
+.import-file-input {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    height: 2.5rem;
+    border: 1px solid var(--rz-base-300);
+    border-radius: var(--rz-border-radius);
+    background-color: var(--rz-base-background-color);
+    color: var(--rz-text-color);
+    font-family: inherit;
+    font-size: var(--rz-body-font-size);
+    padding-inline-end: 0.75rem;
+}
+
+.import-file-input::file-selector-button {
+    height: 100%;
+    margin-inline-end: 0.75rem;
+    padding-inline: 0.9375rem;
+    border: none;
+    border-inline-end: 1px solid var(--rz-base-300);
+    border-radius: var(--rz-border-radius) 0 0 var(--rz-border-radius);
+    background-color: var(--rz-base-200);
+    color: var(--rz-text-color);
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.import-file-input::file-selector-button:hover {
+    background-color: var(--rz-base-300);
+}
+
+.import-file-input:disabled {
+    opacity: var(--rz-button-disabled-opacity, 0.5);
+}
+
+.import-file-input:disabled::file-selector-button {
+    cursor: not-allowed;
+}
