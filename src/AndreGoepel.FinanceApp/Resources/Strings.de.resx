@@ -339,7 +339,8 @@
 
   <!-- Budgets.razor -->
   <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Ein monatliches EUR-Limit pro Kategorie festlegen. Ein Limit auf einer übergeordneten Kategorie zählt die Ausgaben dieser Kategorie und aller ihrer Unterkategorien. Der Fortschritt wird auf der Übersicht angezeigt.]]></value></data>
-  <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Budget festlegen]]></value></data>
+  <data name="Budgets.AddTitle" xml:space="preserve"><value><![CDATA[Budget hinzufügen]]></value></data>
+  <data name="Budgets.EditTitle" xml:space="preserve"><value><![CDATA[Budget bearbeiten]]></value></data>
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monatliches Limit (€)]]></value></data>
   <data name="Budgets.StartMonthLabel" xml:space="preserve"><value><![CDATA[Startmonat]]></value></data>
   <data name="Budgets.EndMonthLabel" xml:space="preserve"><value><![CDATA[Endmonat]]></value></data>

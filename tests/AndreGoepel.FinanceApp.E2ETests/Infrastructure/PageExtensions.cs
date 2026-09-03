@@ -36,4 +36,16 @@ public static class FinanceAppPageExtensions
     /// <summary>Sets the file on the first <c>&lt;InputFile&gt;</c> control on the page.</summary>
     public static Task UploadFileAsync(this IPage page, string absolutePath) =>
         page.SetInputFilesAsync("input[type='file']", absolutePath);
+
+    /// <summary>
+    /// Clicks a button by its visible text, scoped to the open Radzen dialog
+    /// (<c>.rz-dialog-content</c>). A trigger button that opened the dialog (e.g.
+    /// "Add account") stays in the DOM behind it, so an unscoped
+    /// <see cref="ClickButtonAsync"/> risks matching the wrong one whenever the
+    /// dialog's own button caption is a substring of the trigger's (e.g. "Add").
+    /// </summary>
+    public static Task ClickDialogButtonAsync(this IPage page, string text) =>
+        page.Locator(".rz-dialog-content")
+            .GetByRole(AriaRole.Button, new() { Name = text, Exact = false })
+            .First.ClickAsync();
 }
