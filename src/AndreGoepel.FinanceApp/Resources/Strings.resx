@@ -224,6 +224,7 @@
   <data name="Import.ColRow" xml:space="preserve"><value><![CDATA[Row]]></value></data>
   <data name="Import.DuplicateBadge" xml:space="preserve"><value><![CDATA[Duplicate]]></value></data>
   <data name="Import.NewBadge" xml:space="preserve"><value><![CDATA[New]]></value></data>
+  <data name="Import.ImportAnywayLabel" xml:space="preserve"><value><![CDATA[Import anyway]]></value></data>
   <data name="Import.ProblemRowsHeading" xml:space="preserve"><value><![CDATA[Problem rows (not imported)]]></value></data>
   <data name="Import.ColProblem" xml:space="preserve"><value><![CDATA[Problem]]></value></data>
   <data name="Import.ColRawLine" xml:space="preserve"><value><![CDATA[Raw line]]></value></data>

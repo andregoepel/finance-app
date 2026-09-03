@@ -54,7 +54,7 @@
             <RadzenStack Gap="1rem">
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1.5rem">
                     <StatusBadge Variant="BadgeVariant.Success" Text="@L["Import.NewCount", NewRowCount]" />
-                    <StatusBadge Variant="BadgeVariant.Warning" Text="@L["Import.DuplicatesCount", duplicateHashes.Count(kv => kv.Value)]" />
+                    <StatusBadge Variant="BadgeVariant.Warning" Text="@L["Import.DuplicatesCount", SkippedDuplicateCount]" />
                     <StatusBadge Variant="BadgeVariant.Danger" Text="@L["Import.ProblemRowsCount", preview.Errors.Count]" />
                 </RadzenStack>
 
@@ -69,11 +69,18 @@
                         <RadzenDataGridColumn TItem="NormalizedTransaction" Property="Amount" Title="@L["Common.Amount"]" Width="120px" TextAlign="TextAlign.Right">
                             <Template Context="row">@row.Amount.ToString("N2") @row.Currency</Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="NormalizedTransaction" Title="@L["Common.Status"]" Width="110px">
+                        <RadzenDataGridColumn TItem="NormalizedTransaction" Title="@L["Common.Status"]" Width="230px">
                             <Template Context="row">
                                 @if (IsDuplicate(row))
                                 {
-                                    <StatusBadge Variant="BadgeVariant.Warning" Text="@L["Import.DuplicateBadge"]" />
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.4rem">
+                                        <StatusBadge Variant="BadgeVariant.Warning" Text="@L["Import.DuplicateBadge"]" />
+                                        <RadzenSwitch Value="@forceImportRows.Contains(row.SourceRow)"
+                                                       ValueChanged="@(v => ToggleForceImport(row.SourceRow, v))"
+                                                       Name="@($"force-{row.SourceRow}")" />
+                                        <RadzenLabel Text="@L["Import.ImportAnywayLabel"]" Component="@($"force-{row.SourceRow}")"
+                                                      Style="font-size: 0.8rem; color: var(--rz-text-secondary-color);" />
+                                    </RadzenStack>
                                 }
                                 else
                                 {
@@ -147,6 +154,7 @@
     private string? parseFailure;
     private Dictionary<int, bool> duplicateHashes = [];
     private Dictionary<int, string> rowHashes = [];
+    private HashSet<int> forceImportRows = [];
     private List<ImportBatch> history = [];
     private bool isImporting;
 
@@ -154,7 +162,12 @@
         accounts.FirstOrDefault(a => a.Id == selectedAccountId);
 
     private int NewRowCount =>
-        preview is null ? 0 : preview.Rows.Count(row => !IsDuplicate(row));
+        preview is null
+            ? 0
+            : preview.Rows.Count(row => !IsDuplicate(row) || forceImportRows.Contains(row.SourceRow));
+
+    private int SkippedDuplicateCount =>
+        duplicateHashes.Count(kv => kv.Value && !forceImportRows.Contains(kv.Key));
 
     protected override async Task OnInitializedAsync()
     {
@@ -196,6 +209,7 @@
 
         parseFailure = null;
         preview = null;
+        forceImportRows = [];
         fileName = args.File.Name;
 
         StatementFile statementFile;
@@ -249,6 +263,18 @@
     private bool IsDuplicate(NormalizedTransaction row) =>
         duplicateHashes.TryGetValue(row.SourceRow, out var duplicate) && duplicate;
 
+    private void ToggleForceImport(int sourceRow, bool force)
+    {
+        if (force)
+        {
+            forceImportRows.Add(sourceRow);
+        }
+        else
+        {
+            forceImportRows.Remove(sourceRow);
+        }
+    }
+
     private async Task RunImportAsync()
     {
         if (preview is null || SelectedAccount is not Account account)
@@ -270,7 +296,8 @@
                     preview.ParserId,
                     preview.Rows,
                     preview.Errors,
-                    user
+                    user,
+                    forceImportRows.Count > 0 ? forceImportRows : null
                 ),
                 _cts.Token
             );
@@ -299,6 +326,7 @@
                 L["Import.ImportCompleteMessage", result.Value.ImportedCount, result.Value.DuplicateCount]
             );
             preview = null;
+            forceImportRows = [];
             await LoadHistoryAsync();
         }
         finally
