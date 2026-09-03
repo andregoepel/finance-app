@@ -2,12 +2,15 @@ namespace AndreGoepel.FinanceApp.Domain.Planning;
 
 /// <summary>
 /// Records that a transaction satisfies a specific planned occurrence — the source
-/// of truth for plan-vs-actual. One per occurrence; the id encodes the planned
-/// item and its due date so a re-match is idempotent.
+/// of truth for plan-vs-actual. One per (occurrence, transaction) pairing, so an
+/// occurrence can be satisfied by more than one transaction (e.g. a salary paid
+/// out in two bookings) and a transaction can satisfy more than one occurrence
+/// (e.g. one transfer covering rent and a car payment). The id encodes all three
+/// parts so the same pairing is idempotent to re-match.
 /// </summary>
 public sealed class PlannedMatch
 {
-    /// <summary>Document id: <c>{plannedItemId}:{dueDate:yyyy-MM-dd}</c>.</summary>
+    /// <summary>Document id: <c>{plannedItemId}:{dueDate:yyyy-MM-dd}:{transactionId}</c>.</summary>
     public required string Id { get; init; }
 
     public required Guid PlannedItemId { get; init; }
@@ -21,6 +24,6 @@ public sealed class PlannedMatch
 
     public DateTimeOffset MatchedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    public static string KeyFor(Guid plannedItemId, DateOnly dueDate) =>
-        $"{plannedItemId}:{dueDate:yyyy-MM-dd}";
+    public static string KeyFor(Guid plannedItemId, DateOnly dueDate, Guid transactionId) =>
+        $"{plannedItemId}:{dueDate:yyyy-MM-dd}:{transactionId}";
 }

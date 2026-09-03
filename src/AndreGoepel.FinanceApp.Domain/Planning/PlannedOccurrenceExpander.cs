@@ -61,9 +61,12 @@ public sealed record PlannedOccurrence(
     Guid? CategoryId,
     DateOnly DueDate,
     PlannedOccurrenceStatus Status,
-    Guid? MatchedTransactionId,
+    IReadOnlyList<MatchedTransaction> Matches,
     decimal? MatchedAmount
 );
+
+/// <summary>One transaction linked to a planned occurrence, with its EUR amount.</summary>
+public sealed record MatchedTransaction(Guid TransactionId, decimal? AmountEur);
 
 public enum PlannedOccurrenceStatus
 {

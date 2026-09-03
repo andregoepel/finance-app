@@ -60,16 +60,32 @@ public sealed record TransactionLinkedAsTransfer(Guid CounterpartTransactionId);
 /// <summary>Reverts an erroneous transfer link.</summary>
 public sealed record TransactionTransferUnlinked;
 
+/// <summary>One planned occurrence a transaction has been matched to.</summary>
+public sealed record PlannedLink(Guid PlannedItemId, DateOnly DueDate);
+
 /// <summary>
 /// Links this transaction to a planned item's occurrence (auto or manual match)
-/// — the actual that satisfies a planned cost/income. The
-/// <c>PlannedMatch</c> document is the source of truth for plan-vs-actual; this
+/// — the actual that satisfies a planned cost/income. A transaction may satisfy
+/// more than one occurrence (e.g. one transfer covering rent and a car
+/// payment) and an occurrence may be satisfied by more than one transaction
+/// (e.g. a salary paid out in two bookings) — each such pairing appends its own
+/// event; applying the same pairing twice is a no-op. The <c>PlannedMatch</c>
+/// document (one per pairing) is the source of truth for plan-vs-actual; this
 /// event lets the transactions grid show the link.
 /// </summary>
 public sealed record TransactionMatchedToPlannedItem(Guid PlannedItemId, DateOnly DueDate);
 
-/// <summary>Clears a planned-item match from this transaction.</summary>
-public sealed record TransactionPlannedMatchCleared;
+/// <summary>
+/// Clears one planned-item match from this transaction. <paramref name="PlannedItemId"/>
+/// and <paramref name="DueDate"/> are optional only so that events recorded
+/// before a transaction could hold more than one link — where the occurrence
+/// was implicit, there being just the one — still deserialize; going forward
+/// they are always set and identify exactly which link to drop.
+/// </summary>
+public sealed record TransactionPlannedMatchCleared(
+    Guid? PlannedItemId = null,
+    DateOnly? DueDate = null
+);
 
 public enum CategorySource
 {

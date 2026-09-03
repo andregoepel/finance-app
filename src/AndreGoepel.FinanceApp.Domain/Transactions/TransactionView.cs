@@ -46,8 +46,21 @@ public sealed class TransactionView
 
     public bool IsTransfer => TransferCounterpartId is not null;
 
-    /// <summary>The planned item this transaction is matched to, if any.</summary>
-    public Guid? PlannedItemId { get; set; }
+    /// <summary>
+    /// The planned occurrences this transaction is matched to — usually zero or
+    /// one, more than one only when a single transaction was deliberately split
+    /// across planned items (e.g. one transfer covering rent and a car payment).
+    /// </summary>
+    public IReadOnlyList<PlannedLink> PlannedLinks { get; set; } = [];
+
+    /// <summary>
+    /// True once <see cref="PlannedLinks"/> is non-empty. A real stored field
+    /// (not computed from <see cref="PlannedLinks"/>) so Marten can translate it
+    /// into SQL for the auto-matcher's candidate query — the same reason
+    /// <see cref="IsTransfer"/> stays unused in queries in favor of
+    /// <see cref="TransferCounterpartId"/>.
+    /// </summary>
+    public bool IsPlanMatched { get; set; }
 
     public static TransactionView Create(TransactionImported imported) =>
         new()
@@ -99,11 +112,26 @@ public sealed class TransactionView
 
     public void Apply(TransactionMatchedToPlannedItem matched)
     {
-        PlannedItemId = matched.PlannedItemId;
+        if (
+            PlannedLinks.Any(l =>
+                l.PlannedItemId == matched.PlannedItemId && l.DueDate == matched.DueDate
+            )
+        )
+        {
+            return; // already linked to this occurrence — idempotent
+        }
+        PlannedLinks = [.. PlannedLinks, new PlannedLink(matched.PlannedItemId, matched.DueDate)];
+        IsPlanMatched = true;
     }
 
-    public void Apply(TransactionPlannedMatchCleared _)
+    public void Apply(TransactionPlannedMatchCleared cleared)
     {
-        PlannedItemId = null;
+        PlannedLinks =
+            cleared.PlannedItemId is Guid plannedItemId && cleared.DueDate is DateOnly dueDate
+                ? PlannedLinks
+                    .Where(l => l.PlannedItemId != plannedItemId || l.DueDate != dueDate)
+                    .ToList()
+                : []; // event recorded before multi-match existed — there was only ever one link
+        IsPlanMatched = PlannedLinks.Count > 0;
     }
 }

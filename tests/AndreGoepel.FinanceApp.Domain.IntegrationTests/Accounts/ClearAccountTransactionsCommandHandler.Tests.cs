@@ -405,7 +405,7 @@ public sealed class ClearAccountTransactionsCommandHandlerTests(FinanceMartenFix
         var due = new DateOnly(2026, month, 1);
         var match = new PlannedMatch
         {
-            Id = PlannedMatch.KeyFor(plannedItemId, due),
+            Id = PlannedMatch.KeyFor(plannedItemId, due, transactionId),
             PlannedItemId = plannedItemId,
             DueDate = due,
             TransactionId = transactionId,
