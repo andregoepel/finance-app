@@ -376,6 +376,7 @@
   <data name="Planning.Use" xml:space="preserve"><value><![CDATA[Übernehmen]]></value></data>
   <data name="Planning.MatchHeading" xml:space="preserve"><value><![CDATA[„{0}“ zuordnen ({1})]]></value><comment>{0} = occurrence description, {1} = formatted due date</comment></data>
   <data name="Planning.NoCandidates" xml:space="preserve"><value><![CDATA[Keine nicht zugeordneten Transaktionen in der Nähe dieses Datums.]]></value></data>
+  <data name="Planning.ManageItemsTitle" xml:space="preserve"><value><![CDATA[Geplante Posten]]></value></data>
   <data name="Planning.AddItemTitle" xml:space="preserve"><value><![CDATA[Geplanten Posten hinzufügen]]></value></data>
   <data name="Planning.EditItemTitle" xml:space="preserve"><value><![CDATA[Geplanten Posten bearbeiten]]></value></data>
   <data name="Planning.TypeLabel" xml:space="preserve"><value><![CDATA[Art]]></value></data>
