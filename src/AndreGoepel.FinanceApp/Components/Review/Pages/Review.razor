@@ -14,6 +14,40 @@
 
     <PageHeader Title="@L["Review.PageTitle"]" Subtitle="@L["Review.Subtitle"]" />
 
+    <FilterBar OnApply="@(() => ReloadAsync(resetPage: true))" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Secondary">
+        <ChildContent>
+            <FormField Label="@L["Common.Account"]" For="Account">
+                <RadzenDropDown TValue="Guid?"
+                                @bind-Value=@accountFilter Name="Account"
+                                Data=@accounts
+                                TextProperty="Name"
+                                ValueProperty="Id"
+                                AllowClear="true"
+                                Placeholder="@L["Common.AllPlaceholder"]"
+                                Style="min-width: 12rem;"
+                                Change=@(_ => ReloadAsync(resetPage: true)) />
+            </FormField>
+            <FormField Label="@L["Common.From"]" For="From">
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
+            </FormField>
+            <FormField Label="@L["Common.To"]" For="To">
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
+            </FormField>
+            <FormField Label="@L["Review.TypeFilterLabel"]" For="Type">
+                <RadzenSelectBar TValue="bool?" @bind-Value=@incomeFilter Name="Type" Change=@(() => ReloadAsync(resetPage: true))>
+                    <Items>
+                        <RadzenSelectBarItem Text="@L["Common.AllPlaceholder"]" Value="@((bool?)null)" />
+                        <RadzenSelectBarItem Text="@L["Review.TypeExpense"]" Value="@((bool?)false)" />
+                        <RadzenSelectBarItem Text="@L["Review.TypeIncome"]" Value="@((bool?)true)" />
+                    </Items>
+                </RadzenSelectBar>
+            </FormField>
+            <FormField Label="@L["Common.Search"]" For="Search">
+                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;" />
+            </FormField>
+        </ChildContent>
+    </FilterBar>
+
     <RadzenCard>
         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
             <RadzenButton Text="@L["Review.AcceptSuggestions"]"
@@ -41,11 +75,52 @@
                           ButtonStyle="ButtonStyle.Light"
                           Disabled=@(items.Count == 0)
                           Click=@CategorizeWithAiAsync />
+            <RadzenButton Text="@L["Review.FindTransfers"]"
+                          Icon="sync_alt"
+                          ButtonStyle="ButtonStyle.Light"
+                          Click=@FindTransfersAsync />
             <IconButton Icon="refresh" Title="@L["Review.Refresh"]" Click=@(_ => ReloadAsync()) />
         </RadzenStack>
     </RadzenCard>
 
+    @if (transferSuggestions.Count > 0)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6">@L["Review.TransferSuggestionsTitle"]</RadzenText>
+            <RadzenDataGrid TItem="TransferSuggestionRow" Data=@transferSuggestions Density="Density.Compact">
+                <Columns>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColOutgoing"]">
+                        <Template Context="row">
+                            @AccountName(row.Outgoing.AccountId) · @Dates.Short(row.Outgoing.BookingDate) ·
+                            <AmountText Amount="row.Outgoing.Amount" Currency="@row.Outgoing.Currency" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColIncoming"]">
+                        <Template Context="row">
+                            @AccountName(row.Incoming.AccountId) · @Dates.Short(row.Incoming.BookingDate) ·
+                            <AmountText Amount="row.Incoming.Amount" Currency="@row.Incoming.Currency" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColDifference"]" Width="200px">
+                        <Template Context="row">@DifferenceText(row.Suggestion)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="" Width="110px" Sortable="false">
+                        <Template Context="row">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <IconButton Icon="link" Title="@L["Review.LinkTransferTooltip"]"
+                                            Click=@(_ => AcceptTransferAsync(row.Suggestion.Id)) />
+                                <IconButton Icon="close" Title="@L["Review.DismissTransferTooltip"]"
+                                            Click=@(_ => DismissTransferAsync(row.Suggestion.Id)) />
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+    }
+
     <RadzenDataGrid TItem="TransactionView"
+                    @ref="grid"
                     Data=@items
                     AllowPaging="true"
                     PageSize="25"
@@ -91,41 +166,151 @@
 @code {
     private const int MaxRows = 500;
 
+    private RadzenDataGrid<TransactionView> grid = null!;
+
     private List<TransactionView> items = [];
     private Dictionary<Guid, CategorySuggestion> suggestions = [];
+    private List<TransferSuggestionRow> transferSuggestions = [];
     private List<Account> accounts = [];
     private List<CategoryOption> categoryOptions = [];
     private IList<TransactionView> selected = [];
     private Guid? bulkCategoryId;
+
+    private sealed record TransferSuggestionRow(
+        TransferSuggestion Suggestion,
+        TransactionView Outgoing,
+        TransactionView Incoming
+    );
+
+    private Guid? accountFilter;
+    private DateOnly? fromFilter;
+    private DateOnly? toFilter;
+    private bool? incomeFilter;
+    private string textFilter = "";
 
     private IEnumerable<TransactionView> SelectedWithSuggestion =>
         selected.Where(transaction => suggestions.ContainsKey(transaction.Id));
 
     protected override async Task OnInitializedAsync()
     {
-        accounts = (await QuerySession.Query<Account>().ToListAsync()).ToList();
+        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
         var categories = await QuerySession.Query<Category>().ToListAsync();
         categoryOptions = CategoryPaths.Build(categories.ToList());
         await ReloadAsync();
     }
 
-    private async Task ReloadAsync()
+    private async Task ReloadAsync(bool resetPage = false)
     {
-        items = (
-            await QuerySession
-                .Query<TransactionView>()
-                .Where(t => !t.IsCategorized && t.TransferCounterpartId == null)
-                .OrderByDescending(t => t.BookingDate)
-                .Take(MaxRows)
-                .ToListAsync()
-        ).ToList();
+        var page = resetPage ? 0 : (grid?.CurrentPage ?? 0);
+
+        var query = QuerySession
+            .Query<TransactionView>()
+            .Where(t => !t.IsCategorized && t.TransferCounterpartId == null);
+
+        if (accountFilter is Guid accountId)
+        {
+            query = query.Where(t => t.AccountId == accountId);
+        }
+        if (fromFilter is DateOnly from)
+        {
+            query = query.Where(t => t.BookingDate >= from);
+        }
+        if (toFilter is DateOnly to)
+        {
+            query = query.Where(t => t.BookingDate <= to);
+        }
+        if (incomeFilter is bool income)
+        {
+            query = income ? query.Where(t => t.Amount >= 0) : query.Where(t => t.Amount < 0);
+        }
+
+        var loaded = await query.OrderByDescending(t => t.BookingDate).Take(MaxRows).ToListAsync();
+
+        if (!string.IsNullOrWhiteSpace(textFilter))
+        {
+            var needle = textFilter.Trim();
+            loaded = loaded
+                .Where(t =>
+                    t.Description.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                    || (t.Counterparty?.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false))
+                .ToList();
+        }
+
+        items = loaded.ToList();
 
         var ids = items.Select(t => t.Id).ToArray();
         suggestions = (
             await QuerySession.Query<CategorySuggestion>().Where(s => s.Id.IsOneOf(ids)).ToListAsync()
         ).ToDictionary(s => s.Id);
         selected = [];
+
+        await ReloadTransferSuggestionsAsync();
+
+        if (grid is not null)
+        {
+            await grid.GoToPage(page);
+        }
     }
+
+    private async Task ReloadTransferSuggestionsAsync()
+    {
+        var pending = await QuerySession
+            .Query<TransferSuggestion>()
+            .Where(s => !s.Dismissed)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
+
+        var legIds = pending
+            .SelectMany(s => new[] { s.OutgoingTransactionId, s.IncomingTransactionId })
+            .Distinct()
+            .ToArray();
+        var legs = (
+            await QuerySession.Query<TransactionView>().Where(t => t.Id.IsOneOf(legIds)).ToListAsync()
+        ).ToDictionary(t => t.Id);
+
+        // Legs that vanished (deleted) or were linked/dismissed another way in the
+        // meantime are skipped rather than shown broken; the next match run tidies
+        // the stale suggestion up.
+        transferSuggestions = pending
+            .Select(s =>
+                legs.TryGetValue(s.OutgoingTransactionId, out var outgoing)
+                && legs.TryGetValue(s.IncomingTransactionId, out var incoming)
+                && !outgoing.IsTransfer
+                && !incoming.IsTransfer
+                    ? new TransferSuggestionRow(s, outgoing, incoming)
+                    : null
+            )
+            .Where(row => row is not null)
+            .Select(row => row!)
+            .ToList();
+    }
+
+    private string DifferenceText(TransferSuggestion suggestion) =>
+        suggestion.AmountDifferenceEur == 0m
+            ? L["Review.TransferDifferenceDaysOnly", suggestion.DayDifference]
+            : L[
+                "Review.TransferDifferenceDaysAndAmount",
+                suggestion.DayDifference,
+                Money.Format(suggestion.AmountDifferenceEur, "EUR")
+            ];
+
+    private async Task FindTransfersAsync()
+    {
+        await MessageBus.PublishAsync(new MatchTransfersCommand());
+        NotificationService.Success(L["Common.DoneTitle"], L["Review.FindTransfersStartedMessage"]);
+    }
+
+    private async Task AcceptTransferAsync(string suggestionId) =>
+        await RunAsync(
+            new AcceptTransferSuggestionCommand(suggestionId),
+            L["Review.TransferLinkedMessage"]
+        );
+
+    private async Task DismissTransferAsync(string suggestionId) =>
+        await RunAsync(
+            new DismissTransferSuggestionCommand(suggestionId),
+            L["Review.TransferDismissedMessage"]
+        );
 
     private string AccountName(Guid accountId) =>
         accounts.FirstOrDefault(a => a.Id == accountId)?.Name ?? "?";

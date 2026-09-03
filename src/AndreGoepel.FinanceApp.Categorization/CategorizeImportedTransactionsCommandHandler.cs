@@ -70,7 +70,11 @@ public sealed class CategorizeImportedTransactionsCommandHandler
     {
         var pending = await session
             .Query<TransactionView>()
-            .Where(t => t.ImportBatchId == command.ImportBatchId && !t.IsCategorized)
+            .Where(t =>
+                t.ImportBatchId == command.ImportBatchId
+                && !t.IsCategorized
+                && t.TransferCounterpartId == null
+            )
             .ToListAsync(cancellationToken);
 
         return await CategorizeLocallyAsync(

@@ -192,7 +192,22 @@
   <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Vorschlag übernehmen]]></value></data>
   <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Vorschlag übernommen.]]></value></data>
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Vorschläge übernommen.]]></value></data>
+  <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Umbuchungen suchen]]></value></data>
+  <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Die Umbuchungssuche läuft im Hintergrund. Liste in Kürze aktualisieren.]]></value></data>
+  <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Umbuchungsvorschläge]]></value></data>
+  <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Abgang]]></value></data>
+  <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Eingang]]></value></data>
+  <data name="Review.ColDifference" xml:space="preserve"><value><![CDATA[Abweichung]]></value></data>
+  <data name="Review.LinkTransferTooltip" xml:space="preserve"><value><![CDATA[Als Umbuchung verknüpfen]]></value></data>
+  <data name="Review.DismissTransferTooltip" xml:space="preserve"><value><![CDATA[Keine Umbuchung]]></value></data>
+  <data name="Review.TransferDifferenceDaysOnly" xml:space="preserve"><value><![CDATA[{0} Tag(e) auseinander]]></value><comment>{0} = day difference; amount matches exactly</comment></data>
+  <data name="Review.TransferDifferenceDaysAndAmount" xml:space="preserve"><value><![CDATA[{0} Tag(e) auseinander, {1} Abweichung]]></value><comment>{0} = day difference, {1} = formatted EUR amount difference</comment></data>
+  <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Umbuchung verknüpft.]]></value></data>
+  <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Vorschlag verworfen.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Vorschläge verworfen.]]></value></data>
+  <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Art]]></value></data>
+  <data name="Review.TypeIncome" xml:space="preserve"><value><![CDATA[Einnahme]]></value></data>
+  <data name="Review.TypeExpense" xml:space="preserve"><value><![CDATA[Ausgabe]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Konto auswählen]]></value></data>
@@ -314,10 +329,16 @@
   <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Ein monatliches EUR-Limit pro Kategorie festlegen. Ein Limit auf einer übergeordneten Kategorie zählt die Ausgaben dieser Kategorie und aller ihrer Unterkategorien. Der Fortschritt wird auf der Übersicht angezeigt.]]></value></data>
   <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Budget festlegen]]></value></data>
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monatliches Limit (€)]]></value></data>
+  <data name="Budgets.StartMonthLabel" xml:space="preserve"><value><![CDATA[Startmonat]]></value></data>
+  <data name="Budgets.EndMonthLabel" xml:space="preserve"><value><![CDATA[Endmonat]]></value></data>
+  <data name="Budgets.EndMonthOngoingPlaceholder" xml:space="preserve"><value><![CDATA[Laufend]]></value></data>
   <data name="Budgets.CurrentBudgetsHeading" xml:space="preserve"><value><![CDATA[Aktuelle Budgets]]></value></data>
   <data name="Budgets.EmptyTitle" xml:space="preserve"><value><![CDATA[Noch keine Budgets festgelegt]]></value></data>
   <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Oben ein monatliches Limit für eine Kategorie festlegen, um deren Ausgaben zu verfolgen.]]></value></data>
   <data name="Budgets.ColMonthlyLimit" xml:space="preserve"><value><![CDATA[Monatliches Limit]]></value></data>
+  <data name="Budgets.ColStartMonth" xml:space="preserve"><value><![CDATA[Von]]></value></data>
+  <data name="Budgets.ColEndMonth" xml:space="preserve"><value><![CDATA[Bis]]></value></data>
+  <data name="Budgets.Ongoing" xml:space="preserve"><value><![CDATA[Laufend]]></value></data>
   <data name="Budgets.DeletedCategory" xml:space="preserve"><value><![CDATA[(gelöschte Kategorie)]]></value></data>
   <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget gespeichert]]></value></data>
   <data name="Budgets.RemovedTitle" xml:space="preserve"><value><![CDATA[Budget entfernt]]></value></data>

@@ -30,7 +30,7 @@
         </RadzenAlert>
     }
 
-    <FilterBar OnApply="ReloadAsync" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Secondary">
+    <FilterBar OnApply="@(() => ReloadAsync(resetPage: true))" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Secondary">
         <ChildContent>
             <FormField Label="@L["Common.Account"]" For="Account">
                 <RadzenDropDown TValue="Guid?"
@@ -41,7 +41,7 @@
                                 AllowClear="true"
                                 Placeholder="@L["Common.AllPlaceholder"]"
                                 Style="min-width: 12rem;"
-                                Change=@(_ => ReloadAsync()) />
+                                Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Common.Owner"]" For="Owner">
                 <RadzenDropDown TValue="Guid?"
@@ -52,19 +52,19 @@
                                 AllowClear="true"
                                 Placeholder="@L["Common.AllPlaceholder"]"
                                 Style="min-width: 12rem;"
-                                Change=@(_ => ReloadAsync()) />
+                                Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
                 <CategoryPicker Options="@categoryOptions" Name="Category"
                                 Value="@categoryFilter"
-                                ValueChanged="@(v => { categoryFilter = v; return ReloadAsync(); })"
+                                ValueChanged="@(v => { categoryFilter = v; return ReloadAsync(resetPage: true); })"
                                 Placeholder="@L["Common.AllPlaceholder"]" Style="min-width: 13rem;" />
             </FormField>
             <FormField Label="@L["Common.From"]" For="From">
-                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Common.To"]" For="To">
-                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Common.Search"]" For="Search">
                 <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;" />
@@ -80,6 +80,7 @@
     </FilterBar>
 
     <RadzenDataGrid TItem="TransactionView"
+                    @ref="grid"
                     Data=@transactions
                     AllowPaging="true"
                     PageSize="25"
@@ -188,6 +189,8 @@
 
     private readonly CancellationTokenSource _cts = new();
 
+    private RadzenDataGrid<TransactionView> grid = null!;
+
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
     private List<CategoryOption> categoryOptions = [];
@@ -216,8 +219,10 @@
         await ReloadAsync();
     }
 
-    private async Task ReloadAsync()
+    private async Task ReloadAsync(bool resetPage = false)
     {
+        var page = resetPage ? 0 : (grid?.CurrentPage ?? 0);
+
         var accountIds = FilteredAccountIds();
         var query = QuerySession.Query<TransactionView>().Where(t => t.AccountId.IsOneOf(accountIds));
         if (categoryFilter is Guid categoryId)
@@ -249,6 +254,11 @@
 
         transactions = loaded.ToList();
         selected = [];
+
+        if (grid is not null)
+        {
+            await grid.GoToPage(page);
+        }
     }
 
     private Guid[] FilteredAccountIds()

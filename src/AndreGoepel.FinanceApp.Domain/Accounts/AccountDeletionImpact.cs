@@ -87,6 +87,7 @@ internal sealed record AccountPurgeTargets(
     IReadOnlyList<Guid> TransferCounterpartIds,
     IReadOnlyList<string> PlannedMatchIds,
     IReadOnlyList<Guid> ReviewQueueIds,
+    IReadOnlyList<string> TransferSuggestionIds,
     IReadOnlyList<Guid> ImportBatchIds,
     IReadOnlyList<string> CryptoHoldingIds,
     IReadOnlyList<Guid> PlannedItemIdsToDetach
@@ -98,7 +99,7 @@ internal sealed record AccountPurgeTargets(
             ImportBatchIds.Count,
             TransferCounterpartIds.Count,
             PlannedMatchIds.Count,
-            ReviewQueueIds.Count,
+            ReviewQueueIds.Count + TransferSuggestionIds.Count,
             CryptoHoldingIds.Count,
             PlannedItemIdsToDetach.Count
         );
@@ -113,7 +114,7 @@ internal sealed record AccountPurgeTargets(
             ImportBatchIds.Count,
             TransferCounterpartIds.Count,
             PlannedMatchIds.Count,
-            ReviewQueueIds.Count
+            ReviewQueueIds.Count + TransferSuggestionIds.Count
         );
 
     public static async Task<AccountPurgeTargets> CollectAsync(
@@ -155,6 +156,7 @@ internal sealed record AccountPurgeTargets(
                 [],
                 [],
                 [],
+                [],
                 [.. importBatchIds],
                 [.. cryptoHoldingIds],
                 [.. plannedItemIds]
@@ -180,11 +182,21 @@ internal sealed record AccountPurgeTargets(
             .Select(s => s.Id)
             .ToListAsync(cancellationToken);
 
+        var transferSuggestionIds = await session
+            .Query<TransferSuggestion>()
+            .Where(s =>
+                s.OutgoingTransactionId.IsOneOf(transactionIds)
+                || s.IncomingTransactionId.IsOneOf(transactionIds)
+            )
+            .Select(s => s.Id)
+            .ToListAsync(cancellationToken);
+
         return new AccountPurgeTargets(
             transactionIds,
             counterpartIds,
             [.. plannedMatchIds],
             [.. reviewQueueIds],
+            [.. transferSuggestionIds],
             [.. importBatchIds],
             [.. cryptoHoldingIds],
             [.. plannedItemIds]
@@ -229,6 +241,15 @@ internal sealed record AccountPurgeTargets(
             ? []
             : transactionIds;
 
+        var transferSuggestionIds = await session
+            .Query<TransferSuggestion>()
+            .Where(s =>
+                s.OutgoingTransactionId == transaction.Id
+                || s.IncomingTransactionId == transaction.Id
+            )
+            .Select(s => s.Id)
+            .ToListAsync(cancellationToken);
+
         var batchShared = await session
             .Query<TransactionView>()
             .AnyAsync(
@@ -242,6 +263,7 @@ internal sealed record AccountPurgeTargets(
             counterpartIds,
             [.. plannedMatchIds],
             reviewQueueIds,
+            [.. transferSuggestionIds],
             importBatchIds,
             [],
             []

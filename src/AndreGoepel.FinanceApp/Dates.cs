@@ -15,7 +15,9 @@ internal static class Dates
     private const string ShortTimeFormat = "dd.MM.yyyy HH:mm";
     private const string LongFormat = "dddd, dd.MM.yyyy HH:mm";
     private const string DayMonthFormat = "dd.MM";
-    private const string MonthFormat = "MMMM yyyy";
+
+    /// <summary>Raw format string for a month-only <c>RadzenDatePicker.DateFormat</c>.</summary>
+    public const string MonthFormat = "MMMM yyyy";
     private const string ChartMonthFormat = "MMM yy";
 
     public static string Short(DateOnly d) => d.ToString(ShortFormat);

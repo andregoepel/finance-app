@@ -97,6 +97,7 @@
   <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[One of the transactions is already linked as a transfer.]]></value></data>
   <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Transaction is not linked as a transfer.]]></value></data>
   <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Transfer legs must belong to different accounts.]]></value></data>
+  <data name="Error.TransferSuggestionNotFound" xml:space="preserve"><value><![CDATA[Transfer suggestion not found.]]></value></data>
 
   <!-- Planning -->
   <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[A description is required.]]></value></data>
@@ -105,6 +106,9 @@
 
   <!-- Budgets -->
   <data name="Error.BudgetLimitPositive" xml:space="preserve"><value><![CDATA[A budget limit must be greater than zero.]]></value></data>
+  <data name="Error.BudgetEndBeforeStart" xml:space="preserve"><value><![CDATA[The end month cannot be before the start month.]]></value></data>
+  <data name="Error.BudgetNotFound" xml:space="preserve"><value><![CDATA[Budget not found.]]></value></data>
+  <data name="Error.BudgetPeriodOverlap" xml:space="preserve"><value><![CDATA[This category already has a budget for part of that period.]]></value></data>
 
   <!-- Crypto -->
   <data name="Error.SymbolRequired" xml:space="preserve"><value><![CDATA[A symbol is required.]]></value></data>

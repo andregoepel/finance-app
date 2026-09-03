@@ -193,6 +193,21 @@
   <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestion accepted.]]></value></data>
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestions accepted.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestions dismissed.]]></value></data>
+  <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Find transfers]]></value></data>
+  <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Transfer matching is running in the background. Refresh the list in a moment.]]></value></data>
+  <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Transfer suggestions]]></value></data>
+  <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Outgoing]]></value></data>
+  <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Incoming]]></value></data>
+  <data name="Review.ColDifference" xml:space="preserve"><value><![CDATA[Difference]]></value></data>
+  <data name="Review.LinkTransferTooltip" xml:space="preserve"><value><![CDATA[Link as transfer]]></value></data>
+  <data name="Review.DismissTransferTooltip" xml:space="preserve"><value><![CDATA[Not a transfer]]></value></data>
+  <data name="Review.TransferDifferenceDaysOnly" xml:space="preserve"><value><![CDATA[{0} day(s) apart]]></value><comment>{0} = day difference; amount matches exactly</comment></data>
+  <data name="Review.TransferDifferenceDaysAndAmount" xml:space="preserve"><value><![CDATA[{0} day(s) apart, {1} off]]></value><comment>{0} = day difference, {1} = formatted EUR amount difference</comment></data>
+  <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Transfer linked.]]></value></data>
+  <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestion dismissed.]]></value></data>
+  <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Type]]></value></data>
+  <data name="Review.TypeIncome" xml:space="preserve"><value><![CDATA[Income]]></value></data>
+  <data name="Review.TypeExpense" xml:space="preserve"><value><![CDATA[Expense]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Select account]]></value></data>
@@ -314,10 +329,16 @@
   <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Set a monthly EUR limit per category. A limit on a parent category counts spending in that category and all of its subcategories. Progress shows on the dashboard.]]></value></data>
   <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Set a budget]]></value></data>
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monthly limit (€)]]></value></data>
+  <data name="Budgets.StartMonthLabel" xml:space="preserve"><value><![CDATA[Start month]]></value></data>
+  <data name="Budgets.EndMonthLabel" xml:space="preserve"><value><![CDATA[End month]]></value></data>
+  <data name="Budgets.EndMonthOngoingPlaceholder" xml:space="preserve"><value><![CDATA[Ongoing]]></value></data>
   <data name="Budgets.CurrentBudgetsHeading" xml:space="preserve"><value><![CDATA[Current budgets]]></value></data>
   <data name="Budgets.EmptyTitle" xml:space="preserve"><value><![CDATA[No budgets set yet]]></value></data>
   <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Set a monthly limit for a category above to start tracking it.]]></value></data>
   <data name="Budgets.ColMonthlyLimit" xml:space="preserve"><value><![CDATA[Monthly limit]]></value></data>
+  <data name="Budgets.ColStartMonth" xml:space="preserve"><value><![CDATA[From]]></value></data>
+  <data name="Budgets.ColEndMonth" xml:space="preserve"><value><![CDATA[To]]></value></data>
+  <data name="Budgets.Ongoing" xml:space="preserve"><value><![CDATA[Ongoing]]></value></data>
   <data name="Budgets.DeletedCategory" xml:space="preserve"><value><![CDATA[(deleted category)]]></value></data>
   <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget saved]]></value></data>
   <data name="Budgets.RemovedTitle" xml:space="preserve"><value><![CDATA[Budget removed]]></value></data>

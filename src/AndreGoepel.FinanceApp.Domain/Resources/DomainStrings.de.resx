@@ -96,6 +96,7 @@
   <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Eine der Transaktionen ist bereits als Umbuchung verknüpft.]]></value></data>
   <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Die Transaktion ist nicht als Umbuchung verknüpft.]]></value></data>
   <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Die beiden Seiten einer Umbuchung müssen zu verschiedenen Konten gehören.]]></value></data>
+  <data name="Error.TransferSuggestionNotFound" xml:space="preserve"><value><![CDATA[Umbuchungsvorschlag nicht gefunden.]]></value></data>
 
   <!-- Planning -->
   <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[Eine Beschreibung ist erforderlich.]]></value></data>
@@ -104,6 +105,9 @@
 
   <!-- Budgets -->
   <data name="Error.BudgetLimitPositive" xml:space="preserve"><value><![CDATA[Ein Budgetlimit muss größer als null sein.]]></value></data>
+  <data name="Error.BudgetEndBeforeStart" xml:space="preserve"><value><![CDATA[Der Endmonat darf nicht vor dem Startmonat liegen.]]></value></data>
+  <data name="Error.BudgetNotFound" xml:space="preserve"><value><![CDATA[Budget nicht gefunden.]]></value></data>
+  <data name="Error.BudgetPeriodOverlap" xml:space="preserve"><value><![CDATA[Für diese Kategorie besteht in diesem Zeitraum bereits ein Budget.]]></value></data>
 
   <!-- Crypto -->
   <data name="Error.SymbolRequired" xml:space="preserve"><value><![CDATA[Ein Symbol ist erforderlich.]]></value></data>

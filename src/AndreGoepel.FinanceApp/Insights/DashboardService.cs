@@ -53,6 +53,7 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
             .ToList();
 
         var budgets = await BuildBudgetProgressAsync(
+            start,
             expenseTransactions,
             categoriesById,
             cancellationToken
@@ -70,13 +71,15 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
     }
 
     private async Task<IReadOnlyList<BudgetProgress>> BuildBudgetProgressAsync(
+        DateOnly periodMonth,
         IReadOnlyList<TransactionView> expenseTransactions,
         IReadOnlyDictionary<Guid, Category> categoriesById,
         CancellationToken cancellationToken
     )
     {
         var budgets = await session.Query<Budget>().ToListAsync(cancellationToken);
-        if (budgets.Count == 0)
+        var active = budgets.Where(b => IsActive(b, periodMonth)).ToList();
+        if (active.Count == 0)
         {
             return [];
         }
@@ -89,7 +92,9 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
                 )
             )
             .ToList();
-        var limits = budgets.ToDictionary(b => b.Id, b => b.MonthlyLimit);
+        var limits = active
+            .GroupBy(b => b.CategoryId)
+            .ToDictionary(g => g.Key, g => g.First().MonthlyLimit);
 
         return BudgetCalculator
             .Compute(parents, expenses, limits)
@@ -97,6 +102,10 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
             .OrderByDescending(b => b.Percent)
             .ToList();
     }
+
+    /// <summary>Whether a budget period covers the given month (both bounds inclusive, open-ended when <see cref="Budget.EndMonth"/> is null).</summary>
+    private static bool IsActive(Budget budget, DateOnly month) =>
+        month >= budget.StartMonth && (budget.EndMonth is null || month <= budget.EndMonth);
 
     private static string NameOf(Guid categoryId, IReadOnlyDictionary<Guid, Category> byId) =>
         byId.TryGetValue(categoryId, out var category) ? category.Name : "Unknown";
