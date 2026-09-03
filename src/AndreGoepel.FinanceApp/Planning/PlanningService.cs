@@ -12,7 +12,7 @@ namespace AndreGoepel.FinanceApp.Planning;
 /// </summary>
 internal sealed class PlanningService(IQuerySession session) : IPlanningService
 {
-    private const int CandidateWindowDays = 45;
+    private const int CandidateWindowDays = 60;
     private const int UpcomingLimit = 10;
 
     public async Task<IReadOnlyList<PlannedItem>> GetItemsAsync(
@@ -127,6 +127,7 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
 
     public async Task<IReadOnlyList<TransactionView>> GetMatchCandidatesAsync(
         DateOnly dueDate,
+        decimal plannedAmount,
         CancellationToken cancellationToken = default
     )
     {
@@ -137,14 +138,14 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
         // candidates already linked to the specific occurrence being matched.
         var from = dueDate.AddDays(-CandidateWindowDays);
         var to = dueDate.AddDays(CandidateWindowDays);
-        return (
-            await session
-                .Query<TransactionView>()
-                .Where(t =>
-                    t.TransferCounterpartId == null && t.BookingDate >= from && t.BookingDate <= to
-                )
-                .ToListAsync(cancellationToken)
-        )
+        var query = session
+            .Query<TransactionView>()
+            .Where(t =>
+                t.TransferCounterpartId == null && t.BookingDate >= from && t.BookingDate <= to
+            );
+        query = plannedAmount > 0 ? query.Where(t => t.Amount > 0) : query.Where(t => t.Amount < 0);
+
+        return (await query.ToListAsync(cancellationToken))
             .OrderBy(t => Math.Abs(t.BookingDate.DayNumber - dueDate.DayNumber))
             .Take(50)
             .ToList();
