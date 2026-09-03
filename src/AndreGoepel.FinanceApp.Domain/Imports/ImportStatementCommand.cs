@@ -13,13 +13,21 @@ namespace AndreGoepel.FinanceApp.Domain.Imports;
 /// an <see cref="ImportBatch"/> audit record. Re-running the same file is a
 /// no-op apart from a new batch record with <c>DuplicateCount == TotalRows</c>.
 /// </summary>
+/// <param name="ForceImportRows">
+/// <see cref="NormalizedTransaction.SourceRow"/> values the household explicitly
+/// wants imported despite deduping as an existing transaction — an override for
+/// the rare case where two genuinely different bookings hash the same (e.g. two
+/// identical small card charges the same day). Only used from the manual CSV
+/// upload UI; API syncs never set it.
+/// </param>
 public sealed record ImportStatementCommand(
     Guid AccountId,
     string FileName,
     string ParserId,
     IReadOnlyList<NormalizedTransaction> Rows,
     IReadOnlyList<ImportRowError> ParseErrors,
-    string? ImportedBy
+    string? ImportedBy,
+    IReadOnlySet<int>? ForceImportRows = null
 );
 
 public static class ImportStatementCommandHandler
@@ -83,7 +91,8 @@ public static class ImportStatementCommandHandler
         var (newRows, duplicateCount) = SplitNewRows(
             hashedRows,
             existingExternalIds.ToHashSet(),
-            existingHashes.ToHashSet()
+            existingHashes.ToHashSet(),
+            command.ForceImportRows
         );
 
         var batch = new ImportBatch
@@ -136,21 +145,27 @@ public static class ImportStatementCommandHandler
     /// file (re-exported files often repeat bookings). A row with a provider reference is checked
     /// against <paramref name="existingExternalIds"/>; every other row falls back to
     /// <paramref name="existingHashes"/>. Both sets are mutated in place, so two rows of the same
-    /// file sharing a key dedup against each other too, not only against the database.
+    /// file sharing a key dedup against each other too, not only against the database. A row whose
+    /// <see cref="NormalizedTransaction.SourceRow"/> is in <paramref name="forceImportRows"/> is
+    /// always treated as new — but its key is still recorded, so a later row in the same file
+    /// sharing that key (not itself forced) is still caught as a duplicate.
     /// </summary>
     internal static (List<HashedRow> NewRows, int DuplicateCount) SplitNewRows(
         IReadOnlyList<HashedRow> rows,
         HashSet<string> existingExternalIds,
-        HashSet<string> existingHashes
+        HashSet<string> existingHashes,
+        IReadOnlySet<int>? forceImportRows = null
     )
     {
         var newRows = new List<HashedRow>();
         var duplicateCount = 0;
         foreach (var hashed in rows)
         {
-            var isNew = !string.IsNullOrEmpty(hashed.Row.ExternalId)
+            var notPreviouslySeen = !string.IsNullOrEmpty(hashed.Row.ExternalId)
                 ? existingExternalIds.Add(hashed.Row.ExternalId!)
                 : existingHashes.Add(hashed.Hash);
+            var isNew =
+                notPreviouslySeen || (forceImportRows?.Contains(hashed.Row.SourceRow) ?? false);
 
             if (isNew)
             {
