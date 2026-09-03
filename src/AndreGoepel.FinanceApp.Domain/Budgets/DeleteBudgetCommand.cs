@@ -3,8 +3,8 @@ using Marten;
 
 namespace AndreGoepel.FinanceApp.Domain.Budgets;
 
-/// <summary>Removes the budget for a category.</summary>
-public sealed record DeleteBudgetCommand(Guid CategoryId);
+/// <summary>Removes a budget period.</summary>
+public sealed record DeleteBudgetCommand(Guid Id);
 
 public static class DeleteBudgetCommandHandler
 {
@@ -14,7 +14,7 @@ public static class DeleteBudgetCommandHandler
         CancellationToken cancellationToken
     )
     {
-        session.Delete<Budget>(command.CategoryId);
+        session.Delete<Budget>(command.Id);
         await session.SaveChangesAsync(cancellationToken);
         return Result.Ok();
     }
