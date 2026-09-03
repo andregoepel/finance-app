@@ -46,15 +46,17 @@ public sealed class ImportTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixt
     }
 
     /// <summary>
-    /// Creates an account through the Accounts settings form, relying on the DKB / Checking / EUR /
-    /// CSV-upload defaults. An account requires at least one owner, so the admin user is selected.
+    /// Creates an account through the Accounts settings dialog (#166 moved the inline form into a
+    /// Radzen dialog), relying on the DKB / Checking / EUR / CSV-upload defaults. An account requires
+    /// at least one owner, so the admin user is selected.
     /// </summary>
     private async Task CreateCsvAccountAsync(string name)
     {
         await Page.GotoAsync("/settings/accounts");
+        await Page.ClickButtonAsync("Add account");
         await Page.FillFormFieldAsync("Name", name);
         await Page.SelectDropDownAsync("Owner", TestData.AdminEmail);
-        await Page.ClickButtonAsync("Add");
+        await Page.ClickDialogButtonAsync("Add");
         // The grid reloads with the new account once the save round-trip completes.
         await Expect(Page.GetByText(name).First).ToBeVisibleAsync();
     }

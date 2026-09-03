@@ -1,14 +1,14 @@
 @page "/settings/accounts"
 @attribute [Authorize]
-@using AndreGoepel.FinanceApp.Domain.Exchange
+@using AndreGoepel.FinanceApp.Components.Settings.Dialogs
 @using AndreGoepel.Marten.Identity.Users
 @using Microsoft.AspNetCore.Identity
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
-@inject IExchangeRateProvider ExchangeRateProvider
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject DialogService DialogService
 @inject UserManager<User> UserManager
 @inject IStringLocalizer<Strings> L
 @inject IStringLocalizer<DomainStrings> DomainL
@@ -22,6 +22,7 @@
         <Actions>
             <RadzenSwitch @bind-Value=@showDeactivated />
             <RadzenLabel Text="@L["Accounts.ShowDeactivated"]" />
+            <RadzenButton Text="@L["Accounts.AddTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@AddAsync />
         </Actions>
     </PageHeader>
 
@@ -49,7 +50,7 @@
                 <RadzenDataGridColumn TItem="Account" Title="" Width="210px" Sortable="false" TextAlign="TextAlign.End">
                     <Template Context="account">
                         <RowActions>
-                            <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => StartEdit(account)) />
+                            <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => EditAsync(account)) />
                             <IconButton Icon="layers_clear" Title="@L["Accounts.ClearTransactionsTooltip"]"
                                         Click=@(_ => ClearTransactionsAsync(account)) />
                             @if (account.IsActive)
@@ -75,146 +76,18 @@
         </RadzenDataGrid>
     </DataCard>
 
-    <CardForm TItem="InputModel"
-              Data="form"
-              Submit="SaveAsync"
-              Cancel="ResetForm"
-              Title="@(editingAccountId is null ? L["Accounts.AddTitle"] : L["Accounts.EditTitle"])"
-              SubmitText="@(editingAccountId is null ? L["Common.Add"] : L["Common.Save"])"
-              CancelText="@L["Common.Cancel"]"
-              IsBusy="isSaving"
-              BusyText="@L["Accounts.SavingBusyText"]">
-        <div class="ag-form-grid">
-            <FormField Label="@L["Accounts.ColName"]" For="Name">
-                <RadzenTextBox @bind-Value=@form.Name Name="Name" Disabled=@isSaving Style="width: 100%;" />
-            </FormField>
-            <FormField Label="@L["Common.Provider"]" For="Provider">
-                <RadzenDropDown @bind-Value=@form.Provider Name="Provider" Data=@ProviderChoices
-                                Disabled=@(editingAccountId is not null || isSaving) Style="width: 100%;"
-                                Change=@OnProviderChanged />
-            </FormField>
-            <FormField Label="@L["Accounts.ColType"]" For="Type">
-                <RadzenDropDown @bind-Value=@form.Type Name="Type" Data=@TypeChoices Disabled=@isSaving Style="width: 100%;">
-                    <Template>@L[$"Enum.AccountType.{context}"]</Template>
-                </RadzenDropDown>
-            </FormField>
-            <FormField Label="@L["Accounts.ColCurrency"]" For="Currency">
-                <RadzenTextBox @bind-Value=@form.Currency Name="Currency" Disabled=@isSaving MaxLength="3" Style="width: 100%;" />
-            </FormField>
-        </div>
-
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-            <RadzenSwitch @bind-Value=@form.IsShared Name="IsShared" Disabled=@isSaving Change=@OnSharedChanged />
-            <RadzenLabel Text="@L["Accounts.SharedLabel"]" Component="IsShared" />
-        </RadzenStack>
-
-        @if (form.IsShared)
-        {
-            <FormField Label="@L["Accounts.OwnersLabel"]" For="Owners">
-                <RadzenDropDown TValue="IEnumerable<Guid>"
-                                @bind-Value=@form.OwnerUserIds Name="Owners"
-                                Data=@users ValueProperty="StreamId" TextProperty="UserName"
-                                Multiple="true" AllowClear="true" Chips="true"
-                                Disabled=@isSaving Placeholder="@L["Accounts.SelectUsersPlaceholder"]" Style="width: 100%;" />
-            </FormField>
-        }
-        else
-        {
-            <FormField Label="@L["Common.Owner"]" For="Owner">
-                <RadzenDropDown TValue="Guid?"
-                                @bind-Value=@SingleOwner Name="Owner"
-                                Data=@users ValueProperty="StreamId" TextProperty="UserName"
-                                AllowClear="true" Disabled=@isSaving Placeholder="@L["Accounts.SelectUserPlaceholder"]" Style="width: 100%;" />
-            </FormField>
-        }
-
-        <div class="ag-form-grid">
-            <FormField Label="@L["Accounts.ColSync"]" For="Sync">
-                <RadzenDropDown @bind-Value=@form.SyncMethod Name="Sync" Data=@SyncChoices Disabled=@isSaving Style="width: 100%;">
-                    <Template>@L[$"Enum.SyncMethod.{context}"]</Template>
-                </RadzenDropDown>
-            </FormField>
-            @if (form.SyncMethod == SyncMethod.Api)
-            {
-                <FormField Label="@L["Accounts.ConnectionLabel"]" For="Connection">
-                    <RadzenDropDown TValue="Guid?"
-                                    @bind-Value=@form.ConnectionId Name="Connection"
-                                    Data=@ProviderConnections ValueProperty="Id" TextProperty="Label"
-                                    AllowClear="true" Disabled=@isSaving
-                                    Placeholder="@(ProviderConnections.Any() ? L["Accounts.SelectConnectionPlaceholder"] : L["Accounts.NoConnectionPlaceholder", form.Provider])"
-                                    Style="width: 100%;" />
-                </FormField>
-                @if (form.Provider == ProviderKind.Wise)
-                {
-                    <FormField Label="@L["Accounts.WiseBalanceIdLabel"]" For="ExternalId">
-                        <RadzenTextBox @bind-Value=@form.ExternalId Name="ExternalId" Disabled=@isSaving
-                                       Placeholder="@L["Accounts.WiseBalanceIdPlaceholder"]" Style="width: 100%;" />
-                    </FormField>
-                }
-                else
-                {
-                    <FormField Label="@L["Accounts.BankAccountLabel"]" For="IdentificationHash">
-                        <RadzenDropDown TValue="string"
-                                        @bind-Value=@form.IdentificationHash Name="IdentificationHash"
-                                        Data=@LinkedAccounts ValueProperty="IdentificationHash"
-                                        AllowClear="true" Disabled=@isSaving
-                                        Placeholder="@(LinkedAccounts.Any() ? L["Import.SelectAccountPlaceholder"] : L["Accounts.ConnectConsentFirstPlaceholder"])"
-                                        Style="width: 100%;">
-                            <Template Context="linked">
-                                @(((EnableBankingLinkedAccount)linked).Name ?? L["Accounts.UnnamedAccount"]) — @(((EnableBankingLinkedAccount)linked).Currency)
-                            </Template>
-                        </RadzenDropDown>
-                    </FormField>
-                }
-            }
-        </div>
-
-        <div class="ag-form-grid">
-            <FormField Label="@L["Accounts.IbanLabel"]" For="Iban">
-                <RadzenTextBox @bind-Value=@form.Iban Name="Iban" Disabled=@isSaving Style="width: 100%;" />
-            </FormField>
-            <FormField Label="@L["Accounts.CurrentBalanceLabel", string.IsNullOrWhiteSpace(form.Currency) ? "EUR" : form.Currency]" For="CurrentBalance">
-                <RadzenNumeric TValue="decimal?" @bind-Value=@form.CurrentBalance Name="CurrentBalance"
-                               Disabled=@isSaving Placeholder="@L["Accounts.BalancePlaceholder"]" Style="width: 100%;" />
-            </FormField>
-        </div>
-    </CardForm>
-
 </PageBody>
 
 @code {
-    private static readonly ProviderKind[] ProviderChoices = Enum.GetValues<ProviderKind>();
-    private static readonly AccountType[] TypeChoices = Enum.GetValues<AccountType>();
-    private static readonly SyncMethod[] SyncChoices = Enum.GetValues<SyncMethod>();
-
     private readonly CancellationTokenSource _cts = new();
 
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
     private IReadOnlyList<ProviderConnection> connections = [];
-    private Guid? editingAccountId;
-    private InputModel form = new();
-    private decimal? loadedBalance; // balance shown when editing, to detect a change
-    private bool isSaving;
     private bool showDeactivated;
 
     private IEnumerable<Account> DisplayedAccounts =>
         showDeactivated ? accounts : accounts.Where(a => a.IsActive);
-
-    // Connections are per provider; a Wise account can only link a Wise connection.
-    private IEnumerable<ProviderConnection> ProviderConnections =>
-        connections.Where(c => c.Provider == form.Provider);
-
-    // Enable Banking accounts exposed by the selected connection's consent.
-    private IEnumerable<EnableBankingLinkedAccount> LinkedAccounts =>
-        connections.FirstOrDefault(c => c.Id == form.ConnectionId)?.LinkedAccounts
-        ?? Enumerable.Empty<EnableBankingLinkedAccount>();
-
-    private Guid? SingleOwner
-    {
-        get => form.OwnerUserIds.FirstOrDefault() is var id && id != Guid.Empty ? id : null;
-        set => form.OwnerUserIds = value is Guid g ? [g] : [];
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -244,164 +117,20 @@
         return account.IsShared ? $"{joined} (shared)" : joined;
     }
 
-    // Cash is not synced or imported: the type and sync method have exactly one sensible value.
-    private void OnProviderChanged()
+    private Task AddAsync() => OpenFormAsync(null);
+
+    private Task EditAsync(Account account) => OpenFormAsync(account);
+
+    private async Task OpenFormAsync(Account? account)
     {
-        if (form.Provider == ProviderKind.Cash)
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@(account is null ? L["Accounts.AddTitle"] : L["Accounts.EditTitle"])" />,
+            childContent: _ => @<AccountFormDialog Account="@account" Users="@users" Connections="@connections" />
+        );
+        if (result is true)
         {
-            form.Type = AccountType.Cash;
-            form.SyncMethod = SyncMethod.Manual;
-        }
-        else if (form.SyncMethod == SyncMethod.Manual)
-        {
-            form.Type = AccountType.Checking;
-            form.SyncMethod = SyncMethod.CsvUpload;
-        }
-    }
-
-    private void OnSharedChanged()
-    {
-        // Collapsing to a single-owner account keeps only the first selected user.
-        if (!form.IsShared)
-        {
-            form.OwnerUserIds = form.OwnerUserIds.Take(1).ToList();
-        }
-    }
-
-    private void StartEdit(Account account)
-    {
-        editingAccountId = account.Id;
-        form = new InputModel
-        {
-            Name = account.Name,
-            Provider = account.Provider,
-            Type = account.Type,
-            Currency = account.Currency,
-            IsShared = account.IsShared,
-            OwnerUserIds = account.OwnerUserIds.ToList(),
-            SyncMethod = account.SyncMethod,
-            Iban = account.Iban ?? "",
-            ConnectionId = account.ConnectionId,
-            ExternalId = account.ExternalId ?? "",
-            IdentificationHash = account.IdentificationHash,
-            CurrentBalance = account.CurrentBalance,
-        };
-        loadedBalance = account.CurrentBalance;
-    }
-
-    private void ResetForm()
-    {
-        editingAccountId = null;
-        form = new InputModel();
-        loadedBalance = null;
-    }
-
-    private async Task SaveAsync()
-    {
-        if (isSaving)
-        {
-            return; // ignore double-submits while the save is in flight
-        }
-
-        isSaving = true;
-        // Force the disabled state to render and flush to the browser before the
-        // save round-trip runs; otherwise the UI only repaints once the whole
-        // handler has completed and the disable is never visible.
-        StateHasChanged();
-        await Task.Yield();
-        try
-        {
-            var owners = form.OwnerUserIds.ToList();
-            // Only API accounts carry a connection / external id; drop stale values
-            // if the account is set back to CSV upload.
-            var isApi = form.SyncMethod == SyncMethod.Api;
-            var isWise = form.Provider == ProviderKind.Wise;
-            var connectionId = isApi ? form.ConnectionId : null;
-            var externalId = isApi && isWise ? form.ExternalId : null;
-            var identificationHash = isApi && !isWise ? form.IdentificationHash : null;
-            var result = editingAccountId is Guid accountId
-                ? await MessageBus.InvokeAsync<Result<Account>>(
-                    new UpdateAccountCommand(
-                        accountId,
-                        form.Name,
-                        form.Type,
-                        form.Currency,
-                        form.IsShared,
-                        owners,
-                        form.SyncMethod,
-                        form.Iban,
-                        connectionId,
-                        externalId,
-                        identificationHash
-                    ),
-                    _cts.Token
-                )
-                : await MessageBus.InvokeAsync<Result<Account>>(
-                    new CreateAccountCommand(
-                        form.Name,
-                        form.Provider,
-                        form.Type,
-                        form.Currency,
-                        form.IsShared,
-                        owners,
-                        form.SyncMethod,
-                        form.Iban,
-                        connectionId,
-                        externalId,
-                        identificationHash
-                    ),
-                    _cts.Token
-                );
-
-            if (result.IsFailure)
-            {
-                NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
-                return;
-            }
-
-            // Persist the balance anchor (for net worth) when the user set/changed it.
-            if (form.CurrentBalance is decimal balance && balance != loadedBalance)
-            {
-                await SaveBalanceAsync(result.Value!.Id, balance, result.Value.Currency);
-            }
-
-            ResetForm();
             await ReloadAsync();
         }
-        finally
-        {
-            isSaving = false;
-        }
-    }
-
-    private async Task SaveBalanceAsync(Guid accountId, decimal balance, string currency)
-    {
-        decimal? balanceEur = string.Equals(currency, "EUR", StringComparison.OrdinalIgnoreCase)
-            ? balance
-            : null;
-        if (balanceEur is null)
-        {
-            var rate = await ExchangeRateProvider.GetEurRateAsync(
-                currency,
-                DateOnly.FromDateTime(DateTime.UtcNow),
-                _cts.Token
-            );
-            if (rate.IsSuccess)
-            {
-                balanceEur = balance * rate.Value!.EurPerUnit;
-            }
-            else
-            {
-                NotificationService.Warning(
-                    L["Accounts.BalanceNoEurTitle"],
-                    L["Accounts.BalanceNoEurMessage"]
-                );
-            }
-        }
-        await MessageBus.InvokeAsync<Result>(
-            new SetAccountBalanceCommand(accountId, balance, balanceEur, DateTimeOffset.UtcNow),
-            _cts.Token
-        );
     }
 
     private async Task DeactivateAsync(Account account)
@@ -515,27 +244,7 @@
         }
 
         NotificationService.Success(successMessage);
-        if (editingAccountId is not null)
-        {
-            ResetForm();
-        }
         await ReloadAsync();
-    }
-
-    private sealed class InputModel
-    {
-        public string Name { get; set; } = "";
-        public ProviderKind Provider { get; set; } = ProviderKind.Dkb;
-        public AccountType Type { get; set; } = AccountType.Checking;
-        public string Currency { get; set; } = "EUR";
-        public bool IsShared { get; set; }
-        public IEnumerable<Guid> OwnerUserIds { get; set; } = [];
-        public SyncMethod SyncMethod { get; set; } = SyncMethod.CsvUpload;
-        public string Iban { get; set; } = "";
-        public Guid? ConnectionId { get; set; }
-        public string ExternalId { get; set; } = "";
-        public string? IdentificationHash { get; set; }
-        public decimal? CurrentBalance { get; set; }
     }
 
     public void Dispose()
