@@ -2,6 +2,7 @@ using AndreGoepel.FinanceApp.Components.Import.Pages;
 using AndreGoepel.FinanceApp.Components.Settings.Pages;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using CashPage = AndreGoepel.FinanceApp.Components.Cash.Pages.Cash;
 using TransactionsPage = AndreGoepel.FinanceApp.Components.Transactions.Pages.Transactions;
 
 namespace AndreGoepel.FinanceApp.Tests.Components;
@@ -10,6 +11,7 @@ public sealed class PageRoutingTests
 {
     [Theory]
     [InlineData(typeof(TransactionsPage), "/transactions")]
+    [InlineData(typeof(CashPage), "/cash")]
     [InlineData(typeof(Import), "/import")]
     [InlineData(typeof(Accounts), "/settings/accounts")]
     [InlineData(typeof(Categories), "/settings/categories")]

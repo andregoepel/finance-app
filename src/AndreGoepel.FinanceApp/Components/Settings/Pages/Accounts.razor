@@ -90,7 +90,8 @@
             </FormField>
             <FormField Label="@L["Common.Provider"]" For="Provider">
                 <RadzenDropDown @bind-Value=@form.Provider Name="Provider" Data=@ProviderChoices
-                                Disabled=@(editingAccountId is not null || isSaving) Style="width: 100%;" />
+                                Disabled=@(editingAccountId is not null || isSaving) Style="width: 100%;"
+                                Change=@OnProviderChanged />
             </FormField>
             <FormField Label="@L["Accounts.ColType"]" For="Type">
                 <RadzenDropDown @bind-Value=@form.Type Name="Type" Data=@TypeChoices Disabled=@isSaving Style="width: 100%;">
@@ -241,6 +242,21 @@
             .ToList();
         var joined = names.Count == 0 ? "—" : string.Join(", ", names);
         return account.IsShared ? $"{joined} (shared)" : joined;
+    }
+
+    // Cash is not synced or imported: the type and sync method have exactly one sensible value.
+    private void OnProviderChanged()
+    {
+        if (form.Provider == ProviderKind.Cash)
+        {
+            form.Type = AccountType.Cash;
+            form.SyncMethod = SyncMethod.Manual;
+        }
+        else if (form.SyncMethod == SyncMethod.Manual)
+        {
+            form.Type = AccountType.Checking;
+            form.SyncMethod = SyncMethod.CsvUpload;
+        }
     }
 
     private void OnSharedChanged()

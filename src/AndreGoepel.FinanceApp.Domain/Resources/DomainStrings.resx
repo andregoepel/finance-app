@@ -121,4 +121,7 @@
   <data name="Error.NoParserForProvider" xml:space="preserve"><value><![CDATA[No statement parser is registered for {0}.]]></value><comment>{0} = provider name</comment></data>
   <data name="Error.UnrecognizedExportFormat" xml:space="preserve"><value><![CDATA[Unrecognized {0} export format. Supported formats: {1}. The provider may have changed its export — a new parser version is needed.]]></value><comment>{0} = provider, {1} = comma-separated parser ids</comment></data>
   <data name="Error.AccountConsentLinkMissing" xml:space="preserve"><value><![CDATA[This account is not linked to any account in the current {0} consent. Re-link it under Settings → Connections.]]></value><comment>{0} = provider name</comment></data>
+  <!-- Manual entries (cash). -->
+  <data name="Error.ManualEntriesOnManualAccountsOnly" xml:space="preserve"><value><![CDATA[Transactions can only be entered by hand on manually maintained accounts (cash).]]></value></data>
+  <data name="Error.OnlyManualEntriesCanBeDeleted" xml:space="preserve"><value><![CDATA[Only hand-entered transactions can be deleted; imported history stays.]]></value></data>
 </root>
