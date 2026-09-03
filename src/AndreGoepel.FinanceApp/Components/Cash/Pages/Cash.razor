@@ -1,5 +1,6 @@
 @page "/cash"
 @attribute [Authorize]
+@using AndreGoepel.FinanceApp.Components.Cash.Dialogs
 @using AndreGoepel.Marten.Identity.Users
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
@@ -9,6 +10,7 @@
 @inject IExchangeRateProvider ExchangeRateProvider
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject DialogService DialogService
 @inject UserManager<User> UserManager
 @inject IStringLocalizer<Strings> L
 @implements IDisposable
@@ -27,9 +29,9 @@
                                 Style="min-width: 12rem;"
                                 Change=@(_ => ReloadAsync()) />
             }
-            @if (cashAccounts.Count > 0 && !showCreateForm)
+            @if (cashAccounts.Count > 0)
             {
-                <IconButton Icon="add" Title="@L["Cash.AddAccountTooltip"]" Click=@(_ => showCreateForm = true) />
+                <IconButton Icon="add" Title="@L["Cash.AddAccountTooltip"]" Click=@CreateAccountAsync />
             }
         </Actions>
     </PageHeader>
@@ -41,47 +43,13 @@
         <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@L["Cash.OwnerUnknownHint"]</RadzenAlert>
     }
 
-    @if (cashAccounts.Count == 0 || showCreateForm)
+    @if (cashAccounts.Count == 0)
     {
-        @if (cashAccounts.Count == 0)
-        {
-            <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
-                <strong>@L["Cash.NoAccountTitle"]</strong> — @L["Cash.NoAccountText"]
-            </RadzenAlert>
-        }
-
-        <CardForm TItem="CreateModel"
-                  Data="createForm"
-                  Submit="CreateAccountAsync"
-                  Cancel="ResetCreateForm"
-                  Title="@L["Cash.CreateTitle"]"
-                  SubmitText="@L["Cash.CreateButton"]"
-                  CancelText="@L["Common.Cancel"]"
-                  IsBusy="isCreating"
-                  BusyText="@L["Cash.CreatingBusyText"]">
-            <div class="ag-form-grid">
-                <FormField Label="@L["Accounts.ColName"]" For="CreateName">
-                    <RadzenTextBox @bind-Value=@createForm.Name Name="CreateName" Disabled=@isCreating Style="width: 100%;" />
-                </FormField>
-                <FormField Label="@L["Accounts.ColCurrency"]" For="CreateCurrency">
-                    <RadzenTextBox @bind-Value=@createForm.Currency Name="CreateCurrency" Disabled=@isCreating MaxLength="3" Style="width: 100%;" />
-                </FormField>
-                <FormField Label="@L["Cash.OpeningBalanceLabel", CurrencyOf(createForm.Currency)]" For="OpeningBalance">
-                    <RadzenNumeric TValue="decimal?" @bind-Value=@createForm.OpeningBalance Name="OpeningBalance"
-                                   Disabled=@isCreating Style="width: 100%;" />
-                </FormField>
-                @if (currentUserId is null)
-                {
-                    <FormField Label="@L["Common.Owner"]" For="CreateOwner">
-                        <RadzenDropDown TValue="Guid?"
-                                        @bind-Value=@createForm.OwnerUserId Name="CreateOwner"
-                                        Data=@users ValueProperty="StreamId" TextProperty="UserName"
-                                        AllowClear="true" Disabled=@isCreating
-                                        Placeholder="@L["Accounts.SelectUserPlaceholder"]" Style="width: 100%;" />
-                    </FormField>
-                }
-            </div>
-        </CardForm>
+        <EmptyState Icon="@("💵")" Title="@L["Cash.NoAccountTitle"]" Text="@L["Cash.NoAccountText"]">
+            <Actions>
+                <RadzenButton Text="@L["Cash.CreateTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@CreateAccountAsync />
+            </Actions>
+        </EmptyState>
     }
 
     @if (SelectedAccount is Account account)
@@ -117,48 +85,9 @@
             </RadzenColumn>
         </RadzenRow>
 
-        <CardForm TItem="EntryModel"
-                  Data="entry"
-                  Submit="SaveEntryAsync"
-                  Cancel="ResetEntry"
-                  Title="@L["Cash.EntryTitle"]"
-                  SubmitText="@L["Cash.SaveEntry"]"
-                  CancelText="@L["Common.Cancel"]"
-                  IsBusy="isSaving"
-                  BusyText="@L["Cash.SavingBusyText"]">
-            <div class="ag-form-grid">
-                <FormField Label="@L["Common.Date"]" For="EntryDate">
-                    <RadzenDatePicker TValue="DateOnly?" @bind-Value=@entry.Date Name="EntryDate"
-                                      DateFormat="@Dates.ShortFormat" Disabled=@isSaving Style="width: 100%;" />
-                </FormField>
-                <FormField Label="@L["Cash.KindLabel"]" For="EntryKind">
-                    <RadzenSelectBar TValue="bool" @bind-Value=@entry.IsIncome Name="EntryKind" Disabled=@isSaving>
-                        <Items>
-                            <RadzenSelectBarItem Text="@L["Cash.KindExpense"]" Value="@false" />
-                            <RadzenSelectBarItem Text="@L["Cash.KindIncome"]" Value="@true" />
-                        </Items>
-                    </RadzenSelectBar>
-                </FormField>
-                <FormField Label="@L["Cash.AmountLabel", account.Currency]" For="EntryAmount">
-                    <RadzenNumeric TValue="decimal?" @bind-Value=@entry.Amount Name="EntryAmount" Disabled=@isSaving Style="width: 100%;" />
-                </FormField>
-            </div>
-            <div class="ag-form-grid">
-                <FormField Label="@L["Common.Description"]" For="EntryDescription">
-                    <RadzenTextBox @bind-Value=@entry.Description Name="EntryDescription" Disabled=@isSaving
-                                   Placeholder="@L["Cash.DescriptionPlaceholder"]" Style="width: 100%;" />
-                </FormField>
-                <FormField Label="@L["Cash.CounterpartyLabel"]" For="EntryCounterparty">
-                    <RadzenTextBox @bind-Value=@entry.Counterparty Name="EntryCounterparty" Disabled=@isSaving Style="width: 100%;" />
-                </FormField>
-                <FormField Label="@L["Dashboard.ColCategory"]" For="EntryCategory">
-                    <CategoryPicker Options="@categoryOptions" Name="EntryCategory"
-                                    Value="@entry.CategoryId"
-                                    ValueChanged="@(v => entry.CategoryId = v)"
-                                    Placeholder="@L["Cash.CategoryHint"]" />
-                </FormField>
-            </div>
-        </CardForm>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="@L["Cash.EntryTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@(() => AddEntryAsync(account)) />
+        </RadzenStack>
 
         <SectionCard Title="@L["Nav.Transactions"]">
             @if (transactions.Count == 0)
@@ -235,11 +164,7 @@
     private Guid? selectedAccountId;
     private List<CategoryOption> categoryOptions = [];
     private List<TransactionView> transactions = [];
-    private CreateModel createForm = new();
-    private EntryModel entry = new();
     private decimal? countedBalance;
-    private bool showCreateForm;
-    private bool isCreating;
     private bool isSaving;
 
     private Account? SelectedAccount => cashAccounts.FirstOrDefault(a => a.Id == selectedAccountId);
@@ -262,7 +187,6 @@
         var categories = await QuerySession.Query<Category>().ToListAsync(_cts.Token);
         categoryOptions = CategoryPaths.Build(categories);
 
-        ResetCreateForm();
         await LoadAccountsAsync();
         await ReloadAsync();
     }
@@ -306,82 +230,29 @@
 
     private async Task CreateAccountAsync()
     {
-        if (isCreating)
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@L["Cash.CreateTitle"]" />,
+            childContent: _ => @<CashAccountCreateDialog CurrentUserId="@currentUserId" CurrentUserName="@currentUserName" Users="@users" />
+        );
+        if (result is Account created)
         {
-            return;
-        }
-
-        isCreating = true;
-        StateHasChanged();
-        await Task.Yield();
-        try
-        {
-            var owner = currentUserId ?? createForm.OwnerUserId;
-            var result = await MessageBus.InvokeAsync<Result<Account>>(
-                new CreateAccountCommand(
-                    createForm.Name,
-                    ProviderKind.Cash,
-                    AccountType.Cash,
-                    createForm.Currency,
-                    IsShared: false,
-                    OwnerUserIds: owner is Guid ownerId ? [ownerId] : [],
-                    SyncMethod.Manual,
-                    Iban: null
-                ),
-                _cts.Token
-            );
-            if (result.IsFailure)
-            {
-                NotificationService.Error(L["Cash.CreateFailedTitle"], result.Error);
-                return;
-            }
-
-            var created = result.Value!;
-            var opening = createForm.OpeningBalance ?? 0m;
-            var openingEur = await ToEurAsync(opening, created.Currency, DateOnly.FromDateTime(DateTime.UtcNow));
-            if (openingEur is null)
-            {
-                NotificationService.Warning(L["Accounts.BalanceNoEurTitle"], L["Accounts.BalanceNoEurMessage"]);
-            }
-            await MessageBus.InvokeAsync<Result>(
-                new SetAccountBalanceCommand(created.Id, opening, openingEur, DateTimeOffset.UtcNow),
-                _cts.Token
-            );
-
             NotificationService.Success(L["Cash.CreatedMessage"]);
             selectedAccountId = created.Id;
-            ResetCreateForm();
             await LoadAccountsAsync();
             await ReloadAsync();
         }
-        finally
-        {
-            isCreating = false;
-        }
     }
 
-    private async Task SaveEntryAsync()
+    private async Task AddEntryAsync(Account account)
     {
-        if (SelectedAccount is not Account account)
-        {
-            return;
-        }
-
-        var magnitude = Math.Abs(entry.Amount ?? 0m);
-        var amount = entry.IsIncome ? magnitude : -magnitude;
-        var date = entry.Date ?? DateOnly.FromDateTime(DateTime.Today);
-        var recorded = await RecordAsync(
-            account,
-            date,
-            amount,
-            entry.Description,
-            entry.Counterparty,
-            entry.CategoryId,
-            categorizeIfNeeded: true
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@L["Cash.EntryTitle"]" />,
+            childContent: _ => @<CashEntryDialog Account="@account" CurrentUserName="@currentUserName" CategoryOptions="@categoryOptions" />
         );
-        if (recorded)
+        if (result is true)
         {
-            ResetEntry();
+            await LoadAccountsAsync();
+            await ReloadAsync();
         }
     }
 
@@ -548,42 +419,6 @@
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         return transactions.Where(t => t.BookingDate.Year == today.Year && t.BookingDate.Month == today.Month);
-    }
-
-    private static string CurrencyOf(string currency) =>
-        string.IsNullOrWhiteSpace(currency) ? "EUR" : currency.Trim().ToUpperInvariant();
-
-    private void ResetCreateForm()
-    {
-        var defaultName = L["Cash.DefaultName"].Value;
-        createForm = new CreateModel
-        {
-            Name = currentUserName is null ? defaultName : $"{defaultName} {currentUserName}",
-        };
-        showCreateForm = false;
-    }
-
-    private void ResetEntry()
-    {
-        entry = new EntryModel();
-    }
-
-    private sealed class CreateModel
-    {
-        public string Name { get; set; } = "";
-        public string Currency { get; set; } = "EUR";
-        public decimal? OpeningBalance { get; set; } = 0m;
-        public Guid? OwnerUserId { get; set; }
-    }
-
-    private sealed class EntryModel
-    {
-        public DateOnly? Date { get; set; } = DateOnly.FromDateTime(DateTime.Today);
-        public bool IsIncome { get; set; }
-        public decimal? Amount { get; set; }
-        public string Description { get; set; } = "";
-        public string Counterparty { get; set; } = "";
-        public Guid? CategoryId { get; set; }
     }
 
     public void Dispose()

@@ -1,0 +1,138 @@
+@using AndreGoepel.FinanceApp.Domain.Exchange
+@using AndreGoepel.Marten.Identity.Users
+
+@inject IMessageBus MessageBus
+@inject IExchangeRateProvider ExchangeRateProvider
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IStringLocalizer<Strings> L
+
+@* Create a cash account (#166) — the dialog body opened from Cash.razor. There is
+   no edit mode: a cash account's name/currency etc. are edited via the Accounts
+   settings page like any other account, the same way it already worked before
+   this moved into a dialog. Closes with the created Account so the caller can
+   select it, or null if the household has no resolvable owner and none was
+   picked. *@
+
+<DialogForm TItem="CreateModel"
+            Data="form"
+            Submit="SaveAsync"
+            SubmitText="@L["Cash.CreateButton"]"
+            CancelText="@L["Common.Cancel"]"
+            IsBusy="isCreating"
+            BusyText="@L["Cash.CreatingBusyText"]">
+    <div class="ag-form-grid">
+        <FormField Label="@L["Accounts.ColName"]" For="CreateName">
+            <RadzenTextBox @bind-Value=@form.Name Name="CreateName" Disabled=@isCreating Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Accounts.ColCurrency"]" For="CreateCurrency">
+            <RadzenTextBox @bind-Value=@form.Currency Name="CreateCurrency" Disabled=@isCreating MaxLength="3" Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Cash.OpeningBalanceLabel", CurrencyOf(form.Currency)]" For="OpeningBalance">
+            <RadzenNumeric TValue="decimal?" @bind-Value=@form.OpeningBalance Name="OpeningBalance"
+                           Disabled=@isCreating Style="width: 100%;" />
+        </FormField>
+        @if (CurrentUserId is null)
+        {
+            <FormField Label="@L["Common.Owner"]" For="CreateOwner">
+                <RadzenDropDown TValue="Guid?"
+                                @bind-Value=@form.OwnerUserId Name="CreateOwner"
+                                Data=@Users ValueProperty="StreamId" TextProperty="UserName"
+                                AllowClear="true" Disabled=@isCreating
+                                Placeholder="@L["Accounts.SelectUserPlaceholder"]" Style="width: 100%;" />
+            </FormField>
+        }
+    </div>
+</DialogForm>
+
+@code {
+    [Parameter]
+    public Guid? CurrentUserId { get; set; }
+
+    [Parameter]
+    public string? CurrentUserName { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<User> Users { get; set; } = [];
+
+    private CreateModel form = new();
+    private bool isCreating;
+
+    protected override void OnInitialized()
+    {
+        var defaultName = L["Cash.DefaultName"].Value;
+        form.Name = CurrentUserName is null ? defaultName : $"{defaultName} {CurrentUserName}";
+    }
+
+    private async Task SaveAsync()
+    {
+        if (isCreating)
+        {
+            return;
+        }
+
+        isCreating = true;
+        try
+        {
+            var owner = CurrentUserId ?? form.OwnerUserId;
+            var result = await MessageBus.InvokeAsync<Result<Account>>(
+                new CreateAccountCommand(
+                    form.Name,
+                    ProviderKind.Cash,
+                    AccountType.Cash,
+                    form.Currency,
+                    IsShared: false,
+                    OwnerUserIds: owner is Guid ownerId ? [ownerId] : [],
+                    SyncMethod.Manual,
+                    Iban: null
+                )
+            );
+            if (result.IsFailure)
+            {
+                NotificationService.Error(L["Cash.CreateFailedTitle"], result.Error);
+                return;
+            }
+
+            var created = result.Value!;
+            var opening = form.OpeningBalance ?? 0m;
+            var openingEur = await ToEurAsync(opening, created.Currency, DateOnly.FromDateTime(DateTime.UtcNow));
+            if (openingEur is null)
+            {
+                NotificationService.Warning(L["Accounts.BalanceNoEurTitle"], L["Accounts.BalanceNoEurMessage"]);
+            }
+            await MessageBus.InvokeAsync<Result>(
+                new SetAccountBalanceCommand(created.Id, opening, openingEur, DateTimeOffset.UtcNow)
+            );
+
+            DialogService.Close(created);
+        }
+        finally
+        {
+            isCreating = false;
+        }
+    }
+
+    // EUR is a pass-through; anything else is converted at today's rate so the
+    // handler can keep the EUR anchor exact. Null when no rate is available.
+    private async Task<decimal?> ToEurAsync(decimal amount, string currency, DateOnly date)
+    {
+        if (string.Equals(currency, "EUR", StringComparison.OrdinalIgnoreCase))
+        {
+            return amount;
+        }
+
+        var rate = await ExchangeRateProvider.GetEurRateAsync(currency, date);
+        return rate.IsSuccess ? amount * rate.Value!.EurPerUnit : null;
+    }
+
+    private static string CurrencyOf(string currency) =>
+        string.IsNullOrWhiteSpace(currency) ? "EUR" : currency.Trim().ToUpperInvariant();
+
+    private sealed class CreateModel
+    {
+        public string Name { get; set; } = "";
+        public string Currency { get; set; } = "EUR";
+        public decimal? OpeningBalance { get; set; } = 0m;
+        public Guid? OwnerUserId { get; set; }
+    }
+}
