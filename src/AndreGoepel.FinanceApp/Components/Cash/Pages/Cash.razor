@@ -482,6 +482,7 @@
         {
             await MessageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
         }
+        await MessageBus.PublishAsync(new MatchTransfersCommand());
         if (categorizeIfNeeded && recorded.CategoryId is null)
         {
             await MessageBus.PublishAsync(new CategorizeImportedTransactionsCommand(recorded.ImportBatchId));

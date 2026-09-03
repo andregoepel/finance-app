@@ -96,6 +96,7 @@
   <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Eine der Transaktionen ist bereits als Umbuchung verknüpft.]]></value></data>
   <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Die Transaktion ist nicht als Umbuchung verknüpft.]]></value></data>
   <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Die beiden Seiten einer Umbuchung müssen zu verschiedenen Konten gehören.]]></value></data>
+  <data name="Error.TransferSuggestionNotFound" xml:space="preserve"><value><![CDATA[Umbuchungsvorschlag nicht gefunden.]]></value></data>
 
   <!-- Planning -->
   <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[Eine Beschreibung ist erforderlich.]]></value></data>

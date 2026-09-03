@@ -193,6 +193,18 @@
   <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestion accepted.]]></value></data>
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestions accepted.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestions dismissed.]]></value></data>
+  <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Find transfers]]></value></data>
+  <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Transfer matching is running in the background. Refresh the list in a moment.]]></value></data>
+  <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Transfer suggestions]]></value></data>
+  <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Outgoing]]></value></data>
+  <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Incoming]]></value></data>
+  <data name="Review.ColDifference" xml:space="preserve"><value><![CDATA[Difference]]></value></data>
+  <data name="Review.LinkTransferTooltip" xml:space="preserve"><value><![CDATA[Link as transfer]]></value></data>
+  <data name="Review.DismissTransferTooltip" xml:space="preserve"><value><![CDATA[Not a transfer]]></value></data>
+  <data name="Review.TransferDifferenceDaysOnly" xml:space="preserve"><value><![CDATA[{0} day(s) apart]]></value><comment>{0} = day difference; amount matches exactly</comment></data>
+  <data name="Review.TransferDifferenceDaysAndAmount" xml:space="preserve"><value><![CDATA[{0} day(s) apart, {1} off]]></value><comment>{0} = day difference, {1} = formatted EUR amount difference</comment></data>
+  <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Transfer linked.]]></value></data>
+  <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestion dismissed.]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Select account]]></value></data>
