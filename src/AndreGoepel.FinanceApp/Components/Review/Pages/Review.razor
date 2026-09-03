@@ -101,8 +101,8 @@
                             <AmountText Amount="row.Incoming.Amount" Currency="@row.Incoming.Currency" />
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColDifference"]" Width="200px">
-                        <Template Context="row">@DifferenceText(row.Suggestion)</Template>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColReason"]" Width="220px">
+                        <Template Context="row">@ReasonText(row)</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="" Width="110px" Sortable="false">
                         <Template Context="row">
@@ -285,14 +285,16 @@
             .ToList();
     }
 
-    private string DifferenceText(TransferSuggestion suggestion) =>
-        suggestion.AmountDifferenceEur == 0m
-            ? L["Review.TransferDifferenceDaysOnly", suggestion.DayDifference]
-            : L[
-                "Review.TransferDifferenceDaysAndAmount",
-                suggestion.DayDifference,
-                Money.Format(suggestion.AmountDifferenceEur, "EUR")
-            ];
+    /// <summary>
+    /// Every suggestion already matches exactly on day and EUR amount (see
+    /// <see cref="TransferMatcher"/>) — the only reason it isn't auto-linked is
+    /// either a currency mismatch (the FX leg always needs a glance) or another
+    /// pending suggestion competing for one of its legs.
+    /// </summary>
+    private string ReasonText(TransferSuggestionRow row) =>
+        row.Outgoing.Currency != row.Incoming.Currency
+            ? L["Review.TransferReasonCrossCurrency"]
+            : L["Review.TransferReasonAmbiguous"];
 
     private async Task FindTransfersAsync()
     {

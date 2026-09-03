@@ -6,6 +6,7 @@ public sealed class TransferMatcherTests
 {
     private static readonly Guid AccountA = Guid.NewGuid();
     private static readonly Guid AccountB = Guid.NewGuid();
+    private static readonly Guid AccountC = Guid.NewGuid();
     private static readonly DateOnly Day = new(2026, 3, 15);
 
     private static TransferCandidate Txn(
@@ -33,9 +34,9 @@ public sealed class TransferMatcherTests
     }
 
     [Fact]
-    public void FindPairs_OneDayApart_IsStillExact()
+    public void FindPairs_OneDayApart_NoMatch()
     {
-        // Arrange
+        // Arrange — the day must be identical now, no leeway at all.
         var outgoing = Txn(AccountA, Day, -100m);
         var incoming = Txn(AccountB, Day.AddDays(1), 100m);
 
@@ -43,7 +44,23 @@ public sealed class TransferMatcherTests
         var result = TransferMatcher.FindPairs([outgoing, incoming]);
 
         // Assert
-        Assert.Single(result.Exact);
+        Assert.Empty(result.Exact);
+        Assert.Empty(result.Fuzzy);
+    }
+
+    [Fact]
+    public void FindPairs_SmallAmountDifference_NoMatch()
+    {
+        // Arrange — a one-cent difference used to slip through the old fuzzy tolerance.
+        var outgoing = Txn(AccountA, Day, -100m);
+        var incoming = Txn(AccountB, Day, 99.99m);
+
+        // Act
+        var result = TransferMatcher.FindPairs([outgoing, incoming]);
+
+        // Assert
+        Assert.Empty(result.Exact);
+        Assert.Empty(result.Fuzzy);
     }
 
     [Fact]
@@ -79,10 +96,11 @@ public sealed class TransferMatcherTests
     [Fact]
     public void FindPairs_AmbiguousExactCandidates_DemotedToFuzzy()
     {
-        // Arrange — two identical €100 outgoing legs, one incoming leg: neither
-        // pairing is certain, so both must be reviewed rather than guessed.
+        // Arrange — two identical €100 outgoing legs on different accounts, one
+        // incoming leg: neither pairing is certain, so both must be reviewed
+        // rather than guessed.
         var outgoing1 = Txn(AccountA, Day, -100m);
-        var outgoing2 = Txn(AccountA, Day, -100m);
+        var outgoing2 = Txn(AccountC, Day, -100m);
         var incoming = Txn(AccountB, Day, 100m);
 
         // Act
@@ -90,15 +108,15 @@ public sealed class TransferMatcherTests
 
         // Assert
         Assert.Empty(result.Exact);
-        Assert.NotEmpty(result.Fuzzy);
+        Assert.Equal(2, result.Fuzzy.Count);
+        Assert.All(result.Fuzzy, p => Assert.Equal(incoming.Id, p.IncomingId));
     }
 
     [Fact]
     public void FindPairs_UnrelatedExactPairsElsewhereInThePool_AllAutoLink()
     {
         // Arrange — regression guard: many independent same-day, same-amount
-        // transfers must not make each other look "ambiguous" just because they
-        // share the identical (0 days, €0) score.
+        // transfers must not make each other look "ambiguous".
         var pair1Out = Txn(AccountA, Day, -100m);
         var pair1In = Txn(AccountB, Day, 100m);
         var pair2Out = Txn(AccountA, Day, -250m);
@@ -113,56 +131,10 @@ public sealed class TransferMatcherTests
     }
 
     [Fact]
-    public void FindPairs_WithinFuzzyToleranceButNotExact_IsFuzzy()
+    public void FindPairs_DifferentCurrencies_NeverExactEvenWhenEurAmountsMatchExactly()
     {
-        // Arrange — 3 days apart, 1.50 EUR off; within ±5 days / max(1%, €2).
-        var outgoing = Txn(AccountA, Day, -500m);
-        var incoming = Txn(AccountB, Day.AddDays(3), 498.5m);
-
-        // Act
-        var result = TransferMatcher.FindPairs([outgoing, incoming]);
-
-        // Assert
-        Assert.Empty(result.Exact);
-        var pair = Assert.Single(result.Fuzzy);
-        Assert.Equal(3, pair.DayDifference);
-        Assert.Equal(1.5m, pair.AmountDifferenceEur);
-    }
-
-    [Fact]
-    public void FindPairs_OutsideDateWindow_NoMatch()
-    {
-        // Arrange — 6 days apart, exceeds the 5-day fuzzy window.
-        var outgoing = Txn(AccountA, Day, -100m);
-        var incoming = Txn(AccountB, Day.AddDays(6), 100m);
-
-        // Act
-        var result = TransferMatcher.FindPairs([outgoing, incoming]);
-
-        // Assert
-        Assert.Empty(result.Exact);
-        Assert.Empty(result.Fuzzy);
-    }
-
-    [Fact]
-    public void FindPairs_OutsideAmountTolerance_NoMatch()
-    {
-        // Arrange — same day, but the difference exceeds both the 1% and the €2 floor.
-        var outgoing = Txn(AccountA, Day, -50m);
-        var incoming = Txn(AccountB, Day, 45m);
-
-        // Act
-        var result = TransferMatcher.FindPairs([outgoing, incoming]);
-
-        // Assert
-        Assert.Empty(result.Exact);
-        Assert.Empty(result.Fuzzy);
-    }
-
-    [Fact]
-    public void FindPairs_DifferentCurrencies_NeverExactEvenWhenEurAmountsMatch()
-    {
-        // Arrange — an FX leg must always go through review, never auto-link.
+        // Arrange — same day, EUR amounts cancel out exactly, but the FX leg
+        // always needs a human glance rather than auto-linking.
         var outgoing = Txn(AccountA, Day, -100m, "USD");
         var incoming = Txn(AccountB, Day, 100m, "EUR");
 
@@ -171,7 +143,8 @@ public sealed class TransferMatcherTests
 
         // Assert
         Assert.Empty(result.Exact);
-        Assert.Single(result.Fuzzy);
+        var pair = Assert.Single(result.Fuzzy);
+        Assert.False(pair.SameCurrency);
     }
 
     [Fact]
@@ -209,15 +182,15 @@ public sealed class TransferMatcherTests
     [Fact]
     public void FindPairs_Fuzzy_MayOfferTheSameLegForMultipleCandidates()
     {
-        // Arrange — one outgoing leg with two plausible (but not exact) incoming
-        // candidates on a different account: both should surface for review
+        // Arrange — one outgoing leg with two exactly-matching incoming
+        // candidates on different accounts: both should surface for review
         // rather than the matcher silently picking one.
         var outgoing = Txn(AccountA, Day, -100m);
-        var closerCandidate = Txn(AccountB, Day, 99m);
-        var fartherCandidate = Txn(AccountB, Day.AddDays(1), 101m);
+        var candidate1 = Txn(AccountB, Day, 100m);
+        var candidate2 = Txn(AccountC, Day, 100m);
 
         // Act
-        var result = TransferMatcher.FindPairs([outgoing, closerCandidate, fartherCandidate]);
+        var result = TransferMatcher.FindPairs([outgoing, candidate1, candidate2]);
 
         // Assert
         Assert.Empty(result.Exact);
