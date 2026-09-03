@@ -40,7 +40,11 @@ public sealed class DeleteBudgetCommandHandlerTests(FinanceMartenFixture fixture
     {
         // Arrange — two non-overlapping periods on the same category.
         var categoryId = await CreateCategoryAsync();
-        var kept = await CreateBudgetAsync(categoryId, new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 1));
+        var kept = await CreateBudgetAsync(
+            categoryId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 6, 1)
+        );
         var removed = await CreateBudgetAsync(categoryId, new DateOnly(2026, 7, 1));
 
         // Act
@@ -67,10 +71,18 @@ public sealed class DeleteBudgetCommandHandlerTests(FinanceMartenFixture fixture
     private async Task<AndreGoepel.Core.Result> DeleteAsync(Guid budgetId)
     {
         await using var session = fixture.Store.LightweightSession();
-        return await DeleteBudgetCommandHandler.Handle(new DeleteBudgetCommand(budgetId), session, Ct);
+        return await DeleteBudgetCommandHandler.Handle(
+            new DeleteBudgetCommand(budgetId),
+            session,
+            Ct
+        );
     }
 
-    private async Task<Guid> CreateBudgetAsync(Guid categoryId, DateOnly startMonth, DateOnly? endMonth = null)
+    private async Task<Guid> CreateBudgetAsync(
+        Guid categoryId,
+        DateOnly startMonth,
+        DateOnly? endMonth = null
+    )
     {
         var budget = new Budget
         {

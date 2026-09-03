@@ -231,12 +231,7 @@ public sealed class SetBudgetCommandHandlerTests(FinanceMartenFixture fixture) :
     private async Task<Result<Budget>> SetAsync(SetBudgetCommand command)
     {
         await using var session = fixture.Store.LightweightSession();
-        return await SetBudgetCommandHandler.Handle(
-            command,
-            session,
-            DomainLocalizer.Instance,
-            Ct
-        );
+        return await SetBudgetCommandHandler.Handle(command, session, DomainLocalizer.Instance, Ct);
     }
 
     private async Task<Guid> CreateCategoryAsync()
