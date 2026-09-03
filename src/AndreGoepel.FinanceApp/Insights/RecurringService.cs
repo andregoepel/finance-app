@@ -39,14 +39,12 @@ internal sealed class RecurringService(IQuerySession session) : IRecurringServic
 
         var detected = RecurringDetector.Detect(candidates);
         var alreadyPlanned = await AlreadyPlannedKeysAsync(cancellationToken);
+        var dismissed = await DismissedKeysAsync(cancellationToken);
         return
         [
-            .. detected.Select(s =>
-                s with
-                {
-                    AlreadyPlanned = alreadyPlanned.Contains(s.Counterparty),
-                }
-            ),
+            .. detected
+                .Where(s => !dismissed.Contains(s.Counterparty))
+                .Select(s => s with { AlreadyPlanned = alreadyPlanned.Contains(s.Counterparty) }),
         ];
     }
 
@@ -62,6 +60,16 @@ internal sealed class RecurringService(IQuerySession session) : IRecurringServic
             .Query<PlannedItem>()
             .Where(i => i.Active && i.CreatedFromRecurringKey != null)
             .Select(i => i.CreatedFromRecurringKey!)
+            .ToListAsync(cancellationToken);
+        return [.. keys];
+    }
+
+    /// <summary>Series keys the household has flagged as a false positive — see <see cref="DismissedRecurringSeries"/>.</summary>
+    private async Task<HashSet<string>> DismissedKeysAsync(CancellationToken cancellationToken)
+    {
+        var keys = await session
+            .Query<DismissedRecurringSeries>()
+            .Select(d => d.Id)
             .ToListAsync(cancellationToken);
         return [.. keys];
     }

@@ -1,3 +1,4 @@
+using AndreGoepel.Design.Blazor;
 using AndreGoepel.FinanceApp.Domain.Recurring;
 using AndreGoepel.FinanceApp.Insights;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,8 @@ public sealed class RecurringTests : LocalizedTestContext
         Services.AddSingleton(service);
         Services.AddSingleton(Substitute.For<Wolverine.IMessageBus>());
         Services.AddSingleton(new NotificationService());
+        // ConfirmService, used by the row's dismiss action.
+        Services.AddDesignBlazor(options => options.BrandName = "Finance");
     }
 
     private static int CountOccurrences(string haystack, string needle)
@@ -74,6 +77,20 @@ public sealed class RecurringTests : LocalizedTestContext
         // Assert — no second chance to add the same series.
         Assert.DoesNotContain("Add as planned", cut.Markup);
         Assert.Contains("Planned", cut.Markup);
+    }
+
+    [Fact]
+    public void Render_AnySeries_OffersToDismissIt()
+    {
+        // Arrange — the dismiss action is offered regardless of planned state,
+        // since a false positive is still a false positive either way.
+        RegisterSeries(Series("Streaming", alreadyPlanned: true));
+
+        // Act
+        var cut = Render<RecurringPage>();
+
+        // Assert
+        Assert.Contains("Not actually recurring", cut.Markup);
     }
 
     [Fact]
