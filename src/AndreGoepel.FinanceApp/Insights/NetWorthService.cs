@@ -1,5 +1,6 @@
 using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.NetWorth;
+using AndreGoepel.FinanceApp.Domain.Planning;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
 
@@ -78,13 +79,40 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
         var series = NetWorthCalculator.Compute(anchors, BuildSampleDates(months, today));
         var current = series.Count > 0 ? series[^1].Amount : 0m;
         var withoutBalance = balances.Count(b => !b.HasBalance);
+        var forecast = await BuildForecastAsync(current, today, cancellationToken);
 
         return new NetWorthOverview(
             current,
             series,
             withoutBalance,
-            balances.OrderBy(b => b.Type).ThenBy(b => b.Name).ToList()
+            balances.OrderBy(b => b.Type).ThenBy(b => b.Name).ToList(),
+            forecast
         );
+    }
+
+    private async Task<IReadOnlyList<NetWorthPoint>> BuildForecastAsync(
+        decimal current,
+        DateOnly today,
+        CancellationToken cancellationToken
+    )
+    {
+        var items = await session
+            .Query<PlannedItem>()
+            .Where(item => item.Active)
+            .ToListAsync(cancellationToken);
+        var itemIds = items.Select(item => item.Id).ToArray();
+        var matches =
+            itemIds.Length == 0
+                ? []
+                : await session
+                    .Query<PlannedMatch>()
+                    .Where(match => match.PlannedItemId.IsOneOf(itemIds))
+                    .ToListAsync(cancellationToken);
+        var matchedOccurrences = matches
+            .Select(match => (match.PlannedItemId, match.DueDate))
+            .ToHashSet();
+
+        return NetWorthForecastCalculator.Compute(current, today, items, matchedOccurrences);
     }
 
     private static AccountBalance ToBalance(

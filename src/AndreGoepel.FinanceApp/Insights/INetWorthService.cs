@@ -24,7 +24,8 @@ public sealed record NetWorthOverview(
     decimal Current,
     IReadOnlyList<NetWorthPoint> Series,
     int AccountsWithoutBalance,
-    IReadOnlyList<AccountBalance> Accounts
+    IReadOnlyList<AccountBalance> Accounts,
+    IReadOnlyList<NetWorthPoint>? Forecast = null
 );
 
 /// <summary>
