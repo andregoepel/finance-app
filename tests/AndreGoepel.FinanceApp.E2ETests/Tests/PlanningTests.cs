@@ -13,6 +13,7 @@ public sealed class PlanningTests(E2EAppFixture fixture) : FinanceE2ETestBase(fi
         await LoginAsAdminAsync();
         var description = $"E2E Rent {Guid.NewGuid():N}"[..14];
         await Page.GotoAsync("/planning");
+        await Expect(Page.GetByText("Estimated end-of-month value")).ToBeVisibleAsync();
 
         // Act — open the dialog, fill it in, save.
         await Page.ClickButtonAsync("Add planned item");
