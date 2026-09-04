@@ -1,6 +1,7 @@
 @page "/review"
 @attribute [Authorize]
 @using AndreGoepel.FinanceApp.Domain.Credentials
+@using AndreGoepel.FinanceApp.Components.Review
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
@@ -126,8 +127,14 @@
                     @ref="grid"
                     class="review-grid"
                     Data=@items
+                    Count=@itemCount
+                    LoadData=@LoadDataAsync
                     AllowPaging="true"
-                    PageSize="25"
+                    PageSize=@DefaultPageSize
+                    PageSizeOptions=@PageSizeOptions
+                    PageNumbersCount="5"
+                    ShowPagingSummary="true"
+                    PageSizeText="@L["Review.PageSizeText"]"
                     SelectionMode="DataGridSelectionMode.Multiple"
                     @bind-Value=@selected
                     Density="Density.Compact">
@@ -176,11 +183,13 @@
 </PageBody>
 
 @code {
-    private const int MaxRows = 500;
+    private const int DefaultPageSize = 25;
+    private static readonly int[] PageSizeOptions = [25, 50, 100];
 
     private RadzenDataGrid<TransactionView> grid = null!;
 
     private List<TransactionView> items = [];
+    private int itemCount;
     private Dictionary<Guid, CategorySuggestion> suggestions = [];
     private List<TransferSuggestionRow> transferSuggestions = [];
     private List<Account> accounts = [];
@@ -208,59 +217,57 @@
         accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
         var categories = await QuerySession.Query<Category>().ToListAsync();
         categoryOptions = CategoryPaths.Build(categories.ToList());
-        await ReloadAsync();
+        await ReloadTransferSuggestionsAsync();
+    }
+
+    private async Task LoadDataAsync(LoadDataArgs args)
+    {
+        var page = await ReviewQueueQuery.LoadAsync(
+            QuerySession,
+            new ReviewQueueFilters(
+                accountFilter,
+                fromFilter,
+                toFilter,
+                incomeFilter,
+                textFilter
+            ),
+            args.Skip ?? 0,
+            args.Top ?? DefaultPageSize
+        );
+        itemCount = page.TotalCount;
+        items = page.Items.ToList();
+
+        var ids = items.Select(t => t.Id).ToArray();
+        var pageSuggestions = (
+            await QuerySession.Query<CategorySuggestion>().Where(s => s.Id.IsOneOf(ids)).ToListAsync()
+        ).ToDictionary(s => s.Id);
+        foreach (var suggestion in pageSuggestions)
+        {
+            suggestions[suggestion.Key] = suggestion.Value;
+        }
     }
 
     private async Task ReloadAsync(bool resetPage = false)
     {
-        var page = resetPage ? 0 : (grid?.CurrentPage ?? 0);
-
-        var query = QuerySession
-            .Query<TransactionView>()
-            .Where(t => !t.IsCategorized && t.TransferCounterpartId == null);
-
-        if (accountFilter is Guid accountId)
-        {
-            query = query.Where(t => t.AccountId == accountId);
-        }
-        if (fromFilter is DateOnly from)
-        {
-            query = query.Where(t => t.BookingDate >= from);
-        }
-        if (toFilter is DateOnly to)
-        {
-            query = query.Where(t => t.BookingDate <= to);
-        }
-        if (incomeFilter is bool income)
-        {
-            query = income ? query.Where(t => t.Amount >= 0) : query.Where(t => t.Amount < 0);
-        }
-
-        var loaded = await query.OrderByDescending(t => t.BookingDate).Take(MaxRows).ToListAsync();
-
-        if (!string.IsNullOrWhiteSpace(textFilter))
-        {
-            var needle = textFilter.Trim();
-            loaded = loaded
-                .Where(t =>
-                    t.Description.Contains(needle, StringComparison.OrdinalIgnoreCase)
-                    || (t.Counterparty?.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false))
-                .ToList();
-        }
-
-        items = loaded.ToList();
-
-        var ids = items.Select(t => t.Id).ToArray();
-        suggestions = (
-            await QuerySession.Query<CategorySuggestion>().Where(s => s.Id.IsOneOf(ids)).ToListAsync()
-        ).ToDictionary(s => s.Id);
         selected = [];
-
+        suggestions.Clear();
         await ReloadTransferSuggestionsAsync();
 
-        if (grid is not null)
+        if (resetPage)
         {
-            await grid.GoToPage(page);
+            await grid.FirstPage(true);
+            return;
+        }
+
+        await grid.Reload();
+        var validPage = ReviewPagination.ClampPageIndex(
+            grid.CurrentPage,
+            itemCount,
+            grid.PageSize
+        );
+        if (grid.CurrentPage != validPage)
+        {
+            await grid.GoToPage(validPage, true);
         }
     }
 

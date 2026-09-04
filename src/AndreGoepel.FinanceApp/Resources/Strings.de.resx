@@ -190,6 +190,7 @@
   <data name="Review.NoClaudeKeyTitle" xml:space="preserve"><value><![CDATA[Kein Claude-API-Schlüssel]]></value></data>
   <data name="Review.NoClaudeKeyMessage" xml:space="preserve"><value><![CDATA[Zuerst unter „{0}“ einen Claude-API-Schlüssel hinterlegen.]]></value></data>
   <data name="Review.Refresh" xml:space="preserve"><value><![CDATA[Aktualisieren]]></value></data>
+  <data name="Review.PageSizeText" xml:space="preserve"><value><![CDATA[Zeilen pro Seite]]></value></data>
   <data name="Review.ApplyToSelection" xml:space="preserve"><value><![CDATA[Auf Auswahl anwenden]]></value></data>
   <data name="Review.ColAiSuggestion" xml:space="preserve"><value><![CDATA[KI-Vorschlag]]></value></data>
   <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Vorschlag übernehmen]]></value></data>

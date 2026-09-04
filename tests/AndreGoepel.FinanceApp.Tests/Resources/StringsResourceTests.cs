@@ -527,6 +527,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Common.ChooseCategoryPlaceholder", "Kategorie wählen")]
     [InlineData("en", "Review.PageTitle", "Review queue")]
     [InlineData("de", "Review.PageTitle", "Zu prüfen")]
+    [InlineData("en", "Review.PageSizeText", "Rows per page")]
+    [InlineData("de", "Review.PageSizeText", "Zeilen pro Seite")]
     [InlineData("en", "Review.AcceptSuggestions", "Accept suggestions")]
     [InlineData("de", "Review.AcceptSuggestions", "Vorschläge übernehmen")]
     [InlineData("en", "Review.DismissSuggestions", "Dismiss suggestions")]
