@@ -25,6 +25,7 @@ public sealed class AccountsTests(E2EAppFixture fixture) : FinanceE2ETestBase(fi
         // Assert — the dialog closes and the grid shows the new row.
         await Expect(Page.Locator(".rz-dialog-content")).Not.ToBeVisibleAsync();
         await Expect(Page.GetByText(name).First).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Provider: Dkb").First).ToBeVisibleAsync();
 
         // Act — reopen it in edit mode and change the name.
         var renamed = $"{name}-edited";
