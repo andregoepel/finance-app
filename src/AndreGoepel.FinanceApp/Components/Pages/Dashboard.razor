@@ -149,14 +149,24 @@
                             {
                                 <div>
                                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
-                                        <RadzenText TextStyle="TextStyle.Caption">@budget.Category</RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Caption">@(budget.Category ?? L["Planning.Unallocated"])</RadzenText>
                                         <RadzenText TextStyle="TextStyle.Caption" Style="@(budget.IsOver ? "color: var(--rz-danger);" : "")">
-                                            @Money.Eur(budget.Spent) / @Money.Eur(budget.Limit)
+                                            @if (budget.Limit is decimal limit)
+                                            {
+                                                @L["Dashboard.BudgetForecast", Money.Eur(budget.Spent), Money.Eur(budget.PlannedRemaining), Money.Eur(limit)]
+                                            }
+                                            else
+                                            {
+                                                @L["Dashboard.PlannedOnly", Money.Eur(budget.PlannedRemaining)]
+                                            }
                                         </RadzenText>
                                     </RadzenStack>
-                                    <RadzenProgressBar Value="@((double)Math.Min(budget.Percent, 100))" ShowValue="false"
-                                                       ProgressBarStyle="@(budget.IsOver ? ProgressBarStyle.Danger : ProgressBarStyle.Primary)"
-                                                       Style="height: 0.5rem;" />
+                                    @if (budget.Limit is not null)
+                                    {
+                                        <RadzenProgressBar Value="@((double)Math.Min(budget.Percent, 100))" ShowValue="false"
+                                                           ProgressBarStyle="@(budget.IsOver ? ProgressBarStyle.Danger : ProgressBarStyle.Primary)"
+                                                           Style="height: 0.5rem;" />
+                                    }
                                 </div>
                             }
                         }

@@ -1,6 +1,6 @@
-using AndreGoepel.FinanceApp.Domain.Budgets;
 using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.Transactions;
+using AndreGoepel.FinanceApp.Planning;
 using Marten;
 
 namespace AndreGoepel.FinanceApp.Insights;
@@ -10,7 +10,10 @@ namespace AndreGoepel.FinanceApp.Insights;
 /// read model. Spending is rolled up to the top-level category so the breakdown
 /// stays readable; unconverted rows (no EUR amount) are excluded from the sums.
 /// </summary>
-internal sealed class DashboardService(IQuerySession session) : IDashboardService
+internal sealed class DashboardService(
+    IQuerySession session,
+    IMonthlyCategoryPlanService monthlyCategoryPlanService
+) : IDashboardService
 {
     public async Task<MonthlyOverview> GetMonthlyOverviewAsync(
         int year,
@@ -52,12 +55,14 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
             .OrderByDescending(s => s.Amount)
             .ToList();
 
-        var budgets = await BuildBudgetProgressAsync(
-            start,
-            expenseTransactions,
-            categoriesById,
-            cancellationToken
-        );
+        var budgets = (await monthlyCategoryPlanService.GetAsync(year, month, cancellationToken))
+            .Select(plan => new BudgetProgress(
+                plan.Category,
+                plan.BudgetLimit,
+                plan.ActualSpent,
+                plan.PlannedRemaining
+            ))
+            .ToList();
 
         return new MonthlyOverview(
             income,
@@ -69,46 +74,6 @@ internal sealed class DashboardService(IQuerySession session) : IDashboardServic
             UncategorizedCount: transactions.Count(t => !t.IsCategorized)
         );
     }
-
-    private async Task<IReadOnlyList<BudgetProgress>> BuildBudgetProgressAsync(
-        DateOnly periodMonth,
-        IReadOnlyList<TransactionView> expenseTransactions,
-        IReadOnlyDictionary<Guid, Category> categoriesById,
-        CancellationToken cancellationToken
-    )
-    {
-        var budgets = await session.Query<Budget>().ToListAsync(cancellationToken);
-        var active = budgets.Where(b => IsActive(b, periodMonth)).ToList();
-        if (active.Count == 0)
-        {
-            return [];
-        }
-
-        var parents = categoriesById.Values.ToDictionary(c => c.Id, c => c.ParentId);
-        var expenses = expenseTransactions
-            .SelectMany(t =>
-                t.EffectiveCategoryLines.Select(line =>
-                    ((Guid?)line.CategoryId, Amount: -t.EurAmountFor(line)!.Value)
-                )
-            )
-            .ToList();
-        var limits = active
-            .GroupBy(b => b.CategoryId)
-            .ToDictionary(g => g.Key, g => g.First().MonthlyLimit);
-
-        return BudgetCalculator
-            .Compute(parents, expenses, limits)
-            .Select(b => new BudgetProgress(NameOf(b.CategoryId, categoriesById), b.Limit, b.Spent))
-            .OrderByDescending(b => b.Percent)
-            .ToList();
-    }
-
-    /// <summary>Whether a budget period covers the given month (both bounds inclusive, open-ended when <see cref="Budget.EndMonth"/> is null).</summary>
-    private static bool IsActive(Budget budget, DateOnly month) =>
-        month >= budget.StartMonth && (budget.EndMonth is null || month <= budget.EndMonth);
-
-    private static string NameOf(Guid categoryId, IReadOnlyDictionary<Guid, Category> byId) =>
-        byId.TryGetValue(categoryId, out var category) ? category.Name : "Unknown";
 
     /// <summary>Walks a category up to its top-level ancestor; "Uncategorized" when unset/unknown.</summary>
     private static string TopLevelName(Guid? categoryId, IReadOnlyDictionary<Guid, Category> byId)
