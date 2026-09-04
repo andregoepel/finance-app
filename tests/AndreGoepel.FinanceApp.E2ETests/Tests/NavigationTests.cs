@@ -19,7 +19,6 @@ public sealed class NavigationTests(E2EAppFixture fixture) : FinanceE2ETestBase(
             { "/sync", "Sync" },
             { "/settings/accounts", "Accounts" },
             { "/settings/categories", "Categories" },
-            { "/settings/budgets", "Budgets" },
             { "/settings/rules", "Categorization rules" },
             { "/settings/connections", "Connections" },
             { "/settings/credentials", "API Keys" },
@@ -58,6 +57,30 @@ public sealed class NavigationTests(E2EAppFixture fixture) : FinanceE2ETestBase(
         await Page.WaitForBlazorAsync();
 
         // Assert
+        await Page.AssertOnPathAsync("Account/Login");
+    }
+
+    [Fact]
+    public async Task LegacyBudgetsRoute_RedirectsAuthenticatedAdminToPlanning()
+    {
+        await LoginAsAdminAsync();
+
+        await Page.GotoAsync("/settings/budgets");
+        await Page.WaitForBlazorAsync();
+
+        await Page.AssertOnPathAsync("planning");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Planning" }).First)
+            .ToBeVisibleAsync();
+    }
+
+    [Fact]
+    public async Task LegacyBudgetsRoute_RedirectsAnonymousVisitorToLogin()
+    {
+        await Fixture.ProvisionAdminAsync();
+
+        await Page.GotoAsync("/settings/budgets");
+        await Page.WaitForBlazorAsync();
+
         await Page.AssertOnPathAsync("Account/Login");
     }
 }
