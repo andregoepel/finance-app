@@ -126,6 +126,7 @@
 
     <RadzenDataGrid TItem="TransactionView"
                     @ref="grid"
+                    class="review-grid"
                     Data=@items
                     AllowPaging="true"
                     PageSize="25"
@@ -139,8 +140,16 @@
             <RadzenDataGridColumn TItem="TransactionView" Title="@L["Common.Account"]" Width="140px" Sortable="false">
                 <Template Context="transaction">@AccountName(transaction.AccountId)</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="180px" />
-            <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]" />
+            <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="180px">
+                <Template Context="transaction">
+                    <span class="review-grid__ellipsis" title="@transaction.Counterparty">@transaction.Counterparty</span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]">
+                <Template Context="transaction">
+                    <span class="review-grid__ellipsis" title="@transaction.Description">@transaction.Description</span>
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="@L["Common.Amount"]" Width="130px" TextAlign="TextAlign.Right">
                 <Template Context="transaction">
                     <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
