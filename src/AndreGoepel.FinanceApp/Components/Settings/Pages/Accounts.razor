@@ -29,8 +29,6 @@
     <DataCard>
         <RadzenDataGrid TItem="Account"
                         Data=@DisplayedAccounts
-                        Groups=@AccountGroups
-                        HideGroupedColumn="true"
                         Density="Density.Compact">
             <Columns>
                 <RadzenDataGridColumn TItem="Account" Property="Name" Title="@L["Accounts.ColName"]" />
@@ -84,15 +82,6 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    private static readonly System.Collections.ObjectModel.ObservableCollection<GroupDescriptor> AccountGroups =
-    [
-        new()
-        {
-            Property = nameof(Account.Provider),
-            SortOrder = SortOrder.Ascending,
-        },
-    ];
-
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
     private IReadOnlyList<ProviderConnection> connections = [];
