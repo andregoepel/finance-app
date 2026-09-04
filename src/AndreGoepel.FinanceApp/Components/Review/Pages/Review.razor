@@ -52,6 +52,16 @@
 
     <RadzenCard>
         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
+            <RadzenButton Text="@L["Review.SelectCurrentPage"]"
+                          Icon="select_all"
+                          ButtonStyle="ButtonStyle.Light"
+                          Disabled=@ReviewSelection.IsEntirePageSelected(selected, items)
+                          Click=@SelectCurrentPage />
+            <RadzenButton Text="@L["Review.ClearSelection"]"
+                          Icon="deselect"
+                          ButtonStyle="ButtonStyle.Light"
+                          Disabled=@(selected.Count == 0)
+                          Click=@ClearSelection />
             <RadzenButton Text="@L["Review.AcceptSuggestions"]"
                           Icon="check_circle"
                           ButtonStyle="ButtonStyle.Primary"
@@ -135,6 +145,7 @@
                     PageNumbersCount="5"
                     ShowPagingSummary="true"
                     PageSizeText="@L["Review.PageSizeText"]"
+                    KeyProperty="Id"
                     SelectionMode="DataGridSelectionMode.Multiple"
                     @bind-Value=@selected
                     Density="Density.Compact">
@@ -211,6 +222,11 @@
 
     private IEnumerable<TransactionView> SelectedWithSuggestion =>
         selected.Where(transaction => suggestions.ContainsKey(transaction.Id));
+
+    private void SelectCurrentPage() =>
+        selected = ReviewSelection.MergeCurrentPage(selected, items);
+
+    private void ClearSelection() => selected = [];
 
     protected override async Task OnInitializedAsync()
     {

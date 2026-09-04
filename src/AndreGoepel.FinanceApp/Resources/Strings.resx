@@ -182,7 +182,9 @@
   <!-- Review.razor -->
   <data name="Review.PageTitle" xml:space="preserve"><value><![CDATA[Review queue]]></value></data>
   <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Uncategorized transactions and low-confidence AI suggestions. High-confidence suggestions are applied automatically and flagged "Ai" in the transactions grid.]]></value></data>
-  <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Accept suggestions]]></value></data>
+    <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Accept suggestions]]></value></data>
+    <data name="Review.SelectCurrentPage" xml:space="preserve"><value><![CDATA[Select current page]]></value></data>
+    <data name="Review.ClearSelection" xml:space="preserve"><value><![CDATA[Clear selection]]></value></data>
   <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Dismiss suggestions]]></value></data>
   <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Set category for selection]]></value></data>
   <data name="Review.CategorizeWithAi" xml:space="preserve"><value><![CDATA[Categorize with AI]]></value></data>
