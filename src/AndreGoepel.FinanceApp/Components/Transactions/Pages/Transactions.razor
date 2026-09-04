@@ -1,5 +1,6 @@
 @page "/transactions"
 @attribute [Authorize]
+@using AndreGoepel.FinanceApp.Components.Transactions
 @using AndreGoepel.Marten.Identity.Users
 @using Microsoft.AspNetCore.Identity
 
@@ -83,9 +84,16 @@
     <RadzenDataGrid TItem="TransactionView"
                     @ref="grid"
                     Data=@transactions
+                    Count=@transactionCount
+                    LoadData=@LoadDataAsync
                     AllowPaging="true"
-                    PageSize="25"
+                    PageSize=@DefaultPageSize
+                    PageSizeOptions=@PageSizeOptions
+                    PageNumbersCount="5"
+                    ShowPagingSummary="true"
+                    PageSizeText="@L["Transactions.PageSizeText"]"
                     AllowSorting="true"
+                    KeyProperty="Id"
                     SelectionMode="DataGridSelectionMode.Multiple"
                     @bind-Value=@selected
                     Density="Density.Compact">
@@ -186,7 +194,8 @@
 </PageBody>
 
 @code {
-    private const int MaxRows = 1000;
+    private const int DefaultPageSize = 25;
+    private static readonly int[] PageSizeOptions = [25, 50, 100];
 
     /// <summary>Sentinel id for the "Uncategorized" entry in <see cref="categoryFilterOptions"/> — never a real category id, so it can't collide.</summary>
     private static readonly Guid UncategorizedFilterId = Guid.Empty;
@@ -200,6 +209,8 @@
     private List<CategoryOption> categoryOptions = [];
     private List<CategoryOption> categoryFilterOptions = [];
     private List<TransactionView> transactions = [];
+    private List<Category> categories = [];
+    private int transactionCount;
     private IList<TransactionView> selected = [];
 
     private RuleOffer? ruleOffer;
@@ -227,61 +238,64 @@
             .Users.Where(u => !u.Deleted)
             .OrderBy(u => u.UserName)
             .ToListAsync(_cts.Token);
-        var categories = await QuerySession.Query<Category>().ToListAsync(_cts.Token);
+        categories = (await QuerySession.Query<Category>().ToListAsync(_cts.Token)).ToList();
         categoryOptions = CategoryPaths.Build(categories);
         categoryFilterOptions =
         [
             new CategoryOption(UncategorizedFilterId, L["Transactions.CategoryFilterUncategorizedOption"]),
             .. categoryOptions,
         ];
-        await ReloadAsync();
+    }
+
+    private async Task LoadDataAsync(LoadDataArgs args)
+    {
+        var (sort, descending) = TransactionGridState.ParseSort(args.OrderBy);
+        var page = await TransactionPageQuery.LoadAsync(
+            QuerySession,
+            new TransactionPageFilters(
+                FilteredAccountIds(),
+                FilteredCategoryIds(),
+                categoryFilter == UncategorizedFilterId,
+                fromFilter,
+                toFilter,
+                textFilter
+            ),
+            sort,
+            descending,
+            args.Skip ?? 0,
+            args.Top ?? DefaultPageSize,
+            _cts.Token
+        );
+        transactionCount = page.TotalCount;
+        transactions = page.Items.ToList();
     }
 
     private async Task ReloadAsync(bool resetPage = false)
     {
-        var page = resetPage ? 0 : (grid?.CurrentPage ?? 0);
-
-        var accountIds = FilteredAccountIds();
-        var query = QuerySession.Query<TransactionView>().Where(t => t.AccountId.IsOneOf(accountIds));
-        if (categoryFilter == UncategorizedFilterId)
-        {
-            query = query.Where(t => !t.IsCategorized);
-        }
-        else if (categoryFilter is Guid categoryId)
-        {
-            query = query.Where(t =>
-                t.CategoryId == categoryId || t.CategoryLines.Any(l => l.CategoryId == categoryId)
-            );
-        }
-        if (fromFilter is DateOnly from)
-        {
-            query = query.Where(t => t.BookingDate >= from);
-        }
-        if (toFilter is DateOnly to)
-        {
-            query = query.Where(t => t.BookingDate <= to);
-        }
-
-        var loaded = await query.OrderByDescending(t => t.BookingDate).Take(MaxRows).ToListAsync(_cts.Token);
-
-        if (!string.IsNullOrWhiteSpace(textFilter))
-        {
-            var needle = textFilter.Trim();
-            loaded = loaded
-                .Where(t =>
-                    t.Description.Contains(needle, StringComparison.OrdinalIgnoreCase)
-                    || (t.Counterparty?.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false))
-                .ToList();
-        }
-
-        transactions = loaded.ToList();
         selected = [];
 
-        if (grid is not null)
+        if (resetPage)
         {
-            await grid.GoToPage(page);
+            await grid.FirstPage(true);
+            return;
+        }
+
+        await grid.Reload();
+        var validPage = TransactionGridState.ClampPageIndex(
+            grid.CurrentPage,
+            transactionCount,
+            grid.PageSize
+        );
+        if (grid.CurrentPage != validPage)
+        {
+            await grid.GoToPage(validPage, true);
         }
     }
+
+    private IReadOnlyList<Guid>? FilteredCategoryIds() =>
+        categoryFilter is Guid categoryId && categoryId != UncategorizedFilterId
+            ? CategoryHierarchy.InclusiveDescendantIds(categories, categoryId)
+            : null;
 
     private Guid[] FilteredAccountIds()
     {

@@ -529,6 +529,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Review.PageTitle", "Zu prüfen")]
     [InlineData("en", "Review.PageSizeText", "Rows per page")]
     [InlineData("de", "Review.PageSizeText", "Zeilen pro Seite")]
+    [InlineData("en", "Transactions.PageSizeText", "Rows per page")]
+    [InlineData("de", "Transactions.PageSizeText", "Zeilen pro Seite")]
     [InlineData("en", "Review.SelectCurrentPage", "Select current page")]
     [InlineData("de", "Review.SelectCurrentPage", "Aktuelle Seite auswählen")]
     [InlineData("en", "Review.ClearSelection", "Clear selection")]
