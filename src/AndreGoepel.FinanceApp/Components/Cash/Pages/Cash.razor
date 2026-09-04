@@ -1,6 +1,7 @@
 @page "/cash"
 @attribute [Authorize]
 @using AndreGoepel.FinanceApp.Components.Cash.Dialogs
+@using AndreGoepel.FinanceApp.Components.Transactions
 @using AndreGoepel.Marten.Identity.Users
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
@@ -27,7 +28,7 @@
                                 @bind-Value=@selectedAccountId Name="CashAccount"
                                 Data=@cashAccounts TextProperty="Name" ValueProperty="Id"
                                 Style="min-width: 12rem;"
-                                Change=@(_ => ReloadAsync()) />
+                                Change=@(_ => ReloadAsync(resetPage: true)) />
             }
             @if (cashAccounts.Count > 0)
             {
@@ -90,67 +91,73 @@
         </RadzenStack>
 
         <SectionCard Title="@L["Nav.Transactions"]">
-            @if (transactions.Count == 0)
-            {
-                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">@L["Cash.NoEntries"]</RadzenText>
-            }
-            else
+            @if (transactionCount > 0)
             {
                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
                     @L["Cash.TransferHint", L["Nav.Transactions"]]
                 </RadzenText>
-                <RadzenDataGrid TItem="TransactionView"
-                                Data=@transactions
-                                AllowPaging="true"
-                                PageSize="25"
-                                AllowSorting="true"
-                                Density="Density.Compact">
-                    <Columns>
-                        <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="@L["Common.Date"]" Width="110px">
-                            <Template Context="transaction">@Dates.Short(transaction.BookingDate)</Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="170px" />
-                        <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]" />
-                        <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="@L["Common.Amount"]" Width="130px" TextAlign="TextAlign.Right">
-                            <Template Context="transaction">
-                                <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
-                            </Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="220px" Sortable="false">
-                            <Template Context="transaction">
-                                <CategoryPicker Options="@categoryOptions"
-                                                Value="@transaction.CategoryId"
-                                                ValueChanged="@(v => CategorizeAsync(transaction, v))"
-                                                AllowClear="false"
-                                                Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
-                            </Template>
-                        </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="TransactionView" Title="" Width="150px" Sortable="false" TextAlign="TextAlign.End">
-                            <Template Context="transaction">
-                                <RowActions>
-                                    @if (transaction.IsTransfer)
-                                    {
-                                        <StatusBadge Variant="BadgeVariant.Info" Text="@L["Transactions.TransferBadge"]" />
-                                    }
-                                    else if (transaction.CategorySource is not null)
-                                    {
-                                        <StatusBadge Variant="BadgeVariant.Neutral" Text="@L[$"Enum.CategorySource.{transaction.CategorySource}"]" />
-                                    }
-                                    <IconButton Icon="delete" Title="@L["Cash.DeleteEntryTooltip"]" Danger="true"
-                                                Click=@(_ => DeleteAsync(transaction)) />
-                                </RowActions>
-                            </Template>
-                        </RadzenDataGridColumn>
-                    </Columns>
-                </RadzenDataGrid>
             }
+            <RadzenDataGrid TItem="TransactionView"
+                            @ref="grid"
+                            Data=@transactions
+                            Count=@transactionCount
+                            LoadData=@LoadDataAsync
+                            AllowPaging="true"
+                            PageSize=@DefaultPageSize
+                            PageSizeOptions=@PageSizeOptions
+                            PageNumbersCount="5"
+                            ShowPagingSummary="true"
+                            PageSizeText="@L["Cash.PageSizeText"]"
+                            EmptyText="@L["Cash.NoEntries"]"
+                            AllowSorting="true"
+                            KeyProperty="Id"
+                            Density="Density.Compact">
+                <Columns>
+                    <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="@L["Common.Date"]" Width="110px">
+                        <Template Context="transaction">@Dates.Short(transaction.BookingDate)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="170px" />
+                    <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]" />
+                    <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="@L["Common.Amount"]" Width="130px" TextAlign="TextAlign.Right">
+                        <Template Context="transaction">
+                            <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="220px" Sortable="false">
+                        <Template Context="transaction">
+                            <CategoryPicker Options="@categoryOptions"
+                                            Value="@transaction.CategoryId"
+                                            ValueChanged="@(v => CategorizeAsync(transaction, v))"
+                                            AllowClear="false"
+                                            Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransactionView" Title="" Width="150px" Sortable="false" TextAlign="TextAlign.End">
+                        <Template Context="transaction">
+                            <RowActions>
+                                @if (transaction.IsTransfer)
+                                {
+                                    <StatusBadge Variant="BadgeVariant.Info" Text="@L["Transactions.TransferBadge"]" />
+                                }
+                                else if (transaction.CategorySource is not null)
+                                {
+                                    <StatusBadge Variant="BadgeVariant.Neutral" Text="@L[$"Enum.CategorySource.{transaction.CategorySource}"]" />
+                                }
+                                <IconButton Icon="delete" Title="@L["Cash.DeleteEntryTooltip"]" Danger="true"
+                                            Click=@(_ => DeleteAsync(transaction)) />
+                            </RowActions>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
         </SectionCard>
     }
 
 </PageBody>
 
 @code {
-    private const int MaxRows = 500;
+    private const int DefaultPageSize = 25;
+    private static readonly int[] PageSizeOptions = [25, 50, 100];
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -164,14 +171,18 @@
     private Guid? selectedAccountId;
     private List<CategoryOption> categoryOptions = [];
     private List<TransactionView> transactions = [];
+    private RadzenDataGrid<TransactionView> grid = null!;
+    private int transactionCount;
+    private decimal spentThisMonth;
+    private decimal receivedThisMonth;
     private decimal? countedBalance;
     private bool isSaving;
 
     private Account? SelectedAccount => cashAccounts.FirstOrDefault(a => a.Id == selectedAccountId);
 
-    private decimal SpentThisMonth => -ThisMonth().Where(t => t.Amount < 0).Sum(t => t.Amount);
+    private decimal SpentThisMonth => spentThisMonth;
 
-    private decimal ReceivedThisMonth => ThisMonth().Where(t => t.Amount > 0).Sum(t => t.Amount);
+    private decimal ReceivedThisMonth => receivedThisMonth;
 
     protected override async Task OnInitializedAsync()
     {
@@ -209,23 +220,77 @@
         }
     }
 
-    private async Task ReloadAsync()
+    private Task LoadDataAsync(LoadDataArgs args) =>
+        LoadPageAsync(args.Skip ?? 0, args.Top ?? DefaultPageSize, args.OrderBy);
+
+    private async Task LoadPageAsync(int skip, int take, string? orderBy)
     {
         if (selectedAccountId is not Guid accountId)
         {
             transactions = [];
+            transactionCount = 0;
             return;
         }
 
-        transactions = (
-            await QuerySession
-                .Query<TransactionView>()
-                .Where(t => t.AccountId == accountId)
-                .OrderByDescending(t => t.BookingDate)
-                .ThenByDescending(t => t.Id)
-                .Take(MaxRows)
-                .ToListAsync(_cts.Token)
-        ).ToList();
+        var (sort, descending) = TransactionGridState.ParseSort(orderBy);
+        var page = await TransactionPageQuery.LoadAsync(
+            QuerySession,
+            new TransactionPageFilters([accountId], null, false, null, null, null),
+            sort,
+            descending,
+            skip,
+            take,
+            _cts.Token
+        );
+        transactionCount = page.TotalCount;
+        transactions = page.Items.ToList();
+    }
+
+    private async Task ReloadAsync(bool resetPage = false)
+    {
+        await ReloadSummaryAsync();
+
+        if (grid is null)
+        {
+            await LoadPageAsync(0, DefaultPageSize, orderBy: null);
+            return;
+        }
+        if (resetPage)
+        {
+            await grid.FirstPage(true);
+            return;
+        }
+
+        await grid.Reload();
+        var validPage = TransactionGridState.ClampPageIndex(
+            grid.CurrentPage,
+            transactionCount,
+            grid.PageSize
+        );
+        if (grid.CurrentPage != validPage)
+        {
+            await grid.GoToPage(validPage, true);
+        }
+    }
+
+    private async Task ReloadSummaryAsync()
+    {
+        if (selectedAccountId is not Guid accountId)
+        {
+            spentThisMonth = 0;
+            receivedThisMonth = 0;
+            return;
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var summary = await CashTransactionSummaryQuery.LoadAsync(
+            QuerySession,
+            accountId,
+            new DateOnly(today.Year, today.Month, 1),
+            _cts.Token
+        );
+        spentThisMonth = summary.Spent;
+        receivedThisMonth = summary.Received;
     }
 
     private async Task CreateAccountAsync()
@@ -413,12 +478,6 @@
 
         var rate = await ExchangeRateProvider.GetEurRateAsync(currency, date, _cts.Token);
         return rate.IsSuccess ? amount * rate.Value!.EurPerUnit : null;
-    }
-
-    private IEnumerable<TransactionView> ThisMonth()
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        return transactions.Where(t => t.BookingDate.Year == today.Year && t.BookingDate.Month == today.Month);
     }
 
     public void Dispose()

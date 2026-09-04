@@ -54,6 +54,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Enum.SyncMethod.Manual", "Manuell")]
     [InlineData("en", "Cash.EntryTitle", "Record transaction")]
     [InlineData("de", "Cash.EntryTitle", "Transaktion erfassen")]
+    [InlineData("en", "Cash.PageSizeText", "Rows per page")]
+    [InlineData("de", "Cash.PageSizeText", "Zeilen pro Seite")]
     [InlineData("en", "Nav.Review", "Review")]
     [InlineData("de", "Nav.Review", "Zu prüfen")]
     [InlineData("en", "Nav.Recurring", "Recurring")]
