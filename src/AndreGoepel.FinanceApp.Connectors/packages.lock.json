@@ -65,8 +65,8 @@
       },
       "JasperFx": {
         "type": "Transitive",
-        "resolved": "2.60.0",
-        "contentHash": "yZhSu7Qc/3jrsU3SuSBD9OcN6kQP/KAkYWB8A1QMW84KoQh4UrpYn7kE4j7dn9VnAMpfxV/FwyjW0Zn6cmM7Zw==",
+        "resolved": "2.61.0",
+        "contentHash": "AL1hUTCPQTbOcapZUaW5dhh0ZilpnV7xcayAuDDnUld/iBpgCcQeH32TGIrZnGOeqNKjxYgxLnW9OVd2E/QBEg==",
         "dependencies": {
           "FastExpressionCompiler": "5.4.1",
           "ImTools": "4.0.0",
@@ -81,10 +81,10 @@
       },
       "JasperFx.Events": {
         "type": "Transitive",
-        "resolved": "2.60.0",
-        "contentHash": "c4nNvlcCj2uI3+X8aZvKhJBGEUSic8n2iC8FjeZOPSR3KSrcZJpSYHLPSVlAE5+bmkvvKSK/X5KrYAeLI9jH+w==",
+        "resolved": "2.61.0",
+        "contentHash": "Xmk8DDMBAev9rdOMQUbEmn4VSIwaT8z8W0RJdlwqQNdLbi8drMJXKd9x2YZ6nIjlCpDPxxVX7Q1GljSsrtOX4g==",
         "dependencies": {
-          "JasperFx": "2.60.0"
+          "JasperFx": "2.61.0"
         }
       },
       "JasperFx.SourceGenerator": {
@@ -641,7 +641,7 @@
         "dependencies": {
           "AndreGoepel.Core": "[1.0.2, )",
           "AndreGoepel.Marten.Configuration": "[1.2.2, )",
-          "Marten": "[9.31.0, )",
+          "Marten": "[9.31.2, )",
           "Microsoft.AspNetCore.DataProtection.Abstractions": "[10.0.11, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.11, )",
           "Microsoft.Extensions.Localization.Abstractions": "[10.0.11, )",
@@ -661,12 +661,12 @@
       },
       "Marten": {
         "type": "CentralTransitive",
-        "requested": "[9.31.0, )",
-        "resolved": "9.31.0",
-        "contentHash": "h4JpxpjysQXHAn5RV0CAS0dkbdLOO2dIidQN0VYy+Xugu4SFnQB9JN6yIxeeulgjIYjY5qlfNgAP85/IyStrdg==",
+        "requested": "[9.31.2, )",
+        "resolved": "9.31.2",
+        "contentHash": "ijcqfbEhU5k4BMfNazMFVtzLph8DmEhVn2O5kJzPYb5ScYnyRyIXJZRPrd84v8JyrT1W+k1F4NARb0gesy2dfA==",
         "dependencies": {
-          "JasperFx": "2.60.0",
-          "JasperFx.Events": "2.60.0",
+          "JasperFx": "2.61.0",
+          "JasperFx.Events": "2.61.0",
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.0",
           "Microsoft.IO.RecyclableMemoryStream": "3.0.1",
           "Weasel.Postgresql": "9.29.0",
