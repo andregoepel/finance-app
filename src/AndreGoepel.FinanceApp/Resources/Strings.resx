@@ -487,6 +487,8 @@
   <data name="Accounts.ColType" xml:space="preserve"><value><![CDATA[Type]]></value></data>
   <data name="Accounts.ColCurrency" xml:space="preserve"><value><![CDATA[Currency]]></value></data>
   <data name="Accounts.ColSync" xml:space="preserve"><value><![CDATA[Sync]]></value></data>
+  <data name="Accounts.WiseGroupTitle" xml:space="preserve"><value><![CDATA[Wise — {0}]]></value><comment>{0} = Wise connection label or the unlinked fallback</comment></data>
+  <data name="Accounts.UnlinkedWiseGroup" xml:space="preserve"><value><![CDATA[Unlinked accounts]]></value></data>
   <data name="Accounts.StatusActive" xml:space="preserve"><value><![CDATA[Active]]></value></data>
   <data name="Accounts.StatusDeactivated" xml:space="preserve"><value><![CDATA[Deactivated]]></value></data>
   <data name="Accounts.Deactivate" xml:space="preserve"><value><![CDATA[Deactivate]]></value></data>

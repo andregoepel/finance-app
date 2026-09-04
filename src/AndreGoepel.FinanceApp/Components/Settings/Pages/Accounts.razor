@@ -1,5 +1,6 @@
 @page "/settings/accounts"
 @attribute [Authorize]
+@using AndreGoepel.FinanceApp.Components.Settings
 @using AndreGoepel.FinanceApp.Components.Settings.Dialogs
 @using AndreGoepel.Marten.Identity.Users
 @using Microsoft.AspNetCore.Identity
@@ -26,57 +27,25 @@
         </Actions>
     </PageHeader>
 
-    <DataCard>
-        <RadzenDataGrid TItem="Account"
-                        Data=@DisplayedAccounts
-                        Density="Density.Compact">
-            <Columns>
-                <RadzenDataGridColumn TItem="Account" Property="Name" Title="@L["Accounts.ColName"]" />
-                <RadzenDataGridColumn TItem="Account" Property="Provider" Title="@L["Common.Provider"]" Width="100px" />
-                <RadzenDataGridColumn TItem="Account" Property="Type" Title="@L["Accounts.ColType"]" Width="110px">
-                    <Template Context="account">@L[$"Enum.AccountType.{account.Type}"]</Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="Account" Property="Currency" Title="@L["Accounts.ColCurrency"]" Width="80px" />
-                <RadzenDataGridColumn TItem="Account" Title="@L["Common.Owner"]" Width="180px" Sortable="false">
-                    <Template Context="account">@OwnerLabel(account)</Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="Account" Property="SyncMethod" Title="@L["Accounts.ColSync"]" Width="110px">
-                    <Template Context="account">@L[$"Enum.SyncMethod.{account.SyncMethod}"]</Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="Account" Title="@L["Common.Status"]" Width="110px" Sortable="false">
-                    <Template Context="account">
-                        <StatusBadge Text="@(account.IsActive ? L["Accounts.StatusActive"] : L["Accounts.StatusDeactivated"])"
-                                     Variant="@(account.IsActive ? BadgeVariant.Success : BadgeVariant.Neutral)" />
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="Account" Title="" Width="210px" Sortable="false" TextAlign="TextAlign.End">
-                    <Template Context="account">
-                        <RowActions>
-                            <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => EditAsync(account)) />
-                            <IconButton Icon="layers_clear" Title="@L["Accounts.ClearTransactionsTooltip"]"
-                                        Click=@(_ => ClearTransactionsAsync(account)) />
-                            @if (account.IsActive)
-                            {
-                                <RadzenButton Icon="block" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"
-                                              class="ag-icon-btn" title="@L["Accounts.Deactivate"]" aria-label="@L["Accounts.Deactivate"]"
-                                              Click=@(() => DeactivateAsync(account)) />
-                            }
-                            else
-                            {
-                                <RadzenButton Icon="restart_alt" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
-                                              class="ag-icon-btn" title="@L["Accounts.Reactivate"]" aria-label="@L["Accounts.Reactivate"]"
-                                              Click=@(() => ReactivateAsync(account)) />
-                            }
-                            <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true"
-                                        Click=@(_ => DeleteAsync(account)) />
-                            <IconButton Icon="delete_forever" Title="@L["Accounts.DeletePermanentlyTooltip"]" Danger="true"
-                                        Click=@(_ => HardDeleteAsync(account)) />
-                        </RowActions>
-                    </Template>
-                </RadzenDataGridColumn>
-            </Columns>
-        </RadzenDataGrid>
-    </DataCard>
+    @if (Presentation.NonWiseAccounts.Count > 0)
+    {
+        <DataCard>
+            <AccountGrid Accounts=@Presentation.NonWiseAccounts OwnerLabel=@OwnerLabel
+                         Edit=@EditAsync ClearTransactions=@ClearTransactionsAsync
+                         Deactivate=@DeactivateAsync Reactivate=@ReactivateAsync
+                         Delete=@DeleteAsync DeletePermanently=@HardDeleteAsync />
+        </DataCard>
+    }
+
+    @foreach (var group in Presentation.WiseGroups)
+    {
+        <SectionCard Title="@L["Accounts.WiseGroupTitle", group.Label]">
+            <AccountGrid Accounts=@group.Accounts OwnerLabel=@OwnerLabel
+                         Edit=@EditAsync ClearTransactions=@ClearTransactionsAsync
+                         Deactivate=@DeactivateAsync Reactivate=@ReactivateAsync
+                         Delete=@DeleteAsync DeletePermanently=@HardDeleteAsync />
+        </SectionCard>
+    }
 
 </PageBody>
 
@@ -89,6 +58,9 @@
 
     private IEnumerable<Account> DisplayedAccounts =>
         showDeactivated ? accounts : accounts.Where(a => a.IsActive);
+
+    private AccountListPresentation Presentation =>
+        AccountListPresentation.Build(DisplayedAccounts, connections, L["Accounts.UnlinkedWiseGroup"]);
 
     protected override async Task OnInitializedAsync()
     {

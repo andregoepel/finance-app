@@ -1396,6 +1396,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Accounts.StatusActive", "Aktiv")]
     [InlineData("en", "Accounts.StatusDeactivated", "Deactivated")]
     [InlineData("de", "Accounts.StatusDeactivated", "Deaktiviert")]
+    [InlineData("en", "Accounts.UnlinkedWiseGroup", "Unlinked accounts")]
+    [InlineData("de", "Accounts.UnlinkedWiseGroup", "Nicht verknüpfte Konten")]
     [InlineData("en", "Accounts.AddTitle", "Add account")]
     [InlineData("de", "Accounts.AddTitle", "Konto hinzufügen")]
     [InlineData("en", "Accounts.EditTitle", "Edit account")]

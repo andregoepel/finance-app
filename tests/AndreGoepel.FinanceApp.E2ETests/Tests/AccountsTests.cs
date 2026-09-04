@@ -41,4 +41,65 @@ public sealed class AccountsTests(E2EAppFixture fixture) : FinanceE2ETestBase(fi
         await Expect(Page.Locator(".rz-dialog-content")).Not.ToBeVisibleAsync();
         await Expect(Page.GetByText(renamed).First).ToBeVisibleAsync();
     }
+
+    [Fact]
+    public async Task WiseAccounts_AreGroupedByConnectionWhileUnlinkedAccountsRemainVisible()
+    {
+        await LoginAsAdminAsync();
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var firstConnection = $"E2E Wise A {suffix}";
+        var secondConnection = $"E2E Wise B {suffix}";
+
+        await CreateWiseConnectionAsync(firstConnection);
+        await CreateWiseConnectionAsync(secondConnection);
+        await CreateWiseAccountAsync($"E2E EUR {suffix}", "EUR", firstConnection);
+        await CreateWiseAccountAsync($"E2E USD {suffix}", "USD", firstConnection);
+        await CreateWiseAccountAsync($"E2E GBP {suffix}", "GBP", secondConnection);
+        await CreateWiseAccountAsync($"E2E JPY {suffix}", "JPY", null);
+
+        await Page.GotoAsync("/settings/accounts");
+
+        var firstGroup = Page.GetByText($"Wise — {firstConnection}", new() { Exact = true });
+        var secondGroup = Page.GetByText($"Wise — {secondConnection}", new() { Exact = true });
+        var unlinkedGroup = Page.GetByText("Wise — Unlinked accounts", new() { Exact = true });
+        await Expect(firstGroup).ToBeVisibleAsync();
+        await Expect(secondGroup).ToBeVisibleAsync();
+        await Expect(unlinkedGroup).ToBeVisibleAsync();
+        await Expect(Page.GetByText($"E2E EUR {suffix}", new() { Exact = true }))
+            .ToBeVisibleAsync();
+        await Expect(Page.GetByText($"E2E USD {suffix}", new() { Exact = true }))
+            .ToBeVisibleAsync();
+        await Expect(Page.GetByText($"E2E GBP {suffix}", new() { Exact = true }))
+            .ToBeVisibleAsync();
+        await Expect(Page.GetByText($"E2E JPY {suffix}", new() { Exact = true }))
+            .ToBeVisibleAsync();
+    }
+
+    private async Task CreateWiseConnectionAsync(string label)
+    {
+        await Page.GotoAsync("/settings/connections");
+        await Page.WaitForBlazorAsync();
+        await Page.FillFormFieldAsync("Label", label);
+        await Page.SelectDropDownAsync("Owner", TestData.AdminEmail);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Add", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = label })).ToBeVisibleAsync();
+    }
+
+    private async Task CreateWiseAccountAsync(string name, string currency, string? connection)
+    {
+        await Page.GotoAsync("/settings/accounts");
+        await Page.WaitForBlazorAsync();
+        await Page.ClickButtonAsync("Add account");
+        await Page.FillFormFieldAsync("Name", name);
+        await Page.SelectDropDownAsync("Provider", "Wise");
+        await Page.FillFormFieldAsync("Currency", currency);
+        await Page.SelectDropDownAsync("Owner", TestData.AdminEmail);
+        if (connection is not null)
+        {
+            await Page.SelectDropDownAsync("Sync", "Api");
+            await Page.SelectDropDownAsync("Connection", connection);
+        }
+        await Page.ClickDialogButtonAsync("Add");
+        await Expect(Page.Locator(".rz-dialog-content")).Not.ToBeVisibleAsync();
+    }
 }
