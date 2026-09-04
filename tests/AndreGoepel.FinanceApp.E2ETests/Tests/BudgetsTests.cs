@@ -1,8 +1,7 @@
 namespace AndreGoepel.FinanceApp.E2ETests.Tests;
 
 /// <summary>
-/// The Budgets settings page's add/edit form moved from an always-visible inline
-/// section to a Radzen dialog (#166, page 2 of 4).
+/// Budget management lives in Planning; the former settings route remains a redirect.
 /// </summary>
 public sealed class BudgetsTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixture)
 {
@@ -13,6 +12,7 @@ public sealed class BudgetsTests(E2EAppFixture fixture) : FinanceE2ETestBase(fix
         // database (DefaultCategorySeed), so no setup beyond login is needed.
         await LoginAsAdminAsync();
         await Page.GotoAsync("/settings/budgets");
+        await Page.AssertOnPathAsync("planning");
 
         // Act — open the dialog, fill it in, save.
         await Page.ClickButtonAsync("Add budget");
@@ -28,7 +28,7 @@ public sealed class BudgetsTests(E2EAppFixture fixture) : FinanceE2ETestBase(fix
 
         // Act — reopen it in edit mode and change the limit.
         await Page.GetByRole(AriaRole.Row, new() { Name = "Groceries" })
-            .GetByLabel("Edit")
+            .GetByLabel("Edit budget")
             .ClickAsync();
         await Expect(Page.Locator(".rz-dialog-content")).ToBeVisibleAsync();
         // Pre-filled with the existing limit, not blank — the dialog was actually
@@ -40,5 +40,13 @@ public sealed class BudgetsTests(E2EAppFixture fixture) : FinanceE2ETestBase(fix
         // Assert
         await Expect(Page.Locator(".rz-dialog-content")).Not.ToBeVisibleAsync();
         await Expect(Page.GetByText("450.00 €").First).ToBeVisibleAsync();
+
+        // Delete remains available after the standalone Budgets page is retired.
+        await Page.GetByRole(AriaRole.Row, new() { Name = "Groceries" })
+            .GetByLabel("Delete")
+            .ClickAsync();
+        await Page.ClickDialogButtonAsync("Delete");
+        await Expect(Page.GetByRole(AriaRole.Row, new() { Name = "Groceries" }))
+            .Not.ToBeVisibleAsync();
     }
 }

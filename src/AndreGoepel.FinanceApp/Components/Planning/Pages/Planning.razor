@@ -90,13 +90,20 @@
                     <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Title="@L["Planning.ColFlexibleRemaining"]" Width="155px" TextAlign="TextAlign.Right">
                         <Template Context="row">@(row.FlexibleRemaining is decimal amount ? Money.Eur(amount) : "—")</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Title="" Width="70px" TextAlign="TextAlign.End" Sortable="false">
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Title="" Width="110px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             @if (row.CategoryId is not null)
                             {
-                                <IconButton Icon="@(row.BudgetLimit is null ? "add" : "edit")"
-                                            Title="@(row.BudgetLimit is null ? L["Planning.SetBudget"] : L["Planning.EditBudget"] )"
-                                            Click=@(_ => EditBudgetAsync(row)) />
+                                <RowActions>
+                                    <IconButton Icon="@(row.BudgetLimit is null ? "add" : "edit")"
+                                                Title="@(row.BudgetLimit is null ? L["Planning.SetBudget"] : L["Planning.EditBudget"] )"
+                                                Click=@(_ => EditBudgetAsync(row)) />
+                                    @if (row.BudgetLimit is not null)
+                                    {
+                                        <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true"
+                                                    Click=@(_ => DeleteBudgetAsync(row)) />
+                                    }
+                                </RowActions>
                             }
                         </Template>
                     </RadzenDataGridColumn>
@@ -279,13 +286,16 @@
         {
             return;
         }
-        var budget = budgets.FirstOrDefault(candidate =>
+        var budget = FindActiveBudget(categoryId);
+        await OpenBudgetAsync(budget, categoryId);
+    }
+
+    private Budget? FindActiveBudget(Guid categoryId) =>
+        budgets.FirstOrDefault(candidate =>
             candidate.CategoryId == categoryId
             && monthStart >= candidate.StartMonth
             && (candidate.EndMonth is null || monthStart <= candidate.EndMonth)
         );
-        await OpenBudgetAsync(budget, categoryId);
-    }
 
     private Task AddBudgetAsync() => OpenBudgetAsync(null, null);
 
@@ -300,6 +310,27 @@
             await LoadAsync();
             NotificationService.Success(L["Budgets.SavedTitle"]);
         }
+    }
+
+    private async Task DeleteBudgetAsync(MonthlyCategoryPlan row)
+    {
+        if (row.CategoryId is not Guid categoryId || FindActiveBudget(categoryId) is not Budget budget)
+        {
+            return;
+        }
+        var category = row.Category ?? L["Budgets.DeletedCategory"].Value;
+        if (!await ConfirmService.ConfirmDeleteAsync(L["Budgets.DeleteConfirmSubject", category]))
+        {
+            return;
+        }
+        var result = await MessageBus.InvokeAsync<Result>(new DeleteBudgetCommand(budget.Id), _cts.Token);
+        if (result.IsFailure)
+        {
+            NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);
+            return;
+        }
+        await LoadAsync();
+        NotificationService.Success(L["Budgets.RemovedTitle"]);
     }
 
     private async Task MatchNowAsync()
