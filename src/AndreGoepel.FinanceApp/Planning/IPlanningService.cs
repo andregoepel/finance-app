@@ -45,5 +45,6 @@ public sealed record PlanMonth(
     decimal PlannedIncome,
     decimal PlannedExpenses,
     decimal ActualIncome,
-    decimal ActualExpenses
+    decimal ActualExpenses,
+    decimal? EstimatedEndOfMonthValue
 );

@@ -27,7 +27,7 @@
 
     @* ---------- Plan vs actual ---------- *@
     <RadzenRow Gap="1rem">
-        <RadzenColumn Size="12" SizeMd="6">
+        <RadzenColumn Size="12" SizeMd="4">
             <RadzenCard>
                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@L["Planning.ExpensesPlannedVsActual"]</RadzenText>
                 <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-danger);">
@@ -35,11 +35,19 @@
                 </RadzenText>
             </RadzenCard>
         </RadzenColumn>
-        <RadzenColumn Size="12" SizeMd="6">
+        <RadzenColumn Size="12" SizeMd="4">
             <RadzenCard>
                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@L["Planning.IncomePlannedVsActual"]</RadzenText>
                 <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-success);">
                     @Money.Eur(plan?.ActualIncome ?? 0) <span style="color: var(--rz-text-secondary-color); font-weight: 400;">/ @Money.Eur(plan?.PlannedIncome ?? 0)</span>
+                </RadzenText>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMd="4">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@L["Planning.EstimatedEndOfMonthValue"]</RadzenText>
+                <RadzenText TextStyle="TextStyle.H6">
+                    @(plan?.EstimatedEndOfMonthValue is decimal value ? Money.Eur(value) : "—")
                 </RadzenText>
             </RadzenCard>
         </RadzenColumn>

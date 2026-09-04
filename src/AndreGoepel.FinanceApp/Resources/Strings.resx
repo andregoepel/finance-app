@@ -369,6 +369,7 @@
   <data name="Planning.MatchNow" xml:space="preserve"><value><![CDATA[Match now]]></value></data>
   <data name="Planning.ExpensesPlannedVsActual" xml:space="preserve"><value><![CDATA[Expenses — planned vs actual]]></value></data>
   <data name="Planning.IncomePlannedVsActual" xml:space="preserve"><value><![CDATA[Income — planned vs actual]]></value></data>
+  <data name="Planning.EstimatedEndOfMonthValue" xml:space="preserve"><value><![CDATA[Estimated end-of-month value]]></value></data>
   <data name="Planning.ThisMonthsPlan" xml:space="preserve"><value><![CDATA[This month's plan]]></value></data>
   <data name="Planning.NothingPlanned" xml:space="preserve"><value><![CDATA[Nothing planned for this month. Add planned items below.]]></value></data>
   <data name="Planning.ColDue" xml:space="preserve"><value><![CDATA[Due]]></value></data>

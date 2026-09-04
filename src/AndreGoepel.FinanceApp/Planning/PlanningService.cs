@@ -1,5 +1,6 @@
 using AndreGoepel.FinanceApp.Domain.Planning;
 using AndreGoepel.FinanceApp.Domain.Transactions;
+using AndreGoepel.FinanceApp.Insights;
 using Marten;
 
 namespace AndreGoepel.FinanceApp.Planning;
@@ -10,7 +11,8 @@ namespace AndreGoepel.FinanceApp.Planning;
 /// occurrence carries its transaction's actual amount; an unmatched past occurrence
 /// is overdue; otherwise pending.
 /// </summary>
-internal sealed class PlanningService(IQuerySession session) : IPlanningService
+internal sealed class PlanningService(IQuerySession session, INetWorthService netWorthService)
+    : IPlanningService
 {
     private const int CandidateWindowDays = 60;
     private const int UpcomingLimit = 10;
@@ -28,13 +30,21 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
         var from = new DateOnly(year, month, 1);
         var to = from.AddMonths(1).AddDays(-1);
         var occurrences = await BuildOccurrencesAsync(from, to, cancellationToken);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        decimal? estimatedEndOfMonthValue = null;
+        if (year == today.Year && month == today.Month)
+        {
+            var netWorth = await netWorthService.GetAsync(cancellationToken: cancellationToken);
+            estimatedEndOfMonthValue = EndOfMonthEstimator.Calculate(netWorth.Current, occurrences);
+        }
 
         return new PlanMonth(
             occurrences,
             occurrences.Where(o => o.Amount > 0).Sum(o => o.Amount),
             -occurrences.Where(o => o.Amount < 0).Sum(o => o.Amount),
             occurrences.Where(o => o.MatchedAmount > 0).Sum(o => o.MatchedAmount!.Value),
-            -occurrences.Where(o => o.MatchedAmount < 0).Sum(o => o.MatchedAmount!.Value)
+            -occurrences.Where(o => o.MatchedAmount < 0).Sum(o => o.MatchedAmount!.Value),
+            estimatedEndOfMonthValue
         );
     }
 
@@ -150,4 +160,20 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
             .Take(50)
             .ToList();
     }
+}
+
+internal static class EndOfMonthEstimator
+{
+    public static decimal Calculate(
+        decimal currentValue,
+        IReadOnlyList<PlannedOccurrence> occurrences
+    ) =>
+        currentValue
+        + occurrences
+            .Where(occurrence =>
+                occurrence.Status
+                    is PlannedOccurrenceStatus.Pending
+                        or PlannedOccurrenceStatus.Overdue
+            )
+            .Sum(occurrence => occurrence.Amount);
 }

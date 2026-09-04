@@ -1109,6 +1109,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Common.Yes", "ja")]
     [InlineData("en", "Planning.MatchNow", "Match now")]
     [InlineData("de", "Planning.MatchNow", "Jetzt zuordnen")]
+    [InlineData("en", "Planning.EstimatedEndOfMonthValue", "Estimated end-of-month value")]
+    [InlineData("de", "Planning.EstimatedEndOfMonthValue", "Geschätzter Wert zum Monatsende")]
     [InlineData("en", "Planning.ThisMonthsPlan", "This month's plan")]
     [InlineData("de", "Planning.ThisMonthsPlan", "Plan für diesen Monat")]
     [InlineData("en", "Planning.ColDue", "Due")]
