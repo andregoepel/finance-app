@@ -108,9 +108,16 @@
                             <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Money.Eur(netWorth.Current)</RadzenText>
                             @if (netWorthChart.Count > 1)
                             {
-                                <RadzenChart Style="height: 130px;">
-                                    <RadzenAreaSeries Data="@netWorthChart" CategoryProperty="Label" ValueProperty="Amount" />
+                                <RadzenChart Style="height: 180px;">
+                                    <RadzenAreaSeries Data="@netWorthChart" CategoryProperty="Label" ValueProperty="Amount"
+                                                      Title="@L["Dashboard.ActualNetWorth"]" />
+                                    @if (netWorthForecastChart.Count > 1)
+                                    {
+                                        <RadzenLineSeries Data="@netWorthForecastChart" CategoryProperty="Label" ValueProperty="Amount"
+                                                          Title="@L["Dashboard.ForecastNetWorth"]" LineType="LineType.Dashed" StrokeWidth="3" />
+                                    }
                                     <RadzenValueAxis Formatter="@(v => $"{v:N0} €")" />
+                                    <RadzenLegend Position="LegendPosition.Bottom" />
                                 </RadzenChart>
                             }
                             @if (netWorth.AccountsWithoutBalance > 0)
@@ -312,6 +319,7 @@
     private NetWorthOverview? netWorth;
     private CryptoOverview? crypto;
     private IReadOnlyList<ChartPoint> netWorthChart = [];
+    private IReadOnlyList<ChartPoint> netWorthForecastChart = [];
     private IReadOnlyList<PlannedOccurrence> upcoming = [];
 
     private bool IsCurrentMonth =>
@@ -323,6 +331,9 @@
         netWorth = await NetWorthService.GetAsync(cancellationToken: _cts.Token);
         netWorthChart = netWorth
             .Series.Select(p => new ChartPoint(Dates.ChartMonth(p.Date), p.Amount))
+            .ToList();
+        netWorthForecastChart = (netWorth.Forecast ?? [])
+            .Select(p => new ChartPoint(Dates.ChartMonth(p.Date), p.Amount))
             .ToList();
         upcoming = await PlanningService.GetUpcomingAsync(cancellationToken: _cts.Token);
         crypto = await CryptoService.GetOverviewAsync(_cts.Token);

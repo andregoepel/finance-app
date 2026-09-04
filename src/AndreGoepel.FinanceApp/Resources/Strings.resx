@@ -260,6 +260,8 @@
   <data name="Dashboard.UncategorizedCount" xml:space="preserve"><value><![CDATA[{0} transaction(s) are uncategorized —]]></value><comment>{0} = count; a "review them" link follows</comment></data>
   <data name="Dashboard.ReviewThemLink" xml:space="preserve"><value><![CDATA[review them]]></value></data>
   <data name="Dashboard.NetWorth" xml:space="preserve"><value><![CDATA[Net worth]]></value></data>
+  <data name="Dashboard.ActualNetWorth" xml:space="preserve"><value><![CDATA[Actual]]></value></data>
+  <data name="Dashboard.ForecastNetWorth" xml:space="preserve"><value><![CDATA[Forecast]]></value></data>
   <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[{0} account(s) have no balance set —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
   <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[set one]]></value></data>
   <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[ to include them.]]></value><comment>Leading space is deliberate: the Razor puts none before this fragment so German can attach its own separator</comment></data>

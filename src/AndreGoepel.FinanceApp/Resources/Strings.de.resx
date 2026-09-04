@@ -260,6 +260,8 @@
   <data name="Dashboard.UncategorizedCount" xml:space="preserve"><value><![CDATA[{0} Transaktion(en) sind unkategorisiert —]]></value><comment>{0} = count; a "review them" link follows</comment></data>
   <data name="Dashboard.ReviewThemLink" xml:space="preserve"><value><![CDATA[jetzt prüfen]]></value></data>
   <data name="Dashboard.NetWorth" xml:space="preserve"><value><![CDATA[Nettovermögen]]></value></data>
+  <data name="Dashboard.ActualNetWorth" xml:space="preserve"><value><![CDATA[Tatsächlich]]></value></data>
+  <data name="Dashboard.ForecastNetWorth" xml:space="preserve"><value><![CDATA[Prognose]]></value></data>
   <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[Bei {0} Konto/Konten fehlt der Kontostand —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
   <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[jetzt festlegen]]></value></data>
   <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[ und sie werden mitgezählt.]]></value><comment>Leading space is deliberate — the Razor puts none before this fragment</comment></data>
