@@ -182,7 +182,9 @@
   <!-- Review.razor -->
   <data name="Review.PageTitle" xml:space="preserve"><value><![CDATA[Zu prüfen]]></value></data>
   <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Unkategorisierte Transaktionen und KI-Vorschläge mit geringer Konfidenz. Vorschläge mit hoher Konfidenz werden automatisch angewendet und in der Transaktionsübersicht mit „KI“ markiert.]]></value></data>
-  <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge übernehmen]]></value></data>
+    <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge übernehmen]]></value></data>
+    <data name="Review.SelectCurrentPage" xml:space="preserve"><value><![CDATA[Aktuelle Seite auswählen]]></value></data>
+    <data name="Review.ClearSelection" xml:space="preserve"><value><![CDATA[Auswahl aufheben]]></value></data>
   <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Vorschläge verwerfen]]></value></data>
   <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Kategorie für die Auswahl festlegen]]></value></data>
   <data name="Review.CategorizeWithAi" xml:space="preserve"><value><![CDATA[Mit KI nachkategorisieren]]></value></data>
