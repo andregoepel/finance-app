@@ -233,6 +233,8 @@
   <data name="Import.ImportButton" xml:space="preserve"><value><![CDATA[{0} Transaktionen importieren]]></value><comment>{0} = count of new transactions</comment></data>
   <data name="Import.ImportingBusyText" xml:space="preserve"><value><![CDATA[Wird importiert…]]></value></data>
   <data name="Import.HistoryTitle" xml:space="preserve"><value><![CDATA[Import-Verlauf]]></value></data>
+  <data name="Import.PageSizeText" xml:space="preserve"><value><![CDATA[Zeilen pro Seite]]></value></data>
+  <data name="Import.NoHistory" xml:space="preserve"><value><![CDATA[Für dieses Konto gibt es noch keine Importe.]]></value></data>
   <data name="Import.ColWhen" xml:space="preserve"><value><![CDATA[Wann]]></value></data>
   <data name="Import.ColFile" xml:space="preserve"><value><![CDATA[Datei]]></value></data>
   <data name="Import.ColFormat" xml:space="preserve"><value><![CDATA[Format]]></value></data>

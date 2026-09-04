@@ -116,10 +116,23 @@
         </SectionCard>
     }
 
-    @if (history.Count > 0)
+    @if (selectedAccountId is not null)
     {
         <SectionCard Title="@L["Import.HistoryTitle"]">
-            <RadzenDataGrid TItem="ImportBatch" Data=@history Density="Density.Compact" AllowPaging="true" PageSize="10">
+            <RadzenDataGrid TItem="ImportBatch"
+                            @ref="historyGrid"
+                            Data=@history
+                            Count=@historyCount
+                            LoadData=@LoadHistoryDataAsync
+                            Density="Density.Compact"
+                            AllowPaging="true"
+                            PageSize=@DefaultHistoryPageSize
+                            PageSizeOptions=@HistoryPageSizeOptions
+                            PageNumbersCount="5"
+                            ShowPagingSummary="true"
+                            PageSizeText="@L["Import.PageSizeText"]"
+                            EmptyText="@L["Import.NoHistory"]"
+                            KeyProperty="Id">
                     <Columns>
                         <RadzenDataGridColumn TItem="ImportBatch" Property="ImportedAt" Title="@L["Import.ColWhen"]" Width="160px">
                             <Template Context="batch">@Dates.ShortTime(batch.ImportedAt.ToLocalTime())</Template>
@@ -141,6 +154,8 @@
 
 @code {
     private const long MaxFileSize = 5 * 1024 * 1024;
+    private const int DefaultHistoryPageSize = 10;
+    private static readonly int[] HistoryPageSizeOptions = [10, 25, 50];
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -156,6 +171,8 @@
     private Dictionary<int, string> rowHashes = [];
     private HashSet<int> forceImportRows = [];
     private List<ImportBatch> history = [];
+    private RadzenDataGrid<ImportBatch>? historyGrid;
+    private int historyCount;
     private bool isImporting;
 
     private Account? SelectedAccount =>
@@ -185,19 +202,46 @@
     {
         preview = null;
         parseFailure = null;
-        await LoadHistoryAsync();
+        await ReloadHistoryAsync(resetPage: true);
     }
 
-    private async Task LoadHistoryAsync()
+    private Task LoadHistoryDataAsync(LoadDataArgs args) =>
+        LoadHistoryPageAsync(args.Skip ?? 0, args.Top ?? DefaultHistoryPageSize);
+
+    private async Task LoadHistoryPageAsync(int skip, int take)
     {
-        history = selectedAccountId is Guid accountId
-            ? (await QuerySession
-                .Query<ImportBatch>()
-                .Where(b => b.AccountId == accountId)
-                .OrderByDescending(b => b.ImportedAt)
-                .Take(20)
-                .ToListAsync(_cts.Token)).ToList()
-            : [];
+        if (selectedAccountId is not Guid accountId)
+        {
+            history = [];
+            historyCount = 0;
+            return;
+        }
+
+        var page = await ImportBatchPageQuery.LoadAsync(
+            QuerySession,
+            accountId,
+            skip,
+            take,
+            _cts.Token
+        );
+        historyCount = page.TotalCount;
+        history = page.Items.ToList();
+    }
+
+    private async Task ReloadHistoryAsync(bool resetPage = false)
+    {
+        if (historyGrid is null)
+        {
+            await LoadHistoryPageAsync(0, DefaultHistoryPageSize);
+            return;
+        }
+        if (resetPage)
+        {
+            await historyGrid.FirstPage(true);
+            return;
+        }
+
+        await historyGrid.Reload();
     }
 
     private async Task OnFileSelectedAsync(InputFileChangeEventArgs args)
@@ -327,7 +371,7 @@
             );
             preview = null;
             forceImportRows = [];
-            await LoadHistoryAsync();
+            await ReloadHistoryAsync(resetPage: true);
         }
         finally
         {
