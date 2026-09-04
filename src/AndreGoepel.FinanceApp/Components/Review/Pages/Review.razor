@@ -64,7 +64,9 @@
             <FormField Label="@L["Review.SetCategoryLabel"]" For="BulkCategory">
                 <CategoryPicker Options="@categoryOptions" Name="BulkCategory"
                                 @bind-Value=@bulkCategoryId
-                                Placeholder="@L["Common.ChooseCategoryPlaceholder"]" Style="min-width: 14rem;" />
+                                Placeholder="@L["Common.ChooseCategoryPlaceholder"]"
+                                Style="width: min(24rem, calc(100vw - 2rem));"
+                                PopupStyle="width: min(32rem, calc(100vw - 2rem)); max-height: 200px; overflow-x: hidden;" />
             </FormField>
             <RadzenButton Text="@L["Review.ApplyToSelection"]"
                           Icon="done_all"
