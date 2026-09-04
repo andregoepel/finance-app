@@ -3,7 +3,7 @@ using Marten;
 namespace AndreGoepel.FinanceApp.Domain.Transactions;
 
 public sealed record TransactionPageFilters(
-    IReadOnlyList<Guid> AccountIds,
+    IReadOnlyList<Guid>? AccountIds,
     IReadOnlyList<Guid>? CategoryIds,
     bool Uncategorized,
     DateOnly? From,
@@ -36,11 +36,13 @@ public static class TransactionPageQuery
         ArgumentOutOfRangeException.ThrowIfNegative(skip);
         ArgumentOutOfRangeException.ThrowIfLessThan(take, 1);
 
-        var accountIds = filters.AccountIds.ToArray();
-        var query = session
-            .Query<TransactionView>()
-            .Where(transaction => transaction.AccountId.IsOneOf(accountIds));
+        IQueryable<TransactionView> query = session.Query<TransactionView>();
 
+        if (filters.AccountIds is { } filteredAccountIds)
+        {
+            var accountIds = filteredAccountIds.ToArray();
+            query = query.Where(transaction => transaction.AccountId.IsOneOf(accountIds));
+        }
         if (filters.Uncategorized)
         {
             query = query.Where(transaction => !transaction.IsCategorized);

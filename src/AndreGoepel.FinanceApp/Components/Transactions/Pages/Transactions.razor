@@ -245,11 +245,15 @@
             new CategoryOption(UncategorizedFilterId, L["Transactions.CategoryFilterUncategorizedOption"]),
             .. categoryOptions,
         ];
+        await LoadPageAsync(skip: 0, take: DefaultPageSize, orderBy: null);
     }
 
-    private async Task LoadDataAsync(LoadDataArgs args)
+    private Task LoadDataAsync(LoadDataArgs args) =>
+        LoadPageAsync(args.Skip ?? 0, args.Top ?? DefaultPageSize, args.OrderBy);
+
+    private async Task LoadPageAsync(int skip, int take, string? orderBy)
     {
-        var (sort, descending) = TransactionGridState.ParseSort(args.OrderBy);
+        var (sort, descending) = TransactionGridState.ParseSort(orderBy);
         var page = await TransactionPageQuery.LoadAsync(
             QuerySession,
             new TransactionPageFilters(
@@ -262,8 +266,8 @@
             ),
             sort,
             descending,
-            args.Skip ?? 0,
-            args.Top ?? DefaultPageSize,
+            skip,
+            take,
             _cts.Token
         );
         transactionCount = page.TotalCount;
@@ -297,8 +301,13 @@
             ? CategoryHierarchy.InclusiveDescendantIds(categories, categoryId)
             : null;
 
-    private Guid[] FilteredAccountIds()
+    private IReadOnlyList<Guid>? FilteredAccountIds()
     {
+        if (ownerFilter is null && accountFilter is null)
+        {
+            return null;
+        }
+
         var candidates = accounts.AsEnumerable();
         if (ownerFilter is Guid owner)
         {

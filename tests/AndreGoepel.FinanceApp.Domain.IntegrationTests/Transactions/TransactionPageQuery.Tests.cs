@@ -45,6 +45,25 @@ public sealed class TransactionPageQueryTests(FinanceMartenFixture fixture) : IA
     }
 
     [Fact]
+    public async Task LoadAsync_WithoutAccountFilterReturnsTransactionsFromEveryAccount()
+    {
+        var first = Create(1, Guid.NewGuid());
+        var second = Create(2, Guid.NewGuid());
+        await StoreAsync([first, second]);
+
+        var page = await LoadAsync(
+            Filters(accountIds: null),
+            TransactionSort.BookingDate,
+            descending: true,
+            skip: 0,
+            take: 25
+        );
+
+        Assert.Equal(2, page.TotalCount);
+        Assert.Equal([first.Id, second.Id], page.Items.Select(item => item.Id));
+    }
+
+    [Fact]
     public async Task LoadAsync_SearchesRowsBeyondFormerLimitBeforePaging()
     {
         var accountId = Guid.NewGuid();
@@ -182,7 +201,7 @@ public sealed class TransactionPageQueryTests(FinanceMartenFixture fixture) : IA
     }
 
     private static TransactionPageFilters Filters(
-        IReadOnlyList<Guid> accountIds,
+        IReadOnlyList<Guid>? accountIds,
         IReadOnlyList<Guid>? categoryIds = null,
         string? searchText = null
     ) => new(accountIds, categoryIds, Uncategorized: false, null, null, searchText);
