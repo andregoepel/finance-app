@@ -626,6 +626,7 @@
   <data name="Cash.EntrySavedMessage" xml:space="preserve"><value><![CDATA[Transaktion erfasst]]></value></data>
   <data name="Cash.EntryFailedTitle" xml:space="preserve"><value><![CDATA[Transaktion konnte nicht erfasst werden]]></value></data>
   <data name="Cash.NoEntries" xml:space="preserve"><value><![CDATA[Noch keine Bargeld-Transaktionen.]]></value></data>
+  <data name="Cash.PageSizeText" xml:space="preserve"><value><![CDATA[Zeilen pro Seite]]></value></data>
   <data name="Cash.DeleteEntryTooltip" xml:space="preserve"><value><![CDATA[Transaktion löschen…]]></value></data>
   <data name="Cash.DeleteEntryTitle" xml:space="preserve"><value><![CDATA[Transaktion löschen]]></value></data>
   <data name="Cash.EntryDeletedMessage" xml:space="preserve"><value><![CDATA[Transaktion gelöscht]]></value></data>
