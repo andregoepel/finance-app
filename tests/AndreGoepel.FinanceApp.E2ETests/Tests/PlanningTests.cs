@@ -20,6 +20,10 @@ public sealed class PlanningTests(E2EAppFixture fixture) : FinanceE2ETestBase(fi
         await Expect(Page.Locator(".rz-dialog-content")).ToBeVisibleAsync();
         await Page.FillFormFieldAsync("Description", description);
         await Page.FillFormFieldAsync("Amount (€)", "500");
+        // Use a category distinct from BudgetsTests. The E2E fixture deliberately
+        // shares one application/database, and active budgets are unique per
+        // category and month.
+        await Page.SelectDropDownAsync("Category", "Utilities");
         await Page.ClickDialogButtonAsync("Add");
 
         // Assert — the dialog closes and the grid shows the new row.
@@ -42,5 +46,17 @@ public sealed class PlanningTests(E2EAppFixture fixture) : FinanceE2ETestBase(fi
         await Expect(Page.Locator(".rz-dialog-content")).Not.ToBeVisibleAsync();
         await Expect(Page.GetByText(description).First).ToBeVisibleAsync();
         await Expect(Page.GetByText("-650.00 €").First).ToBeVisibleAsync();
+
+        // The planned-only category is already visible in the monthly plan and can
+        // receive an optional budget without entering the payment a second time.
+        await Page.GetByRole(AriaRole.Row, new() { Name = "Utilities" })
+            .First.GetByLabel("Set budget")
+            .ClickAsync();
+        await Expect(Page.Locator(".rz-dialog-content")).ToBeVisibleAsync();
+        await Page.FillFormFieldAsync("Monthly limit (€)", "800");
+        await Page.ClickDialogButtonAsync("Add");
+
+        await Expect(Page.Locator(".rz-dialog-content")).Not.ToBeVisibleAsync();
+        await Expect(Page.GetByText("800.00 €").First).ToBeVisibleAsync();
     }
 }

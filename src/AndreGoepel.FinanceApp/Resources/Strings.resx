@@ -375,6 +375,14 @@
   <data name="Planning.ExpensesPlannedVsActual" xml:space="preserve"><value><![CDATA[Expenses — planned vs actual]]></value></data>
   <data name="Planning.IncomePlannedVsActual" xml:space="preserve"><value><![CDATA[Income — planned vs actual]]></value></data>
   <data name="Planning.EstimatedEndOfMonthValue" xml:space="preserve"><value><![CDATA[Estimated end-of-month value]]></value></data>
+  <data name="Planning.MonthlyCategoryPlan" xml:space="preserve"><value><![CDATA[Monthly category plan]]></value></data>
+  <data name="Planning.NoCategoryPlan" xml:space="preserve"><value><![CDATA[Add a planned expense or budget to start the category plan.]]></value></data>
+  <data name="Planning.ColBudget" xml:space="preserve"><value><![CDATA[Budget]]></value></data>
+  <data name="Planning.ColFixedRemaining" xml:space="preserve"><value><![CDATA[Fixed remaining]]></value></data>
+  <data name="Planning.ColForecast" xml:space="preserve"><value><![CDATA[Forecast]]></value></data>
+  <data name="Planning.ColFlexibleRemaining" xml:space="preserve"><value><![CDATA[Flexible remaining]]></value></data>
+  <data name="Planning.SetBudget" xml:space="preserve"><value><![CDATA[Set budget]]></value></data>
+  <data name="Planning.EditBudget" xml:space="preserve"><value><![CDATA[Edit budget]]></value></data>
   <data name="Planning.ThisMonthsPlan" xml:space="preserve"><value><![CDATA[This month's plan]]></value></data>
   <data name="Planning.NothingPlanned" xml:space="preserve"><value><![CDATA[Nothing planned for this month. Add planned items below.]]></value></data>
   <data name="Planning.ColDue" xml:space="preserve"><value><![CDATA[Due]]></value></data>

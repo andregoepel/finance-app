@@ -2,10 +2,13 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @using AndreGoepel.FinanceApp.Components.Planning.Dialogs
+@using AndreGoepel.FinanceApp.Components.Settings.Dialogs
+@using AndreGoepel.FinanceApp.Domain.Budgets
 @using AndreGoepel.FinanceApp.Planning
 
 @inject IQuerySession QuerySession
 @inject IPlanningService PlanningService
+@inject IMonthlyCategoryPlanService MonthlyCategoryPlanService
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
@@ -52,6 +55,56 @@
             </RadzenCard>
         </RadzenColumn>
     </RadzenRow>
+
+    <SectionCard Title="@L["Planning.MonthlyCategoryPlan"]">
+        <Actions>
+            <RadzenButton Text="@L["Budgets.AddTitle"]" Icon="add" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
+                          Click=@AddBudgetAsync />
+        </Actions>
+        <ChildContent>
+            @if (categoryPlans.Count == 0)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                    @L["Planning.NoCategoryPlan"]
+                </RadzenText>
+            }
+            else
+            {
+            <RadzenDataGrid TItem="MonthlyCategoryPlan" Data=@categoryPlans Density="Density.Compact" AllowPaging="false">
+                <Columns>
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Property="Category" Title="@L["Dashboard.ColCategory"]">
+                        <Template Context="row">@(row.Category ?? L["Planning.Unallocated"])</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Title="@L["Planning.ColBudget"]" Width="125px" TextAlign="TextAlign.Right">
+                        <Template Context="row">@(row.BudgetLimit is decimal amount ? Money.Eur(amount) : "—")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Property="ActualSpent" Title="@L["Planning.ColActual"]" Width="125px" TextAlign="TextAlign.Right">
+                        <Template Context="row">@Money.Eur(row.ActualSpent)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Property="PlannedRemaining" Title="@L["Planning.ColFixedRemaining"]" Width="145px" TextAlign="TextAlign.Right">
+                        <Template Context="row">@Money.Eur(row.PlannedRemaining)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Property="ForecastSpent" Title="@L["Planning.ColForecast"]" Width="125px" TextAlign="TextAlign.Right">
+                        <Template Context="row">@Money.Eur(row.ForecastSpent)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Title="@L["Planning.ColFlexibleRemaining"]" Width="155px" TextAlign="TextAlign.Right">
+                        <Template Context="row">@(row.FlexibleRemaining is decimal amount ? Money.Eur(amount) : "—")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="MonthlyCategoryPlan" Title="" Width="70px" TextAlign="TextAlign.End" Sortable="false">
+                        <Template Context="row">
+                            @if (row.CategoryId is not null)
+                            {
+                                <IconButton Icon="@(row.BudgetLimit is null ? "add" : "edit")"
+                                            Title="@(row.BudgetLimit is null ? L["Planning.SetBudget"] : L["Planning.EditBudget"] )"
+                                            Click=@(_ => EditBudgetAsync(row)) />
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+            }
+        </ChildContent>
+    </SectionCard>
 
     <SectionCard Title="@L["Planning.ThisMonthsPlan"]">
         <RadzenStack Gap="1rem">
@@ -178,6 +231,8 @@
     private DateOnly monthStart = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private PlanMonth? plan;
     private List<PlannedItem> items = [];
+    private List<MonthlyCategoryPlan> categoryPlans = [];
+    private List<Budget> budgets = [];
     private List<CategoryOption> categoryOptions = [];
     private Dictionary<Guid, string> categoryNames = [];
     private List<Account> accounts = [];
@@ -206,6 +261,8 @@
     {
         items = (await PlanningService.GetItemsAsync(_cts.Token)).OrderBy(i => i.Description).ToList();
         plan = await PlanningService.GetMonthAsync(monthStart.Year, monthStart.Month, _cts.Token);
+        categoryPlans = (await MonthlyCategoryPlanService.GetAsync(monthStart.Year, monthStart.Month, _cts.Token)).ToList();
+        budgets = (await QuerySession.Query<Budget>().ToListAsync(_cts.Token)).ToList();
     }
 
     private async Task OnMonthChangedAsync(DateOnly month)
@@ -213,7 +270,36 @@
         monthStart = month;
         matchingOccurrence = null;
         plan = null;
-        plan = await PlanningService.GetMonthAsync(monthStart.Year, monthStart.Month, _cts.Token);
+        await LoadAsync();
+    }
+
+    private async Task EditBudgetAsync(MonthlyCategoryPlan row)
+    {
+        if (row.CategoryId is not Guid categoryId)
+        {
+            return;
+        }
+        var budget = budgets.FirstOrDefault(candidate =>
+            candidate.CategoryId == categoryId
+            && monthStart >= candidate.StartMonth
+            && (candidate.EndMonth is null || monthStart <= candidate.EndMonth)
+        );
+        await OpenBudgetAsync(budget, categoryId);
+    }
+
+    private Task AddBudgetAsync() => OpenBudgetAsync(null, null);
+
+    private async Task OpenBudgetAsync(Budget? budget, Guid? categoryId)
+    {
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@(budget is null ? L["Budgets.AddTitle"] : L["Budgets.EditTitle"] )" />,
+            childContent: _ => @<BudgetFormDialog Budget="@budget" InitialCategoryId="@categoryId" InitialStartMonth="@monthStart" CategoryOptions="@categoryOptions" />
+        );
+        if (result is true)
+        {
+            await LoadAsync();
+            NotificationService.Success(L["Budgets.SavedTitle"]);
+        }
     }
 
     private async Task MatchNowAsync()
