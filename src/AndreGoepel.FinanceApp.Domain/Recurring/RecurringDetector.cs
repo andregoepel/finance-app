@@ -128,13 +128,19 @@ public static class RecurringDetector
 public sealed record RecurringCandidate(string Counterparty, DateOnly Date, decimal Amount);
 
 /// <summary>A detected recurring payment or income stream.</summary>
+/// <param name="AlreadyPlanned">
+/// True when an active planned item was already created from this series. The
+/// detector never sets it — it works purely on transactions and knows nothing
+/// about planning; <c>IRecurringService</c> fills it in.
+/// </param>
 public sealed record RecurringSeries(
     string Counterparty,
     decimal TypicalAmount,
     RecurrenceInterval Interval,
     int Occurrences,
     DateOnly LastSeen,
-    DateOnly NextExpected
+    DateOnly NextExpected,
+    bool AlreadyPlanned = false
 );
 
 public enum RecurrenceInterval

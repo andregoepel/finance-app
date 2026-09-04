@@ -44,7 +44,19 @@ later phases forward without being asked.
 - **Claude categorization:** batch ~50 transactions per request, structured
   output, temperature 0. High confidence auto-applies (flagged "AI" in UI),
   low confidence goes to the review queue. Must degrade gracefully when the
-  API is unavailable — imports never fail because of it.
+  API is unavailable — imports never fail because of it. The system prompt is
+  two blocks: instructions + category tree + recent confirmed examples (byte-
+  identical for every batch of a run, `cache_control` breakpoint), then the
+  batch's own counterparty examples. Never put anything batch- or
+  time-dependent before the breakpoint.
+- **Cash:** one cash account per user (`ProviderKind.Cash`, `AccountType.Cash`,
+  `SyncMethod.Manual`). Transactions are typed in by hand
+  (`RecordManualTransactionCommand`) and take the normal import shape (one
+  `TransactionImported` stream + one-row `ImportBatch`, parser id
+  `manual-entry`), so they flow through categorization, transfers and net
+  worth like any other. The account's balance anchor is always the ledger
+  balance (opening balance + every entry). Only manual entries may be deleted
+  one at a time (`DeleteManualTransactionCommand`); imported history never is.
 
 ## Testing
 - Scope: domain logic, handlers, parsers, rules engine, matching logic

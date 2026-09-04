@@ -5,6 +5,11 @@ using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Planning;
 
+/// <param name="CreatedFromRecurringKey">
+/// Set when the item is created from a detected recurring series, carrying that
+/// series' key — see <see cref="PlannedItem.CreatedFromRecurringKey"/>. Null for
+/// items entered by hand.
+/// </param>
 public sealed record CreatePlannedItemCommand(
     string Description,
     decimal Amount,
@@ -15,7 +20,8 @@ public sealed record CreatePlannedItemCommand(
     Guid? ExpectedAccountId,
     string? CounterpartyPattern,
     decimal AmountTolerance,
-    int DateWindowDays
+    int DateWindowDays,
+    string? CreatedFromRecurringKey = null
 );
 
 public static class CreatePlannedItemCommandHandler
@@ -51,6 +57,9 @@ public static class CreatePlannedItemCommandHandler
                 : command.CounterpartyPattern.Trim(),
             AmountTolerance = Math.Max(0, command.AmountTolerance),
             DateWindowDays = Math.Max(0, command.DateWindowDays),
+            CreatedFromRecurringKey = string.IsNullOrWhiteSpace(command.CreatedFromRecurringKey)
+                ? null
+                : command.CreatedFromRecurringKey.Trim(),
         };
         session.Store(item);
         await session.SaveChangesAsync(cancellationToken);

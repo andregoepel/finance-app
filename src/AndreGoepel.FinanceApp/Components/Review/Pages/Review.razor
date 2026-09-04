@@ -1,8 +1,11 @@
 @page "/review"
 @attribute [Authorize]
+@using AndreGoepel.FinanceApp.Domain.Credentials
+@using AndreGoepel.FinanceApp.Components.Review
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
+@inject ICredentialStore CredentialStore
 @inject NotificationService NotificationService
 @inject IStringLocalizer<Strings> L
 
@@ -12,8 +15,53 @@
 
     <PageHeader Title="@L["Review.PageTitle"]" Subtitle="@L["Review.Subtitle"]" />
 
+    <FilterBar OnApply="@(() => ReloadAsync(resetPage: true))" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Primary">
+        <ChildContent>
+            <FormField Label="@L["Common.Account"]" For="Account">
+                <RadzenDropDown TValue="Guid?"
+                                @bind-Value=@accountFilter Name="Account"
+                                Data=@accounts
+                                TextProperty="Name"
+                                ValueProperty="Id"
+                                AllowClear="true"
+                                Placeholder="@L["Common.AllPlaceholder"]"
+                                Style="min-width: 12rem;"
+                                Change=@(_ => ReloadAsync(resetPage: true)) />
+            </FormField>
+            <FormField Label="@L["Common.From"]" For="From">
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
+            </FormField>
+            <FormField Label="@L["Common.To"]" For="To">
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
+            </FormField>
+            <FormField Label="@L["Review.TypeFilterLabel"]" For="Type">
+                <RadzenSelectBar TValue="bool?" @bind-Value=@incomeFilter Name="Type" Change=@(() => ReloadAsync(resetPage: true))>
+                    <Items>
+                        <RadzenSelectBarItem Text="@L["Common.AllPlaceholder"]" Value="@((bool?)null)" />
+                        <RadzenSelectBarItem Text="@L["Review.TypeExpense"]" Value="@((bool?)false)" />
+                        <RadzenSelectBarItem Text="@L["Review.TypeIncome"]" Value="@((bool?)true)" />
+                    </Items>
+                </RadzenSelectBar>
+            </FormField>
+            <FormField Label="@L["Common.Search"]" For="Search">
+                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;"
+                               Change=@(_ => ReloadAsync(resetPage: true)) />
+            </FormField>
+        </ChildContent>
+    </FilterBar>
+
     <RadzenCard>
         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="1rem" AlignItems="AlignItems.End">
+            <RadzenButton Text="@L["Review.SelectCurrentPage"]"
+                          Icon="select_all"
+                          ButtonStyle="ButtonStyle.Light"
+                          Disabled=@ReviewSelection.IsEntirePageSelected(selected, items)
+                          Click=@SelectCurrentPage />
+            <RadzenButton Text="@L["Review.ClearSelection"]"
+                          Icon="deselect"
+                          ButtonStyle="ButtonStyle.Light"
+                          Disabled=@(selected.Count == 0)
+                          Click=@ClearSelection />
             <RadzenButton Text="@L["Review.AcceptSuggestions"]"
                           Icon="check_circle"
                           ButtonStyle="ButtonStyle.Primary"
@@ -27,20 +75,77 @@
             <FormField Label="@L["Review.SetCategoryLabel"]" For="BulkCategory">
                 <CategoryPicker Options="@categoryOptions" Name="BulkCategory"
                                 @bind-Value=@bulkCategoryId
-                                Placeholder="@L["Common.ChooseCategoryPlaceholder"]" Style="min-width: 14rem;" />
+                                Placeholder="@L["Common.ChooseCategoryPlaceholder"]"
+                                Style="width: min(24rem, calc(100vw - 2rem));"
+                                PopupStyle="width: min(32rem, calc(100vw - 2rem)); max-height: 200px; overflow-x: hidden;" />
             </FormField>
             <RadzenButton Text="@L["Review.ApplyToSelection"]"
                           Icon="done_all"
                           ButtonStyle="ButtonStyle.Secondary"
                           Disabled=@(bulkCategoryId is null || selected.Count == 0)
                           Click=@BulkCategorizeAsync />
+            <RadzenButton Text="@L["Review.CategorizeWithAi"]"
+                          Icon="auto_awesome"
+                          ButtonStyle="ButtonStyle.Light"
+                          Disabled=@(items.Count == 0)
+                          Click=@CategorizeWithAiAsync />
+            <RadzenButton Text="@L["Review.FindTransfers"]"
+                          Icon="sync_alt"
+                          ButtonStyle="ButtonStyle.Light"
+                          Click=@FindTransfersAsync />
+            <IconButton Icon="refresh" Title="@L["Review.Refresh"]" Click=@(_ => ReloadAsync()) />
         </RadzenStack>
     </RadzenCard>
 
+    @if (transferSuggestions.Count > 0)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6">@L["Review.TransferSuggestionsTitle"]</RadzenText>
+            <RadzenDataGrid TItem="TransferSuggestionRow" Data=@transferSuggestions Density="Density.Compact">
+                <Columns>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColOutgoing"]">
+                        <Template Context="row">
+                            @AccountName(row.Outgoing.AccountId) · @Dates.Short(row.Outgoing.BookingDate) ·
+                            <AmountText Amount="row.Outgoing.Amount" Currency="@row.Outgoing.Currency" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColIncoming"]">
+                        <Template Context="row">
+                            @AccountName(row.Incoming.AccountId) · @Dates.Short(row.Incoming.BookingDate) ·
+                            <AmountText Amount="row.Incoming.Amount" Currency="@row.Incoming.Currency" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="@L["Review.ColReason"]" Width="220px">
+                        <Template Context="row">@ReasonText(row)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="TransferSuggestionRow" Title="" Width="110px" Sortable="false">
+                        <Template Context="row">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <IconButton Icon="link" Title="@L["Review.LinkTransferTooltip"]"
+                                            Click=@(_ => AcceptTransferAsync(row.Suggestion.Id)) />
+                                <IconButton Icon="close" Title="@L["Review.DismissTransferTooltip"]"
+                                            Click=@(_ => DismissTransferAsync(row.Suggestion.Id)) />
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+    }
+
     <RadzenDataGrid TItem="TransactionView"
+                    @ref="grid"
+                    class="review-grid"
                     Data=@items
+                    Count=@itemCount
+                    LoadData=@LoadDataAsync
                     AllowPaging="true"
-                    PageSize="25"
+                    PageSize=@DefaultPageSize
+                    PageSizeOptions=@PageSizeOptions
+                    PageNumbersCount="5"
+                    ShowPagingSummary="true"
+                    PageSizeText="@L["Review.PageSizeText"]"
+                    KeyProperty="Id"
                     SelectionMode="DataGridSelectionMode.Multiple"
                     @bind-Value=@selected
                     Density="Density.Compact">
@@ -51,8 +156,16 @@
             <RadzenDataGridColumn TItem="TransactionView" Title="@L["Common.Account"]" Width="140px" Sortable="false">
                 <Template Context="transaction">@AccountName(transaction.AccountId)</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="180px" />
-            <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]" />
+            <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="180px">
+                <Template Context="transaction">
+                    <span class="review-grid__ellipsis" title="@transaction.Counterparty">@transaction.Counterparty</span>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]">
+                <Template Context="transaction">
+                    <span class="review-grid__ellipsis" title="@transaction.Description">@transaction.Description</span>
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="@L["Common.Amount"]" Width="130px" TextAlign="TextAlign.Right">
                 <Template Context="transaction">
                     <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
@@ -81,43 +194,163 @@
 </PageBody>
 
 @code {
-    private const int MaxRows = 500;
+    private const int DefaultPageSize = 25;
+    private static readonly int[] PageSizeOptions = [25, 50, 100];
+
+    private RadzenDataGrid<TransactionView> grid = null!;
 
     private List<TransactionView> items = [];
+    private int itemCount;
     private Dictionary<Guid, CategorySuggestion> suggestions = [];
+    private List<TransferSuggestionRow> transferSuggestions = [];
     private List<Account> accounts = [];
     private List<CategoryOption> categoryOptions = [];
     private IList<TransactionView> selected = [];
     private Guid? bulkCategoryId;
 
+    private sealed record TransferSuggestionRow(
+        TransferSuggestion Suggestion,
+        TransactionView Outgoing,
+        TransactionView Incoming
+    );
+
+    private Guid? accountFilter;
+    private DateOnly? fromFilter;
+    private DateOnly? toFilter;
+    private bool? incomeFilter;
+    private string textFilter = "";
+
     private IEnumerable<TransactionView> SelectedWithSuggestion =>
         selected.Where(transaction => suggestions.ContainsKey(transaction.Id));
 
+    private void SelectCurrentPage() =>
+        selected = ReviewSelection.MergeCurrentPage(selected, items);
+
+    private void ClearSelection() => selected = [];
+
     protected override async Task OnInitializedAsync()
     {
-        accounts = (await QuerySession.Query<Account>().ToListAsync()).ToList();
+        accounts = (await QuerySession.Query<Account>().ToListAsync()).OrderBy(a => a.Name).ToList();
         var categories = await QuerySession.Query<Category>().ToListAsync();
         categoryOptions = CategoryPaths.Build(categories.ToList());
-        await ReloadAsync();
+        await ReloadTransferSuggestionsAsync();
     }
 
-    private async Task ReloadAsync()
+    private async Task LoadDataAsync(LoadDataArgs args)
     {
-        items = (
-            await QuerySession
-                .Query<TransactionView>()
-                .Where(t => t.CategoryId == null && t.TransferCounterpartId == null)
-                .OrderByDescending(t => t.BookingDate)
-                .Take(MaxRows)
-                .ToListAsync()
-        ).ToList();
+        var page = await ReviewQueueQuery.LoadAsync(
+            QuerySession,
+            new ReviewQueueFilters(
+                accountFilter,
+                fromFilter,
+                toFilter,
+                incomeFilter,
+                textFilter
+            ),
+            args.Skip ?? 0,
+            args.Top ?? DefaultPageSize
+        );
+        itemCount = page.TotalCount;
+        items = page.Items.ToList();
 
         var ids = items.Select(t => t.Id).ToArray();
-        suggestions = (
+        var pageSuggestions = (
             await QuerySession.Query<CategorySuggestion>().Where(s => s.Id.IsOneOf(ids)).ToListAsync()
         ).ToDictionary(s => s.Id);
-        selected = [];
+        foreach (var suggestion in pageSuggestions)
+        {
+            suggestions[suggestion.Key] = suggestion.Value;
+        }
     }
+
+    private async Task ReloadAsync(bool resetPage = false)
+    {
+        selected = [];
+        suggestions.Clear();
+        await ReloadTransferSuggestionsAsync();
+
+        if (resetPage)
+        {
+            await grid.FirstPage(true);
+            return;
+        }
+
+        await grid.Reload();
+        var validPage = ReviewPagination.ClampPageIndex(
+            grid.CurrentPage,
+            itemCount,
+            grid.PageSize
+        );
+        if (grid.CurrentPage != validPage)
+        {
+            await grid.GoToPage(validPage, true);
+        }
+    }
+
+    private async Task ReloadTransferSuggestionsAsync()
+    {
+        var pending = await QuerySession
+            .Query<TransferSuggestion>()
+            .Where(s => !s.Dismissed)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
+
+        var legIds = pending
+            .SelectMany(s => new[] { s.OutgoingTransactionId, s.IncomingTransactionId })
+            .Distinct()
+            .ToArray();
+        var legs = (
+            await QuerySession.Query<TransactionView>().Where(t => t.Id.IsOneOf(legIds)).ToListAsync()
+        ).ToDictionary(t => t.Id);
+
+        // Legs that vanished (deleted), were linked/dismissed another way, or were
+        // categorized by hand in the meantime are skipped rather than shown stale;
+        // the next match run tidies the underlying suggestion up (see
+        // MatchTransfersCommandHandler.FindStaleSuggestionsAsync).
+        transferSuggestions = pending
+            .Select(s =>
+                legs.TryGetValue(s.OutgoingTransactionId, out var outgoing)
+                && legs.TryGetValue(s.IncomingTransactionId, out var incoming)
+                && !outgoing.IsTransfer
+                && !incoming.IsTransfer
+                && outgoing.CategorySource != CategorySource.Manual
+                && incoming.CategorySource != CategorySource.Manual
+                    ? new TransferSuggestionRow(s, outgoing, incoming)
+                    : null
+            )
+            .Where(row => row is not null)
+            .Select(row => row!)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Every suggestion already matches exactly on day and EUR amount (see
+    /// <see cref="TransferMatcher"/>) — the only reason it isn't auto-linked is
+    /// either a currency mismatch (the FX leg always needs a glance) or another
+    /// pending suggestion competing for one of its legs.
+    /// </summary>
+    private string ReasonText(TransferSuggestionRow row) =>
+        row.Outgoing.Currency != row.Incoming.Currency
+            ? L["Review.TransferReasonCrossCurrency"]
+            : L["Review.TransferReasonAmbiguous"];
+
+    private async Task FindTransfersAsync()
+    {
+        await MessageBus.PublishAsync(new MatchTransfersCommand());
+        NotificationService.Success(L["Common.DoneTitle"], L["Review.FindTransfersStartedMessage"]);
+    }
+
+    private async Task AcceptTransferAsync(string suggestionId) =>
+        await RunAsync(
+            new AcceptTransferSuggestionCommand(suggestionId),
+            L["Review.TransferLinkedMessage"]
+        );
+
+    private async Task DismissTransferAsync(string suggestionId) =>
+        await RunAsync(
+            new DismissTransferSuggestionCommand(suggestionId),
+            L["Review.TransferDismissedMessage"]
+        );
 
     private string AccountName(Guid accountId) =>
         accounts.FirstOrDefault(a => a.Id == accountId)?.Name ?? "?";
@@ -162,6 +395,28 @@
             }
         }
         await ReloadAsync();
+    }
+
+    /// <summary>
+    /// Fire-and-forget backfill over everything still uncategorized — the same
+    /// pipeline an import kicks off, so it can take a while for a large queue.
+    /// Checked up front for the API key because the handler itself only logs
+    /// when it is missing and the user would never learn why nothing happened.
+    /// </summary>
+    private async Task CategorizeWithAiAsync()
+    {
+        var apiKey = await CredentialStore.GetSecretAsync(CredentialKeys.ClaudeApiKey);
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            NotificationService.Warning(
+                L["Review.NoClaudeKeyTitle"],
+                L["Review.NoClaudeKeyMessage", L["Nav.ApiKeys"]]
+            );
+            return;
+        }
+
+        await MessageBus.PublishAsync(new CategorizeUncategorizedTransactionsCommand());
+        NotificationService.Success(L["Common.DoneTitle"], L["Review.CategorizeWithAiStartedMessage"]);
     }
 
     private async Task RunAsync(object command, string successMessage)

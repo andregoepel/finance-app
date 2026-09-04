@@ -23,41 +23,89 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
             .Where(a => a.Status == AccountStatus.Active)
             .ToListAsync(cancellationToken);
 
-        var anchored = accounts
-            .Where(a => a.CurrentBalanceEur is not null && a.BalanceUpdatedAt is not null)
-            .ToList();
-        var withoutBalance = accounts.Count - anchored.Count;
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var anchors = new List<AccountAnchor>();
+        var balances = new List<AccountBalance>(accounts.Count);
 
-        var anchors = new List<AccountAnchor>(anchored.Count);
-        foreach (var account in anchored)
+        foreach (var account in accounts)
         {
-            var transactions = (
-                await session
-                    .Query<TransactionView>()
-                    .Where(t => t.AccountId == account.Id && t.AmountEur != null)
-                    .ToListAsync(cancellationToken)
-            )
-                .Select(t => (t.BookingDate, t.AmountEur!.Value))
-                .ToList();
+            if (account.CurrentBalanceEur is null || account.BalanceUpdatedAt is null)
+            {
+                balances.Add(ToBalance(account, balance: null, balanceEur: null));
+                continue;
+            }
 
-            anchors.Add(
-                new AccountAnchor(
-                    account.CurrentBalanceEur!.Value,
-                    DateOnly.FromDateTime(account.BalanceUpdatedAt!.Value.UtcDateTime),
-                    transactions
-                )
+            var transactions = await session
+                .Query<TransactionView>()
+                .Where(t => t.AccountId == account.Id)
+                .ToListAsync(cancellationToken);
+
+            var anchorDate = DateOnly.FromDateTime(account.BalanceUpdatedAt.Value.UtcDateTime);
+            var anchor = new AccountAnchor(
+                account.CurrentBalanceEur.Value,
+                anchorDate,
+                transactions
+                    .Where(t => t.AmountEur is not null)
+                    .Select(t => (t.BookingDate, t.AmountEur!.Value))
+                    .ToList()
             );
+            anchors.Add(anchor);
+
+            // The native balance follows the same projection, restricted to the
+            // account's own currency: on a multi-currency account the other
+            // currencies are only meaningful in EUR.
+            decimal? native = account.CurrentBalance is decimal nativeAnchor
+                ? NetWorthCalculator.BalanceAt(
+                    nativeAnchor,
+                    anchorDate,
+                    transactions
+                        .Where(t =>
+                            string.Equals(
+                                t.Currency,
+                                account.Currency,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        .Select(t => (t.BookingDate, t.Amount))
+                        .ToList(),
+                    today
+                )
+                : null;
+
+            balances.Add(ToBalance(account, native, NetWorthCalculator.BalanceAt(anchor, today)));
         }
 
-        var series = NetWorthCalculator.Compute(anchors, BuildSampleDates(months));
+        var series = NetWorthCalculator.Compute(anchors, BuildSampleDates(months, today));
         var current = series.Count > 0 ? series[^1].Amount : 0m;
-        return new NetWorthOverview(current, series, withoutBalance);
+        var withoutBalance = balances.Count(b => !b.HasBalance);
+
+        return new NetWorthOverview(
+            current,
+            series,
+            withoutBalance,
+            balances.OrderBy(b => b.Type).ThenBy(b => b.Name).ToList()
+        );
     }
 
+    private static AccountBalance ToBalance(
+        Account account,
+        decimal? balance,
+        decimal? balanceEur
+    ) =>
+        new(
+            account.Id,
+            account.Name,
+            account.Provider,
+            account.Type,
+            account.Currency,
+            balance,
+            balanceEur,
+            balanceEur is null ? null : account.BalanceUpdatedAt
+        );
+
     /// <summary>Month-end dates for the trailing window, ending with today.</summary>
-    private static IReadOnlyList<DateOnly> BuildSampleDates(int months)
+    private static IReadOnlyList<DateOnly> BuildSampleDates(int months, DateOnly today)
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
         var dates = new List<DateOnly>();
         for (var i = months - 1; i >= 1; i--)
         {

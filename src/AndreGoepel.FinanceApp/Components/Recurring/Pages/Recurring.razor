@@ -7,6 +7,7 @@
 @inject IRecurringService RecurringService
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
+@inject ConfirmService ConfirmService
 @inject IStringLocalizer<Strings> L
 
 <AppPageTitle Title="@L["Nav.Recurring"]" />
@@ -45,11 +46,21 @@
                     <RadzenDataGridColumn TItem="RecurringSeries" Property="NextExpected" Title="@L["Recurring.ColNextExpected"]" Width="150px">
                         <Template Context="row">@Dates.Short(row.NextExpected)</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="140px" TextAlign="TextAlign.End" Sortable="false">
+                    <RadzenDataGridColumn TItem="RecurringSeries" Title="" Width="210px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
-                                <RadzenButton Text="@L["Recurring.AddAsPlanned"]" Icon="event_note" Size="ButtonSize.ExtraSmall"
-                                              ButtonStyle="ButtonStyle.Secondary" Click=@(() => AddAsPlannedAsync(row)) />
+                                @if (row.AlreadyPlanned)
+                                {
+                                    <StatusBadge Variant="BadgeVariant.Success" Text="@L["Recurring.AlreadyPlanned"]" />
+                                }
+                                else
+                                {
+                                    <RadzenButton Text="@L["Recurring.AddAsPlanned"]" Icon="event_note" Size="ButtonSize.ExtraSmall"
+                                                  ButtonStyle="ButtonStyle.Secondary" Disabled=@adding
+                                                  Click=@(() => AddAsPlannedAsync(row)) />
+                                }
+                                <IconButton Icon="delete" Title="@L["Recurring.DismissTooltip"]"
+                                            Click=@(_ => DismissAsync(row)) />
                             </RowActions>
                         </Template>
                     </RadzenDataGridColumn>
@@ -62,10 +73,24 @@
 
 @code {
     private IReadOnlyList<RecurringSeries>? series;
+    private bool adding;
 
     protected override async Task OnInitializedAsync() => series = await RecurringService.GetAsync();
 
     private async Task AddAsPlannedAsync(RecurringSeries s)
+    {
+        adding = true;
+        try
+        {
+            await AddAsPlannedCoreAsync(s);
+        }
+        finally
+        {
+            adding = false;
+        }
+    }
+
+    private async Task AddAsPlannedCoreAsync(RecurringSeries s)
     {
         // Weekly/biweekly cadences map to Monthly (planning steps by whole months) —
         // the user can fine-tune on the Planning page.
@@ -87,7 +112,10 @@
                 ExpectedAccountId: null,
                 CounterpartyPattern: s.Counterparty,
                 AmountTolerance: 0.1m,
-                DateWindowDays: 7
+                DateWindowDays: 7,
+                // Records which series this came from, so the row shows as planned
+                // instead of offering to add it a second time.
+                CreatedFromRecurringKey: s.Counterparty
             )
         );
 
@@ -100,5 +128,18 @@
             L["Recurring.AddedToPlanningTitle"],
             L["Recurring.AddedToPlanningMessage", s.Counterparty]
         );
+        series = await RecurringService.GetAsync();
+    }
+
+    private async Task DismissAsync(RecurringSeries s)
+    {
+        if (!await ConfirmService.ConfirmDeleteAsync(s.Counterparty, L["Recurring.DismissTitle"]))
+        {
+            return;
+        }
+
+        await MessageBus.InvokeAsync(new DismissRecurringSeriesCommand(s.Counterparty));
+        NotificationService.Success(L["Recurring.DismissedMessage", s.Counterparty]);
+        series = await RecurringService.GetAsync();
     }
 }

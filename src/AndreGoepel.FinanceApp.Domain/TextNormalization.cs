@@ -8,7 +8,7 @@ namespace AndreGoepel.FinanceApp.Domain;
 /// matching — import dedup hashing and recurring-transaction grouping both
 /// need "same text, different formatting" to collapse to one key.
 /// </summary>
-internal static class TextNormalization
+public static class TextNormalization
 {
     /// <summary>
     /// Lower-cases and collapses whitespace: leading/trailing whitespace is

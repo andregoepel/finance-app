@@ -1,0 +1,202 @@
+@using AndreGoepel.FinanceApp.Categorization
+@using AndreGoepel.FinanceApp.Domain.Accounts
+@using AndreGoepel.FinanceApp.Domain.Planning
+
+@inject IMessageBus MessageBus
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IStringLocalizer<Strings> L
+
+@* Add/edit a planned item (#166) — the dialog body opened from Planning.razor.
+   Closes with `true` once saved, so the caller knows to reload. *@
+
+<DialogForm TItem="ItemForm"
+            Data="form"
+            Submit="SaveAsync"
+            SubmitText="@(Item is null ? L["Common.Add"] : L["Common.Save"])"
+            CancelText="@L["Common.Cancel"]"
+            IsBusy="isSaving">
+    <div class="ag-form-grid">
+        <FormField Label="@L["Common.Description"]" For="Description">
+            <RadzenTextBox @bind-Value=@form.Description Name="Description" Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Planning.TypeLabel"]" For="Type">
+            <RadzenDropDown TValue="bool" @bind-Value=@form.IsExpense Name="Type" Data=@TypeChoices
+                            TextProperty="Label" ValueProperty="IsExpense" Style="width: 100%;" />
+        </FormField>
+    </div>
+    <div class="ag-form-grid">
+        <FormField Label="@L["Planning.AmountLabel"]" For="Amount">
+            <RadzenNumeric TValue="decimal" @bind-Value=@form.Amount Name="Amount" Min="0" Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
+            <CategoryPicker Options="@CategoryOptions" Name="Category" @bind-Value=@form.CategoryId
+                            Placeholder="@L["Planning.NonePlaceholder"]" />
+        </FormField>
+    </div>
+    <div class="ag-form-grid">
+        <FormField Label="@L["Planning.FrequencyLabel"]" For="Frequency">
+            <RadzenDropDown TValue="PlannedFrequency" @bind-Value=@form.Frequency Name="Frequency" Data=@Frequencies Style="width: 100%;">
+                <Template>@L[$"Enum.PlannedFrequency.{context}"]</Template>
+            </RadzenDropDown>
+        </FormField>
+        <FormField Label="@L["Planning.StartDateLabel"]" For="StartDate">
+            <RadzenDatePicker TValue="DateTime" @bind-Value=@form.StartDate Name="StartDate" DateFormat="@Dates.ShortFormat" Style="width: 100%;" />
+        </FormField>
+    </div>
+    @if (form.Frequency != PlannedFrequency.OneTime)
+    {
+        <FormField Label="@L["Planning.EndDateLabel"]" For="EndDate">
+            <RadzenDatePicker TValue="DateTime?" @bind-Value=@form.EndDate Name="EndDate" DateFormat="@Dates.ShortFormat" AllowClear="true" Style="width: 100%;" />
+        </FormField>
+    }
+    <FormField Label="@L["Planning.ExpectedAccountLabel"]" For="ExpectedAccount">
+        <RadzenDropDown TValue="Guid?" @bind-Value=@form.ExpectedAccountId Name="ExpectedAccount" Data=@Accounts ValueProperty="Id" TextProperty="Name"
+                        AllowClear="true" Placeholder="@L["Planning.AnyPlaceholder"]" Style="width: 100%;" />
+    </FormField>
+    <FormField Label="@L["Rules.ColCounterpartyContains"]" For="CounterpartyPattern">
+        <RadzenTextBox @bind-Value=@form.CounterpartyPattern Name="CounterpartyPattern" Placeholder="@L["Planning.MatchHintPlaceholder"]" Style="width: 100%;" />
+    </FormField>
+    <div class="ag-form-grid">
+        <FormField Label="@L["Planning.ToleranceLabel"]" For="Tolerance">
+            <RadzenNumeric TValue="decimal" @bind-Value=@form.TolerancePercent Name="Tolerance" Min="0" Max="100" Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Planning.DateWindowLabel"]" For="DateWindow">
+            <RadzenNumeric TValue="int" @bind-Value=@form.DateWindowDays Name="DateWindow" Min="0" Style="width: 100%;" />
+        </FormField>
+    </div>
+    @if (Item is not null)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <RadzenSwitch @bind-Value=@form.Active Name="Active" />
+            <RadzenLabel Text="@L["Planning.ActiveLabel"]" Component="Active" />
+        </RadzenStack>
+    }
+</DialogForm>
+
+@code {
+    private sealed record TypeChoice(string Label, bool IsExpense);
+
+    private static readonly PlannedFrequency[] Frequencies = Enum.GetValues<PlannedFrequency>();
+
+    // Instance property (not static) since the labels are localized via the injected L.
+    private TypeChoice[] TypeChoices =>
+        [new(L["Planning.TypeExpense"], true), new(L["Planning.TypeIncome"], false)];
+
+    /// <summary>The planned item being edited, or null when adding a new one.</summary>
+    [Parameter]
+    public PlannedItem? Item { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CategoryOption> CategoryOptions { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<Account> Accounts { get; set; } = [];
+
+    private ItemForm form = new();
+    private bool isSaving;
+
+    protected override void OnInitialized()
+    {
+        if (Item is null)
+        {
+            return;
+        }
+
+        form = new ItemForm
+        {
+            Description = Item.Description,
+            IsExpense = Item.Amount < 0,
+            Amount = Math.Abs(Item.Amount),
+            CategoryId = Item.CategoryId,
+            Frequency = Item.Schedule.Frequency,
+            StartDate = Item.Schedule.StartDate.ToDateTime(TimeOnly.MinValue),
+            EndDate = Item.Schedule.EndDate?.ToDateTime(TimeOnly.MinValue),
+            ExpectedAccountId = Item.ExpectedAccountId,
+            CounterpartyPattern = Item.CounterpartyPattern ?? "",
+            TolerancePercent = Item.AmountTolerance * 100,
+            DateWindowDays = Item.DateWindowDays,
+            Active = Item.Active,
+        };
+    }
+
+    private async Task SaveAsync()
+    {
+        if (isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var amount = form.IsExpense ? -form.Amount : form.Amount;
+            var start = DateOnly.FromDateTime(form.StartDate);
+            DateOnly? end =
+                form.Frequency != PlannedFrequency.OneTime && form.EndDate is DateTime e
+                    ? DateOnly.FromDateTime(e)
+                    : null;
+            var tolerance = form.TolerancePercent / 100m;
+
+            Result result = Item is not null
+                ? await MessageBus.InvokeAsync<Result<PlannedItem>>(
+                    new UpdatePlannedItemCommand(
+                        Item.Id,
+                        form.Description,
+                        amount,
+                        form.CategoryId,
+                        form.Frequency,
+                        start,
+                        end,
+                        form.ExpectedAccountId,
+                        form.CounterpartyPattern,
+                        tolerance,
+                        form.DateWindowDays,
+                        form.Active
+                    )
+                )
+                : await MessageBus.InvokeAsync<Result<PlannedItem>>(
+                    new CreatePlannedItemCommand(
+                        form.Description,
+                        amount,
+                        form.CategoryId,
+                        form.Frequency,
+                        start,
+                        end,
+                        form.ExpectedAccountId,
+                        form.CounterpartyPattern,
+                        tolerance,
+                        form.DateWindowDays
+                    )
+                );
+
+            if (result.IsFailure)
+            {
+                NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
+                return;
+            }
+
+            DialogService.Close(true);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private sealed class ItemForm
+    {
+        public string Description { get; set; } = "";
+        public bool IsExpense { get; set; } = true;
+        public decimal Amount { get; set; }
+        public Guid? CategoryId { get; set; }
+        public PlannedFrequency Frequency { get; set; } = PlannedFrequency.Monthly;
+        public DateTime StartDate { get; set; } = DateTime.Today;
+        public DateTime? EndDate { get; set; }
+        public Guid? ExpectedAccountId { get; set; }
+        public string CounterpartyPattern { get; set; } = "";
+        public decimal TolerancePercent { get; set; } = 10;
+        public int DateWindowDays { get; set; } = 7;
+        public bool Active { get; set; } = true;
+    }
+}

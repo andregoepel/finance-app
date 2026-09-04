@@ -1,0 +1,107 @@
+@using AndreGoepel.FinanceApp.Categorization
+@using AndreGoepel.FinanceApp.Domain.Budgets
+
+@inject IMessageBus MessageBus
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IStringLocalizer<Strings> L
+
+@* Add/edit a budget period (#166) — the dialog body opened from Budgets.razor.
+   Closes with `true` once saved, so the caller knows to reload. *@
+
+<DialogForm TItem="InputModel"
+            Data="form"
+            Submit="SaveAsync"
+            SubmitText="@(Budget is null ? L["Common.Add"] : L["Common.Save"])"
+            CancelText="@L["Common.Cancel"]"
+            IsBusy="isSaving">
+    <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
+        <CategoryPicker Options="@CategoryOptions" Name="Category"
+                        @bind-Value=@form.CategoryId
+                        Placeholder="@L["Common.SelectCategoryPlaceholder"]" />
+    </FormField>
+    <FormField Label="@L["Budgets.MonthlyLimitLabel"]" For="Limit">
+        <RadzenNumeric TValue="decimal" @bind-Value=@form.Limit Name="Limit" Min="0" Style="width: 100%;" />
+    </FormField>
+    <div class="ag-form-grid">
+        <FormField Label="@L["Budgets.StartMonthLabel"]" For="StartMonth">
+            <RadzenDatePicker TValue="DateTime" @bind-Value=@form.StartMonth Name="StartMonth"
+                              DateFormat="@Dates.MonthFormat" Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Budgets.EndMonthLabel"]" For="EndMonth">
+            <RadzenDatePicker TValue="DateTime?" @bind-Value=@form.EndMonth Name="EndMonth"
+                              DateFormat="@Dates.MonthFormat" AllowClear="true"
+                              Placeholder="@L["Budgets.EndMonthOngoingPlaceholder"]" Style="width: 100%;" />
+        </FormField>
+    </div>
+</DialogForm>
+
+@code {
+    /// <summary>The budget period being edited, or null when adding a new one.</summary>
+    [Parameter]
+    public Budget? Budget { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CategoryOption> CategoryOptions { get; set; } = [];
+
+    private InputModel form = new();
+    private bool isSaving;
+
+    protected override void OnInitialized()
+    {
+        if (Budget is null)
+        {
+            return;
+        }
+
+        form = new InputModel
+        {
+            CategoryId = Budget.CategoryId,
+            Limit = Budget.MonthlyLimit,
+            StartMonth = Budget.StartMonth.ToDateTime(TimeOnly.MinValue),
+            EndMonth = Budget.EndMonth?.ToDateTime(TimeOnly.MinValue),
+        };
+    }
+
+    private async Task SaveAsync()
+    {
+        if (isSaving || form.CategoryId is not Guid categoryId)
+        {
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var result = await MessageBus.InvokeAsync<Result<Budget>>(
+                new SetBudgetCommand(
+                    Budget?.Id,
+                    categoryId,
+                    form.Limit,
+                    DateOnly.FromDateTime(form.StartMonth),
+                    form.EndMonth is DateTime end ? DateOnly.FromDateTime(end) : null
+                )
+            );
+
+            if (result.IsFailure)
+            {
+                NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
+                return;
+            }
+
+            DialogService.Close(true);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private sealed class InputModel
+    {
+        public Guid? CategoryId { get; set; }
+        public decimal Limit { get; set; }
+        public DateTime StartMonth { get; set; } = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+        public DateTime? EndMonth { get; set; }
+    }
+}

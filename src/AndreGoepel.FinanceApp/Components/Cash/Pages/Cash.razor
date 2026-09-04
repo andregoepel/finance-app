@@ -1,0 +1,429 @@
+@page "/cash"
+@attribute [Authorize]
+@using AndreGoepel.FinanceApp.Components.Cash.Dialogs
+@using AndreGoepel.Marten.Identity.Users
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@inject IQuerySession QuerySession
+@inject IMessageBus MessageBus
+@inject IExchangeRateProvider ExchangeRateProvider
+@inject NotificationService NotificationService
+@inject ConfirmService ConfirmService
+@inject DialogService DialogService
+@inject UserManager<User> UserManager
+@inject IStringLocalizer<Strings> L
+@implements IDisposable
+
+<AppPageTitle Title="@L["Nav.Cash"]" />
+
+<PageBody>
+
+    <PageHeader Title="@L["Nav.Cash"]">
+        <Actions>
+            @if (cashAccounts.Count > 1)
+            {
+                <RadzenDropDown TValue="Guid?"
+                                @bind-Value=@selectedAccountId Name="CashAccount"
+                                Data=@cashAccounts TextProperty="Name" ValueProperty="Id"
+                                Style="min-width: 12rem;"
+                                Change=@(_ => ReloadAsync()) />
+            }
+            @if (cashAccounts.Count > 0)
+            {
+                <IconButton Icon="add" Title="@L["Cash.AddAccountTooltip"]" Click=@CreateAccountAsync />
+            }
+        </Actions>
+    </PageHeader>
+
+    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@L["Cash.Subtitle"]</RadzenText>
+
+    @if (currentUserId is null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">@L["Cash.OwnerUnknownHint"]</RadzenAlert>
+    }
+
+    @if (cashAccounts.Count == 0)
+    {
+        <EmptyState Icon="@("💵")" Title="@L["Cash.NoAccountTitle"]" Text="@L["Cash.NoAccountText"]">
+            <Actions>
+                <RadzenButton Text="@L["Cash.CreateTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@CreateAccountAsync />
+            </Actions>
+        </EmptyState>
+    }
+
+    @if (SelectedAccount is Account account)
+    {
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenText TextStyle="TextStyle.Overline">@L["Cash.BalanceTitle"] — @account.Name</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Money.Format(account.CurrentBalance ?? 0m, account.Currency)</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@L["Cash.AdjustHint"]</RadzenText>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
+                            <FormField Label="@L["Cash.CountedBalanceLabel", account.Currency]" For="Counted">
+                                <RadzenNumeric TValue="decimal?" @bind-Value=@countedBalance Name="Counted" Disabled=@isSaving Style="min-width: 10rem;" />
+                            </FormField>
+                            <RadzenButton Text="@L["Cash.AdjustButton"]" Icon="balance" ButtonStyle="ButtonStyle.Light"
+                                          Disabled=@(isSaving || countedBalance is null) Click=@AdjustAsync />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="3">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Overline">@L["Cash.SpentThisMonth"]</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; color: var(--rz-danger);">@Money.Format(SpentThisMonth, account.Currency)</RadzenText>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="3">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Overline">@L["Cash.ReceivedThisMonth"]</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5" Style="margin: 0; color: var(--rz-success);">@Money.Format(ReceivedThisMonth, account.Currency)</RadzenText>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="@L["Cash.EntryTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@(() => AddEntryAsync(account)) />
+        </RadzenStack>
+
+        <SectionCard Title="@L["Nav.Transactions"]">
+            @if (transactions.Count == 0)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">@L["Cash.NoEntries"]</RadzenText>
+            }
+            else
+            {
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                    @L["Cash.TransferHint", L["Nav.Transactions"]]
+                </RadzenText>
+                <RadzenDataGrid TItem="TransactionView"
+                                Data=@transactions
+                                AllowPaging="true"
+                                PageSize="25"
+                                AllowSorting="true"
+                                Density="Density.Compact">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="TransactionView" Property="BookingDate" Title="@L["Common.Date"]" Width="110px">
+                            <Template Context="transaction">@Dates.Short(transaction.BookingDate)</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="TransactionView" Property="Counterparty" Title="@L["Common.Counterparty"]" Width="170px" />
+                        <RadzenDataGridColumn TItem="TransactionView" Property="Description" Title="@L["Common.Description"]" />
+                        <RadzenDataGridColumn TItem="TransactionView" Property="Amount" Title="@L["Common.Amount"]" Width="130px" TextAlign="TextAlign.Right">
+                            <Template Context="transaction">
+                                <AmountText Amount="transaction.Amount" Currency="@transaction.Currency" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="220px" Sortable="false">
+                            <Template Context="transaction">
+                                <CategoryPicker Options="@categoryOptions"
+                                                Value="@transaction.CategoryId"
+                                                ValueChanged="@(v => CategorizeAsync(transaction, v))"
+                                                AllowClear="false"
+                                                Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="TransactionView" Title="" Width="150px" Sortable="false" TextAlign="TextAlign.End">
+                            <Template Context="transaction">
+                                <RowActions>
+                                    @if (transaction.IsTransfer)
+                                    {
+                                        <StatusBadge Variant="BadgeVariant.Info" Text="@L["Transactions.TransferBadge"]" />
+                                    }
+                                    else if (transaction.CategorySource is not null)
+                                    {
+                                        <StatusBadge Variant="BadgeVariant.Neutral" Text="@L[$"Enum.CategorySource.{transaction.CategorySource}"]" />
+                                    }
+                                    <IconButton Icon="delete" Title="@L["Cash.DeleteEntryTooltip"]" Danger="true"
+                                                Click=@(_ => DeleteAsync(transaction)) />
+                                </RowActions>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </SectionCard>
+    }
+
+</PageBody>
+
+@code {
+    private const int MaxRows = 500;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private readonly CancellationTokenSource _cts = new();
+
+    private IReadOnlyList<User> users = [];
+    private string? currentUserName;
+    private Guid? currentUserId;
+    private List<Account> cashAccounts = [];
+    private Guid? selectedAccountId;
+    private List<CategoryOption> categoryOptions = [];
+    private List<TransactionView> transactions = [];
+    private decimal? countedBalance;
+    private bool isSaving;
+
+    private Account? SelectedAccount => cashAccounts.FirstOrDefault(a => a.Id == selectedAccountId);
+
+    private decimal SpentThisMonth => -ThisMonth().Where(t => t.Amount < 0).Sum(t => t.Amount);
+
+    private decimal ReceivedThisMonth => ThisMonth().Where(t => t.Amount > 0).Sum(t => t.Amount);
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserManager
+            .Users.Where(u => !u.Deleted)
+            .OrderBy(u => u.UserName)
+            .ToListAsync(_cts.Token);
+        currentUserName = AuthenticationState is null
+            ? null
+            : (await AuthenticationState).User.Identity?.Name;
+        currentUserId = users.FirstOrDefault(u => u.UserName == currentUserName)?.StreamId;
+
+        var categories = await QuerySession.Query<Category>().ToListAsync(_cts.Token);
+        categoryOptions = CategoryPaths.Build(categories);
+
+        await LoadAccountsAsync();
+        await ReloadAsync();
+    }
+
+    // "Per user": only the cash accounts the signed-in user owns (shared ones included).
+    // Without a resolvable user every cash account is shown rather than none.
+    private async Task LoadAccountsAsync()
+    {
+        var manual = await QuerySession
+            .Query<Account>()
+            .Where(a => a.SyncMethod == SyncMethod.Manual && a.Status == AccountStatus.Active)
+            .ToListAsync(_cts.Token);
+        cashAccounts = manual
+            .Where(a => currentUserId is not Guid me || a.OwnerUserIds.Contains(me))
+            .OrderBy(a => a.Name)
+            .ToList();
+        if (SelectedAccount is null)
+        {
+            selectedAccountId = cashAccounts.FirstOrDefault()?.Id;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (selectedAccountId is not Guid accountId)
+        {
+            transactions = [];
+            return;
+        }
+
+        transactions = (
+            await QuerySession
+                .Query<TransactionView>()
+                .Where(t => t.AccountId == accountId)
+                .OrderByDescending(t => t.BookingDate)
+                .ThenByDescending(t => t.Id)
+                .Take(MaxRows)
+                .ToListAsync(_cts.Token)
+        ).ToList();
+    }
+
+    private async Task CreateAccountAsync()
+    {
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@L["Cash.CreateTitle"]" />,
+            childContent: _ => @<CashAccountCreateDialog CurrentUserId="@currentUserId" CurrentUserName="@currentUserName" Users="@users" />
+        );
+        if (result is Account created)
+        {
+            NotificationService.Success(L["Cash.CreatedMessage"]);
+            selectedAccountId = created.Id;
+            await LoadAccountsAsync();
+            await ReloadAsync();
+        }
+    }
+
+    private async Task AddEntryAsync(Account account)
+    {
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@L["Cash.EntryTitle"]" />,
+            childContent: _ => @<CashEntryDialog Account="@account" CurrentUserName="@currentUserName" CategoryOptions="@categoryOptions" />
+        );
+        if (result is true)
+        {
+            await LoadAccountsAsync();
+            await ReloadAsync();
+        }
+    }
+
+    // Counting the cash and typing in the result records the difference as its own
+    // entry, so the history explains every change of the balance.
+    private async Task AdjustAsync()
+    {
+        if (SelectedAccount is not Account account || countedBalance is not decimal counted)
+        {
+            return;
+        }
+
+        var difference = counted - (account.CurrentBalance ?? 0m);
+        if (difference == 0)
+        {
+            NotificationService.Success(L["Cash.AdjustNoDifference"]);
+            countedBalance = null;
+            return;
+        }
+
+        var recorded = await RecordAsync(
+            account,
+            DateOnly.FromDateTime(DateTime.Today),
+            difference,
+            L["Cash.AdjustmentDescription"],
+            counterparty: null,
+            categoryId: null,
+            categorizeIfNeeded: false
+        );
+        if (recorded)
+        {
+            countedBalance = null;
+        }
+    }
+
+    private async Task<bool> RecordAsync(
+        Account account,
+        DateOnly date,
+        decimal amount,
+        string description,
+        string? counterparty,
+        Guid? categoryId,
+        bool categorizeIfNeeded
+    )
+    {
+        if (isSaving)
+        {
+            return false;
+        }
+
+        isSaving = true;
+        StateHasChanged();
+        await Task.Yield();
+        try
+        {
+            var amountEur = await ToEurAsync(amount, account.Currency, date);
+            if (amountEur is null)
+            {
+                NotificationService.Warning(L["Cash.RateUnavailableTitle"], L["Cash.RateUnavailableMessage"]);
+            }
+
+            var result = await MessageBus.InvokeAsync<Result<TransactionView>>(
+                new RecordManualTransactionCommand(
+                    account.Id,
+                    date,
+                    amount,
+                    amountEur,
+                    description,
+                    counterparty,
+                    categoryId,
+                    currentUserName
+                ),
+                _cts.Token
+            );
+            if (result.IsFailure)
+            {
+                NotificationService.Error(L["Cash.EntryFailedTitle"], result.Error);
+                return false;
+            }
+
+            await PublishFollowUpsAsync(result.Value!, categorizeIfNeeded);
+            NotificationService.Success(L["Cash.EntrySavedMessage"]);
+            await LoadAccountsAsync();
+            await ReloadAsync();
+            return true;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // Same follow-ups as an import, published top-level from application code
+    // (the proven Wolverine delivery path); none of them can fail the entry.
+    private async Task PublishFollowUpsAsync(TransactionView recorded, bool categorizeIfNeeded)
+    {
+        if (recorded.AmountEur is null)
+        {
+            await MessageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
+        }
+        await MessageBus.PublishAsync(new MatchTransfersCommand());
+        if (categorizeIfNeeded && recorded.CategoryId is null)
+        {
+            await MessageBus.PublishAsync(new CategorizeImportedTransactionsCommand(recorded.ImportBatchId));
+        }
+        await MessageBus.PublishAsync(new MatchPlannedTransactionsCommand());
+    }
+
+    private async Task CategorizeAsync(TransactionView transaction, Guid? categoryId)
+    {
+        if (categoryId is not Guid newCategoryId || newCategoryId == transaction.CategoryId)
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result>(
+            new CategorizeTransactionCommand(transaction.Id, newCategoryId),
+            _cts.Token
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Error(L["Transactions.CategorizationFailedTitle"], result.Error);
+            return;
+        }
+        await ReloadAsync();
+    }
+
+    private async Task DeleteAsync(TransactionView transaction)
+    {
+        if (!await ConfirmService.ConfirmDeleteAsync(transaction.Description, L["Cash.DeleteEntryTitle"]))
+        {
+            return;
+        }
+
+        var result = await MessageBus.InvokeAsync<Result>(
+            new DeleteManualTransactionCommand(transaction.Id),
+            _cts.Token
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);
+            return;
+        }
+
+        NotificationService.Success(L["Cash.EntryDeletedMessage"]);
+        await LoadAccountsAsync();
+        await ReloadAsync();
+    }
+
+    // EUR is a pass-through; anything else is converted at the entry's date so the
+    // handler can keep the EUR anchor exact. Null when no rate is available.
+    private async Task<decimal?> ToEurAsync(decimal amount, string currency, DateOnly date)
+    {
+        if (string.Equals(currency, "EUR", StringComparison.OrdinalIgnoreCase))
+        {
+            return amount;
+        }
+
+        var rate = await ExchangeRateProvider.GetEurRateAsync(currency, date, _cts.Token);
+        return rate.IsSuccess ? amount * rate.Value!.EurPerUnit : null;
+    }
+
+    private IEnumerable<TransactionView> ThisMonth()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return transactions.Where(t => t.BookingDate.Year == today.Year && t.BookingDate.Month == today.Month);
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+}

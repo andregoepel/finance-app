@@ -96,6 +96,7 @@
   <data name="Error.AlreadyLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Eine der Transaktionen ist bereits als Umbuchung verknüpft.]]></value></data>
   <data name="Error.NotLinkedAsTransfer" xml:space="preserve"><value><![CDATA[Die Transaktion ist nicht als Umbuchung verknüpft.]]></value></data>
   <data name="Error.TransferLegsSameAccount" xml:space="preserve"><value><![CDATA[Die beiden Seiten einer Umbuchung müssen zu verschiedenen Konten gehören.]]></value></data>
+  <data name="Error.TransferSuggestionNotFound" xml:space="preserve"><value><![CDATA[Umbuchungsvorschlag nicht gefunden.]]></value></data>
 
   <!-- Planning -->
   <data name="Error.DescriptionRequired" xml:space="preserve"><value><![CDATA[Eine Beschreibung ist erforderlich.]]></value></data>
@@ -104,6 +105,9 @@
 
   <!-- Budgets -->
   <data name="Error.BudgetLimitPositive" xml:space="preserve"><value><![CDATA[Ein Budgetlimit muss größer als null sein.]]></value></data>
+  <data name="Error.BudgetEndBeforeStart" xml:space="preserve"><value><![CDATA[Der Endmonat darf nicht vor dem Startmonat liegen.]]></value></data>
+  <data name="Error.BudgetNotFound" xml:space="preserve"><value><![CDATA[Budget nicht gefunden.]]></value></data>
+  <data name="Error.BudgetPeriodOverlap" xml:space="preserve"><value><![CDATA[Für diese Kategorie besteht in diesem Zeitraum bereits ein Budget.]]></value></data>
 
   <!-- Crypto -->
   <data name="Error.SymbolRequired" xml:space="preserve"><value><![CDATA[Ein Symbol ist erforderlich.]]></value></data>
@@ -116,8 +120,15 @@
   <data name="Error.SecretMustNotBeEmpty" xml:space="preserve"><value><![CDATA[Das Secret darf nicht leer sein.]]></value></data>
   <!-- Categorization -->
   <data name="Error.NoPendingSuggestions" xml:space="preserve"><value><![CDATA[Keine offenen Vorschläge für die ausgewählten Transaktionen gefunden.]]></value></data>
+  <data name="Error.SplitNeedsAtLeastTwoLines" xml:space="preserve"><value><![CDATA[Eine Aufteilung benötigt mindestens zwei Kategorien.]]></value></data>
+  <data name="Error.SplitLineAmountZero" xml:space="preserve"><value><![CDATA[Jeder Teilbetrag darf nicht null sein.]]></value></data>
+  <data name="Error.SplitLineWrongSign" xml:space="preserve"><value><![CDATA[Jeder Teilbetrag muss dasselbe Vorzeichen wie die Transaktion haben (negativ = Ausgabe, positiv = Einnahme).]]></value></data>
+  <data name="Error.SplitAmountsMustSumToTotal" xml:space="preserve"><value><![CDATA[Die Teilbeträge müssen in Summe dem Gesamtbetrag der Transaktion entsprechen.]]></value></data>
   <!-- Connectors — the three messages from that layer a user can actually act on. -->
   <data name="Error.NoParserForProvider" xml:space="preserve"><value><![CDATA[Für {0} ist kein Kontoauszugs-Parser registriert.]]></value><comment>{0} = provider name</comment></data>
   <data name="Error.UnrecognizedExportFormat" xml:space="preserve"><value><![CDATA[Unbekanntes {0}-Exportformat. Unterstützte Formate: {1}. Möglicherweise hat der Anbieter sein Exportformat geändert — dann wird eine neue Parser-Version benötigt.]]></value><comment>{0} = provider, {1} = comma-separated parser ids</comment></data>
   <data name="Error.AccountConsentLinkMissing" xml:space="preserve"><value><![CDATA[Dieses Konto ist mit keinem Konto der aktuellen {0}-Einwilligung verknüpft. Bitte unter Einstellungen → Verbindungen neu verknüpfen.]]></value><comment>{0} = provider name</comment></data>
+  <!-- Manual entries (cash). -->
+  <data name="Error.ManualEntriesOnManualAccountsOnly" xml:space="preserve"><value><![CDATA[Transaktionen können nur auf manuell geführten Konten (Bargeld) von Hand erfasst werden.]]></value></data>
+  <data name="Error.OnlyManualEntriesCanBeDeleted" xml:space="preserve"><value><![CDATA[Nur von Hand erfasste Transaktionen können gelöscht werden; importierte Historie bleibt erhalten.]]></value></data>
 </root>

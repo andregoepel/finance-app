@@ -3,13 +3,16 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AndreGoepel.Core;
 using AndreGoepel.FinanceApp.Domain.Credentials;
+using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Categorization.Claude;
 
 /// <summary>
 /// Claude Messages API client: batches of transactions, structured output via a
 /// forced tool call, temperature 0, Haiku-class model. The API key comes from
-/// the encrypted credential store and is never logged.
+/// the encrypted credential store and is never logged. The instructions, the
+/// category tree and the recent examples form a cached prefix that every batch
+/// of a run shares; see <see cref="BuildSystemBlocks"/>.
 /// </summary>
 /// <remarks>
 /// Takes <see cref="IHttpClientFactory"/> (a named client) rather than a typed
@@ -22,7 +25,8 @@ namespace AndreGoepel.FinanceApp.Categorization.Claude;
 /// </remarks>
 public sealed class ClaudeCategorizer(
     IHttpClientFactory httpClientFactory,
-    ICredentialStore credentialStore
+    ICredentialStore credentialStore,
+    ILogger<ClaudeCategorizer> logger
 ) : IClaudeCategorizer
 {
     internal const string HttpClientName = "claude";
@@ -32,7 +36,7 @@ public sealed class ClaudeCategorizer(
     public async Task<Result<IReadOnlyList<ClaudeCategorySuggestion>>> SuggestAsync(
         IReadOnlyList<TransactionToCategorize> transactions,
         IReadOnlyList<CategoryOption> categories,
-        IReadOnlyList<FewShotExample> examples,
+        FewShotExamples examples,
         CancellationToken cancellationToken = default
     )
     {
@@ -71,6 +75,7 @@ public sealed class ClaudeCategorizer(
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            LogUsage(json, transactions.Count);
             return ParseResponse(json, categories.Select(c => c.Id).ToHashSet());
         }
         catch (Exception exception)
@@ -85,24 +90,17 @@ public sealed class ClaudeCategorizer(
     internal static JsonObject BuildRequestBody(
         IReadOnlyList<TransactionToCategorize> transactions,
         IReadOnlyList<CategoryOption> categories,
-        IReadOnlyList<FewShotExample> examples
+        FewShotExamples examples
     )
     {
-        var transactionLines = transactions.Select(t => new JsonObject
-        {
-            ["transaction_id"] = t.TransactionId.ToString("D"),
-            ["counterparty"] = t.Counterparty,
-            ["description"] = t.Description,
-            ["amount"] = t.Amount,
-            ["currency"] = t.Currency,
-        });
+        var transactionLines = transactions.Select(TransactionLine);
 
         return new JsonObject
         {
             ["model"] = Model,
             ["max_tokens"] = 4096,
             ["temperature"] = 0,
-            ["system"] = BuildSystemPrompt(categories, examples),
+            ["system"] = BuildSystemBlocks(categories, examples),
             ["messages"] = new JsonArray(
                 new JsonObject
                 {
@@ -160,9 +158,62 @@ public sealed class ClaudeCategorizer(
         };
     }
 
-    internal static string BuildSystemPrompt(
+    /// <summary>
+    /// The system prompt as content blocks so the stable part can be served from
+    /// the prompt cache: instructions, category tree and recent examples are the
+    /// same for every batch of a run and end with the cache breakpoint; the
+    /// batch's own counterparty examples follow it. Everything before the
+    /// breakpoint (tools included) must stay byte-identical between requests, so
+    /// nothing time- or batch-dependent may go there. The cache only kicks in
+    /// once the prefix exceeds the model's minimum (4096 tokens on Haiku 4.5);
+    /// the recent-example count in the handler is sized for that.
+    /// </summary>
+    internal static JsonArray BuildSystemBlocks(
         IReadOnlyList<CategoryOption> categories,
-        IReadOnlyList<FewShotExample> examples
+        FewShotExamples examples
+    )
+    {
+        var blocks = new JsonArray(
+            new JsonObject
+            {
+                ["type"] = "text",
+                ["text"] = BuildStablePrompt(categories, examples.Recent),
+                ["cache_control"] = new JsonObject { ["type"] = "ephemeral" },
+            }
+        );
+        if (examples.ForBatch.Count > 0)
+        {
+            blocks.Add(
+                new JsonObject { ["type"] = "text", ["text"] = BuildBatchPrompt(examples.ForBatch) }
+            );
+        }
+        return blocks;
+    }
+
+    internal static JsonObject TransactionLine(TransactionToCategorize transaction)
+    {
+        var line = new JsonObject
+        {
+            ["transaction_id"] = transaction.TransactionId.ToString("D"),
+            ["counterparty"] = transaction.Counterparty,
+            ["description"] = transaction.Description,
+            ["amount"] = transaction.Amount,
+            ["currency"] = transaction.Currency,
+        };
+        if (transaction.BookingDate is DateOnly bookingDate)
+        {
+            line["booking_date"] = bookingDate.ToString("yyyy-MM-dd");
+        }
+        if (!string.IsNullOrWhiteSpace(transaction.RecurrenceHint))
+        {
+            line["recurrence"] = transaction.RecurrenceHint;
+        }
+        return line;
+    }
+
+    internal static string BuildStablePrompt(
+        IReadOnlyList<CategoryOption> categories,
+        IReadOnlyList<FewShotExample> recentExamples
     )
     {
         var builder = new System.Text.StringBuilder();
@@ -174,6 +225,12 @@ public sealed class ClaudeCategorizer(
                 + "or null when no category fits. Report a confidence between 0 and 1; use low "
                 + "confidence when unsure. Negative amounts are expenses, positive amounts income."
         );
+        builder.AppendLine(
+            "A transaction may carry a \"recurrence\" note: the same counterparty has appeared at "
+                + "that interval with a consistent amount. Treat it as a strong signal for "
+                + "subscriptions, insurance premiums, rent, utilities, loan instalments and salary, "
+                + "and prefer that reading over a one-off interpretation of the name."
+        );
         builder.AppendLine();
         builder.AppendLine("Available categories (id: path):");
         foreach (var category in categories)
@@ -181,19 +238,39 @@ public sealed class ClaudeCategorizer(
             builder.AppendLine($"{category.Id:D}: {category.Path}");
         }
 
-        if (examples.Count > 0)
+        if (recentExamples.Count > 0)
         {
             builder.AppendLine();
-            builder.AppendLine("Confirmed examples from this household's history:");
-            foreach (var example in examples)
-            {
-                builder.AppendLine(
-                    $"- counterparty: {example.Counterparty ?? "-"} | description: {example.Description} | amount: {example.Amount} => {example.CategoryPath}"
-                );
-            }
+            builder.AppendLine(
+                "Recently confirmed examples from this household's history (newest first):"
+            );
+            AppendExamples(builder, recentExamples);
         }
 
         return builder.ToString();
+    }
+
+    internal static string BuildBatchPrompt(IReadOnlyList<FewShotExample> batchExamples)
+    {
+        var builder = new System.Text.StringBuilder();
+        builder.AppendLine(
+            "Confirmed examples for counterparties in this batch — follow them when they apply:"
+        );
+        AppendExamples(builder, batchExamples);
+        return builder.ToString();
+    }
+
+    private static void AppendExamples(
+        System.Text.StringBuilder builder,
+        IReadOnlyList<FewShotExample> examples
+    )
+    {
+        foreach (var example in examples)
+        {
+            builder.AppendLine(
+                $"- counterparty: {example.Counterparty ?? "-"} | description: {example.Description} | amount: {example.Amount} => {example.CategoryPath}"
+            );
+        }
     }
 
     internal static Result<IReadOnlyList<ClaudeCategorySuggestion>> ParseResponse(
@@ -252,4 +329,38 @@ public sealed class ClaudeCategorizer(
 
         return Result.Ok<IReadOnlyList<ClaudeCategorySuggestion>>(suggestions);
     }
+
+    /// <summary>
+    /// The token accounting of one call, so the log shows whether the cached prefix
+    /// is actually being read (<c>cache_read_input_tokens</c> &gt; 0 from the second
+    /// batch of a run on) or silently ignored because the prefix is too short.
+    /// </summary>
+    private void LogUsage(string json, int transactionCount)
+    {
+        JsonNode? usage;
+        try
+        {
+            usage = JsonNode.Parse(json)?["usage"];
+        }
+        catch (JsonException)
+        {
+            return;
+        }
+        if (usage is null)
+        {
+            return;
+        }
+
+        logger.LogInformation(
+            "Claude categorized {Count} transactions: {Input} uncached input tokens, {CacheRead} read from cache, {CacheWrite} written to cache, {Output} output tokens.",
+            transactionCount,
+            Tokens(usage, "input_tokens"),
+            Tokens(usage, "cache_read_input_tokens"),
+            Tokens(usage, "cache_creation_input_tokens"),
+            Tokens(usage, "output_tokens")
+        );
+    }
+
+    private static long Tokens(JsonNode usage, string field) =>
+        usage[field] is JsonValue value && value.TryGetValue<long>(out var tokens) ? tokens : 0;
 }

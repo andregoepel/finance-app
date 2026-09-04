@@ -6,7 +6,13 @@ using Microsoft.Extensions.Localization;
 
 namespace AndreGoepel.FinanceApp.Domain.Planning;
 
-/// <summary>Manually matches a transaction to a planned occurrence (overrides auto-matching).</summary>
+/// <summary>
+/// Manually links a transaction to a planned occurrence. Additive: an occurrence
+/// may already have other transactions linked (e.g. a salary paid out in two
+/// bookings) and the transaction may already be linked to other occurrences
+/// (e.g. one transfer covering rent and a car payment) — neither is disturbed.
+/// Re-linking the same pairing is a no-op.
+/// </summary>
 public sealed record SetPlannedMatchCommand(
     Guid PlannedItemId,
     DateOnly DueDate,
@@ -28,36 +34,6 @@ public static class SetPlannedMatchCommandHandler
             return Result.Fail(localizer["Error.PlannedItemNotFound"]);
         }
 
-        var key = PlannedMatch.KeyFor(command.PlannedItemId, command.DueDate);
-
-        // If this occurrence is already matched to a different transaction, clear that one's link.
-        var current = await session.LoadAsync<PlannedMatch>(key, cancellationToken);
-        if (current is not null && current.TransactionId != command.TransactionId)
-        {
-            await ClearTransactionLinkAsync(session, current.TransactionId, cancellationToken);
-        }
-
-        // A transaction satisfies at most one occurrence — drop any other match using it.
-        var others = await session
-            .Query<PlannedMatch>()
-            .Where(m => m.TransactionId == command.TransactionId && m.Id != key)
-            .ToListAsync(cancellationToken);
-        foreach (var other in others)
-        {
-            session.Delete<PlannedMatch>(other.Id);
-        }
-
-        session.Store(
-            new PlannedMatch
-            {
-                Id = key,
-                PlannedItemId = command.PlannedItemId,
-                DueDate = command.DueDate,
-                TransactionId = command.TransactionId,
-                Auto = false,
-            }
-        );
-
         var stream = await session.Events.FetchForWriting<TransactionView>(
             command.TransactionId,
             cancellationToken
@@ -66,7 +42,27 @@ public static class SetPlannedMatchCommandHandler
         {
             return Result.Fail(localizer["Error.TransactionNotFound"]);
         }
-        if (stream.Aggregate.PlannedItemId != command.PlannedItemId)
+
+        session.Store(
+            new PlannedMatch
+            {
+                Id = PlannedMatch.KeyFor(
+                    command.PlannedItemId,
+                    command.DueDate,
+                    command.TransactionId
+                ),
+                PlannedItemId = command.PlannedItemId,
+                DueDate = command.DueDate,
+                TransactionId = command.TransactionId,
+                Auto = false,
+            }
+        );
+
+        if (
+            !stream.Aggregate.PlannedLinks.Any(l =>
+                l.PlannedItemId == command.PlannedItemId && l.DueDate == command.DueDate
+            )
+        )
         {
             stream.AppendOne(
                 new TransactionMatchedToPlannedItem(command.PlannedItemId, command.DueDate)
@@ -75,21 +71,5 @@ public static class SetPlannedMatchCommandHandler
 
         await session.SaveChangesAsync(cancellationToken);
         return Result.Ok();
-    }
-
-    private static async Task ClearTransactionLinkAsync(
-        IDocumentSession session,
-        Guid transactionId,
-        CancellationToken cancellationToken
-    )
-    {
-        var stream = await session.Events.FetchForWriting<TransactionView>(
-            transactionId,
-            cancellationToken
-        );
-        if (stream.Aggregate is { PlannedItemId: not null })
-        {
-            stream.AppendOne(new TransactionPlannedMatchCleared());
-        }
     }
 }

@@ -16,8 +16,8 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
 {
     internal const string HttpClientName = "wise";
 
-    /// <summary>Safety cap on cursor pagination — 100 activities per page.</summary>
-    private const int MaxActivityPages = 20;
+    /// <summary>Activities requested per page; Wise's maximum.</summary>
+    private const int ActivityPageSize = 100;
 
     private static string BaseUrl(ProviderEnvironment environment) =>
         environment == ProviderEnvironment.Sandbox
@@ -66,7 +66,7 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
         var json = await GetAsync(
             apiToken,
             environment,
-            $"/v4/profiles/{profileId}/balances?types=STANDARD",
+            $"/v4/profiles/{profileId}/balances?types=STANDARD,SAVINGS",
             cancellationToken
         );
         if (json.IsFailure)
@@ -82,7 +82,20 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
                 .Select(b => new WiseBalance(
                     b.GetProperty("id").GetInt64(),
                     b.GetProperty("currency").GetString() ?? "",
-                    b.GetProperty("amount").GetProperty("value").GetDecimal()
+                    b.GetProperty("amount").GetProperty("value").GetDecimal(),
+                    // Deliberately not defaulted to "STANDARD": a missing/unparseable type
+                    // must not silently masquerade as a normal balance — WiseConnector fails
+                    // loudly on anything it doesn't recognize as STANDARD or SAVINGS, rather
+                    // than risk syncing a jar's full transaction history onto the household.
+                    b.TryGetProperty("type", out var type)
+                        ? type.GetString() ?? ""
+                        : "",
+                    b.TryGetProperty("name", out var name) ? name.GetString() : null,
+                    // Same fail-closed reasoning as Type: a missing "primary" must not
+                    // default to true (syncable) — that would risk duplicating the real
+                    // primary balance's transactions onto this one, same as the Type bug.
+                    b.TryGetProperty("primary", out var primary)
+                        && primary.ValueKind == JsonValueKind.True
                 ))
                 .ToList();
             return Result.Ok<IReadOnlyList<WiseBalance>>(balances);
@@ -108,11 +121,18 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
             $"/v1/profiles/{profileId}/activities"
             + $"?since={since:yyyy-MM-dd}T00:00:00.000Z"
             + $"&until={until:yyyy-MM-dd}T23:59:59.999Z"
-            + "&size=100";
+            + $"&size={ActivityPageSize}";
 
         var activities = new List<WiseActivity>();
+        // Paging runs until Wise says there is nothing left: capping it would drop
+        // the oldest history (the feed is newest first) and silently skew every
+        // balance the app reconstructs from it. The only way this does not
+        // terminate is a cursor that stops advancing, so that is what is guarded —
+        // by remembering the ones already used rather than by limiting how far
+        // back the window may reach.
+        var seenCursors = new HashSet<string>(StringComparer.Ordinal);
         string? cursor = null;
-        for (var page = 0; page < MaxActivityPages; page++)
+        while (true)
         {
             var path = cursor is null
                 ? basePath
@@ -136,11 +156,19 @@ internal sealed partial class WiseApiClient(IHttpClientFactory httpClientFactory
 
             if (cursor is null)
             {
-                break;
+                return Result.Ok<IReadOnlyList<WiseActivity>>(activities);
+            }
+            if (!seenCursors.Add(cursor))
+            {
+                return Result.Fail<IReadOnlyList<WiseActivity>>(
+                    "Wise handed back a pagination cursor it had already used while reading "
+                        + $"activities for {since:yyyy-MM-dd}..{until:yyyy-MM-dd}, so the feed "
+                        + "never ends. Returning what was read would drop the oldest part of "
+                        + "the window without saying so; try again, and narrow the period if "
+                        + "it keeps happening."
+                );
             }
         }
-
-        return Result.Ok<IReadOnlyList<WiseActivity>>(activities);
     }
 
     /// <summary>

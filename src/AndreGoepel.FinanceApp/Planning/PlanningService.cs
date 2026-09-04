@@ -12,7 +12,7 @@ namespace AndreGoepel.FinanceApp.Planning;
 /// </summary>
 internal sealed class PlanningService(IQuerySession session) : IPlanningService
 {
-    private const int CandidateWindowDays = 45;
+    private const int CandidateWindowDays = 60;
     private const int UpcomingLimit = 10;
 
     public async Task<IReadOnlyList<PlannedItem>> GetItemsAsync(
@@ -75,15 +75,15 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
             )
             .ToList();
 
-        var keys = due.Select(o => PlannedMatch.KeyFor(o.Item.Id, o.Date)).ToArray();
+        var itemIds = due.Select(o => o.Item.Id).Distinct().ToArray();
         var matches =
-            keys.Length == 0
+            itemIds.Length == 0
                 ? []
                 : await session
                     .Query<PlannedMatch>()
-                    .Where(m => m.Id.IsOneOf(keys))
+                    .Where(m => m.PlannedItemId.IsOneOf(itemIds))
                     .ToListAsync(cancellationToken);
-        var matchByKey = matches.ToDictionary(m => m.Id);
+        var matchesByOccurrence = matches.ToLookup(m => (m.PlannedItemId, m.DueDate));
 
         var transactionIds = matches.Select(m => m.TransactionId).Distinct().ToArray();
         var txnById = (
@@ -97,14 +97,15 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
 
         return due.Select(o =>
             {
-                matchByKey.TryGetValue(PlannedMatch.KeyFor(o.Item.Id, o.Date), out var match);
-                var matchedTxn =
-                    match is not null && txnById.TryGetValue(match.TransactionId, out var t)
-                        ? t
-                        : null;
+                var lines = matchesByOccurrence[(o.Item.Id, o.Date)]
+                    .Select(m => new MatchedTransaction(
+                        m.TransactionId,
+                        txnById.TryGetValue(m.TransactionId, out var t) ? t.AmountEur : null
+                    ))
+                    .ToList();
 
                 var status =
-                    match is not null ? PlannedOccurrenceStatus.Matched
+                    lines.Count > 0 ? PlannedOccurrenceStatus.Matched
                     : o.Date < today ? PlannedOccurrenceStatus.Overdue
                     : PlannedOccurrenceStatus.Pending;
 
@@ -115,8 +116,8 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
                     o.Item.CategoryId,
                     o.Date,
                     status,
-                    match?.TransactionId,
-                    matchedTxn?.AmountEur
+                    lines,
+                    lines.Count == 0 ? null : lines.Sum(l => l.AmountEur ?? 0)
                 );
             })
             .OrderBy(o => o.DueDate)
@@ -126,22 +127,25 @@ internal sealed class PlanningService(IQuerySession session) : IPlanningService
 
     public async Task<IReadOnlyList<TransactionView>> GetMatchCandidatesAsync(
         DateOnly dueDate,
+        decimal plannedAmount,
         CancellationToken cancellationToken = default
     )
     {
+        // Deliberately does not exclude transactions already matched elsewhere: a
+        // single transaction can satisfy more than one occurrence (e.g. one
+        // transfer covering rent and a car payment), so an already-matched
+        // transaction is still a valid candidate here. The caller excludes
+        // candidates already linked to the specific occurrence being matched.
         var from = dueDate.AddDays(-CandidateWindowDays);
         var to = dueDate.AddDays(CandidateWindowDays);
-        return (
-            await session
-                .Query<TransactionView>()
-                .Where(t =>
-                    t.PlannedItemId == null
-                    && t.TransferCounterpartId == null
-                    && t.BookingDate >= from
-                    && t.BookingDate <= to
-                )
-                .ToListAsync(cancellationToken)
-        )
+        var query = session
+            .Query<TransactionView>()
+            .Where(t =>
+                t.TransferCounterpartId == null && t.BookingDate >= from && t.BookingDate <= to
+            );
+        query = plannedAmount > 0 ? query.Where(t => t.Amount > 0) : query.Where(t => t.Amount < 0);
+
+        return (await query.ToListAsync(cancellationToken))
             .OrderBy(t => Math.Abs(t.BookingDate.DayNumber - dueDate.DayNumber))
             .Take(50)
             .ToList();

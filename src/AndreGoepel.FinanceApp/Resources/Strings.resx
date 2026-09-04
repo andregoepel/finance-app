@@ -123,9 +123,13 @@
   <data name="Recurring.ColLast" xml:space="preserve"><value><![CDATA[Last]]></value></data>
   <data name="Recurring.ColNextExpected" xml:space="preserve"><value><![CDATA[Next expected]]></value></data>
   <data name="Recurring.AddAsPlanned" xml:space="preserve"><value><![CDATA[Add as planned]]></value></data>
+  <data name="Recurring.AlreadyPlanned" xml:space="preserve"><value><![CDATA[Planned]]></value></data>
   <data name="Recurring.CouldNotAddTitle" xml:space="preserve"><value><![CDATA[Could not add]]></value></data>
   <data name="Recurring.AddedToPlanningTitle" xml:space="preserve"><value><![CDATA[Added to planning]]></value></data>
   <data name="Recurring.AddedToPlanningMessage" xml:space="preserve"><value><![CDATA[“{0}” — adjust it on the Planning page.]]></value><comment>{0} = the counterparty name</comment></data>
+  <data name="Recurring.DismissTooltip" xml:space="preserve"><value><![CDATA[Not actually recurring — remove]]></value></data>
+  <data name="Recurring.DismissTitle" xml:space="preserve"><value><![CDATA[Remove recurring series]]></value></data>
+  <data name="Recurring.DismissedMessage" xml:space="preserve"><value><![CDATA[“{0}” removed — it won't be detected again.]]></value><comment>{0} = the counterparty name</comment></data>
   <data name="Enum.RecurrenceInterval.Weekly" xml:space="preserve"><value><![CDATA[Weekly]]></value></data>
   <data name="Enum.RecurrenceInterval.Biweekly" xml:space="preserve"><value><![CDATA[Biweekly]]></value></data>
   <data name="Enum.RecurrenceInterval.Monthly" xml:space="preserve"><value><![CDATA[Monthly]]></value></data>
@@ -156,6 +160,8 @@
   <data name="Sync.ColLastSync" xml:space="preserve"><value><![CDATA[Last sync]]></value></data>
   <data name="Sync.NeverSynced" xml:space="preserve"><value><![CDATA[never]]></value></data>
   <data name="Sync.SyncNowButton" xml:space="preserve"><value><![CDATA[Sync now]]></value></data>
+  <data name="Sync.FullSyncButton" xml:space="preserve"><value><![CDATA[Full sync]]></value></data>
+  <data name="Sync.FullSyncTooltip" xml:space="preserve"><value><![CDATA[Re-fetch the account's entire available history instead of just what's new since the last sync]]></value></data>
   <data name="Sync.InvalidScheduleTitle" xml:space="preserve"><value><![CDATA[Invalid schedule]]></value></data>
   <data name="Sync.ScheduleSavedTitle" xml:space="preserve"><value><![CDATA[Schedule saved]]></value></data>
   <data name="Sync.RescheduledMessage" xml:space="preserve"><value><![CDATA[Automatic sync rescheduled.]]></value></data>
@@ -176,15 +182,38 @@
   <!-- Review.razor -->
   <data name="Review.PageTitle" xml:space="preserve"><value><![CDATA[Review queue]]></value></data>
   <data name="Review.Subtitle" xml:space="preserve"><value><![CDATA[Uncategorized transactions and low-confidence AI suggestions. High-confidence suggestions are applied automatically and flagged "Ai" in the transactions grid.]]></value></data>
-  <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Accept suggestions]]></value></data>
+    <data name="Review.AcceptSuggestions" xml:space="preserve"><value><![CDATA[Accept suggestions]]></value></data>
+    <data name="Review.SelectCurrentPage" xml:space="preserve"><value><![CDATA[Select current page]]></value></data>
+    <data name="Review.ClearSelection" xml:space="preserve"><value><![CDATA[Clear selection]]></value></data>
   <data name="Review.DismissSuggestions" xml:space="preserve"><value><![CDATA[Dismiss suggestions]]></value></data>
   <data name="Review.SetCategoryLabel" xml:space="preserve"><value><![CDATA[Set category for selection]]></value></data>
+  <data name="Review.CategorizeWithAi" xml:space="preserve"><value><![CDATA[Categorize with AI]]></value></data>
+  <data name="Review.CategorizeWithAiStartedMessage" xml:space="preserve"><value><![CDATA[AI categorization is running in the background. Refresh the list in a moment.]]></value></data>
+  <data name="Review.NoClaudeKeyTitle" xml:space="preserve"><value><![CDATA[No Claude API key]]></value></data>
+  <data name="Review.NoClaudeKeyMessage" xml:space="preserve"><value><![CDATA[Store a Claude API key under {0} first.]]></value></data>
+  <data name="Review.Refresh" xml:space="preserve"><value><![CDATA[Refresh]]></value></data>
+  <data name="Review.PageSizeText" xml:space="preserve"><value><![CDATA[Rows per page]]></value></data>
   <data name="Review.ApplyToSelection" xml:space="preserve"><value><![CDATA[Apply to selection]]></value></data>
   <data name="Review.ColAiSuggestion" xml:space="preserve"><value><![CDATA[AI suggestion]]></value></data>
   <data name="Review.AcceptSuggestionTooltip" xml:space="preserve"><value><![CDATA[Accept suggestion]]></value></data>
   <data name="Review.SuggestionAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestion accepted.]]></value></data>
   <data name="Review.SuggestionsAcceptedMessage" xml:space="preserve"><value><![CDATA[Suggestions accepted.]]></value></data>
   <data name="Review.SuggestionsDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestions dismissed.]]></value></data>
+  <data name="Review.FindTransfers" xml:space="preserve"><value><![CDATA[Find transfers]]></value></data>
+  <data name="Review.FindTransfersStartedMessage" xml:space="preserve"><value><![CDATA[Transfer matching is running in the background. Refresh the list in a moment.]]></value></data>
+  <data name="Review.TransferSuggestionsTitle" xml:space="preserve"><value><![CDATA[Transfer suggestions]]></value></data>
+  <data name="Review.ColOutgoing" xml:space="preserve"><value><![CDATA[Outgoing]]></value></data>
+  <data name="Review.ColIncoming" xml:space="preserve"><value><![CDATA[Incoming]]></value></data>
+  <data name="Review.ColReason" xml:space="preserve"><value><![CDATA[Reason]]></value></data>
+  <data name="Review.LinkTransferTooltip" xml:space="preserve"><value><![CDATA[Link as transfer]]></value></data>
+  <data name="Review.DismissTransferTooltip" xml:space="preserve"><value><![CDATA[Not a transfer]]></value></data>
+  <data name="Review.TransferReasonCrossCurrency" xml:space="preserve"><value><![CDATA[Different currencies — check the conversion]]></value></data>
+  <data name="Review.TransferReasonAmbiguous" xml:space="preserve"><value><![CDATA[Multiple matching transactions — pick the right pair]]></value></data>
+  <data name="Review.TransferLinkedMessage" xml:space="preserve"><value><![CDATA[Transfer linked.]]></value></data>
+  <data name="Review.TransferDismissedMessage" xml:space="preserve"><value><![CDATA[Suggestion dismissed.]]></value></data>
+  <data name="Review.TypeFilterLabel" xml:space="preserve"><value><![CDATA[Type]]></value></data>
+  <data name="Review.TypeIncome" xml:space="preserve"><value><![CDATA[Income]]></value></data>
+  <data name="Review.TypeExpense" xml:space="preserve"><value><![CDATA[Expense]]></value></data>
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Select account]]></value></data>
@@ -196,6 +225,7 @@
   <data name="Import.ColRow" xml:space="preserve"><value><![CDATA[Row]]></value></data>
   <data name="Import.DuplicateBadge" xml:space="preserve"><value><![CDATA[Duplicate]]></value></data>
   <data name="Import.NewBadge" xml:space="preserve"><value><![CDATA[New]]></value></data>
+  <data name="Import.ImportAnywayLabel" xml:space="preserve"><value><![CDATA[Import anyway]]></value></data>
   <data name="Import.ProblemRowsHeading" xml:space="preserve"><value><![CDATA[Problem rows (not imported)]]></value></data>
   <data name="Import.ColProblem" xml:space="preserve"><value><![CDATA[Problem]]></value></data>
   <data name="Import.ColRawLine" xml:space="preserve"><value><![CDATA[Raw line]]></value></data>
@@ -230,6 +260,11 @@
   <data name="Dashboard.AccountsWithoutBalance" xml:space="preserve"><value><![CDATA[{0} account(s) have no balance set —]]></value><comment>{0} = count; a "set one" link and "to include them" follow</comment></data>
   <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[set one]]></value></data>
   <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[ to include them.]]></value><comment>Leading space is deliberate: the Razor puts none before this fragment so German can attach its own separator</comment></data>
+  <data name="Dashboard.Accounts" xml:space="preserve"><value><![CDATA[Accounts]]></value></data>
+  <data name="Dashboard.NoAccounts" xml:space="preserve"><value><![CDATA[No accounts yet —]]></value><comment>An "add one" link follows</comment></data>
+  <data name="Dashboard.BalanceAsOf" xml:space="preserve"><value><![CDATA[as of {0}]]></value><comment>{0} = date the balance was last set</comment></data>
+  <data name="Dashboard.NoBalanceYet" xml:space="preserve"><value><![CDATA[no balance yet —]]></value><comment>A "set one" link follows</comment></data>
+  <data name="Dashboard.AccountsTotal" xml:space="preserve"><value><![CDATA[Total]]></value></data>
   <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[No budgets set —]]></value><comment>An "add one" link follows</comment></data>
   <data name="Dashboard.AddOneLink" xml:space="preserve"><value><![CDATA[add one]]></value></data>
   <data name="Dashboard.HoldingsLink" xml:space="preserve"><value><![CDATA[Holdings]]></value></data>
@@ -261,6 +296,7 @@
   <data name="Transactions.SearchPlaceholder" xml:space="preserve"><value><![CDATA[Description or counterparty]]></value></data>
   <data name="Transactions.LinkAsTransfer" xml:space="preserve"><value><![CDATA[Link as transfer]]></value></data>
   <data name="Transactions.UncategorizedPlaceholder" xml:space="preserve"><value><![CDATA[Uncategorized]]></value></data>
+  <data name="Transactions.CategoryFilterUncategorizedOption" xml:space="preserve"><value><![CDATA[Uncategorized]]></value></data>
   <data name="Transactions.TransferBadge" xml:space="preserve"><value><![CDATA[Transfer]]></value></data>
   <data name="Transactions.UnlinkTransfer" xml:space="preserve"><value><![CDATA[Unlink transfer]]></value></data>
   <data name="Transactions.CategorizationFailedTitle" xml:space="preserve"><value><![CDATA[Categorization failed]]></value></data>
@@ -270,10 +306,20 @@
   <data name="Transactions.LinkedTitle" xml:space="preserve"><value><![CDATA[Linked]]></value></data>
   <data name="Transactions.LinkedMessage" xml:space="preserve"><value><![CDATA[Transactions linked as transfer.]]></value></data>
   <data name="Transactions.UnlinkingFailedTitle" xml:space="preserve"><value><![CDATA[Unlinking failed]]></value></data>
+  <data name="Transactions.SplitBadge" xml:space="preserve"><value><![CDATA[Split ({0})]]></value><comment>{0} = number of category lines</comment></data>
+  <data name="Transactions.SplitTooltip" xml:space="preserve"><value><![CDATA[Split across categories]]></value></data>
+  <data name="Transactions.EditSplitTooltip" xml:space="preserve"><value><![CDATA[Edit split]]></value></data>
+  <data name="Transactions.SplitTitle" xml:space="preserve"><value><![CDATA[Split into categories]]></value></data>
+  <data name="Transactions.AddSplitLine" xml:space="preserve"><value><![CDATA[Add category]]></value></data>
+  <data name="Transactions.SplitRemaining" xml:space="preserve"><value><![CDATA[Remaining]]></value></data>
+  <data name="Transactions.SplitFailedTitle" xml:space="preserve"><value><![CDATA[Split failed]]></value></data>
+  <data name="Transactions.SplitSavedTitle" xml:space="preserve"><value><![CDATA[Saved]]></value></data>
+  <data name="Transactions.SplitSavedMessage" xml:space="preserve"><value><![CDATA[Transaction split across categories.]]></value></data>
   <data name="Enum.CategorySource.Provider" xml:space="preserve"><value><![CDATA[Provider]]></value></data>
   <data name="Enum.CategorySource.Rule" xml:space="preserve"><value><![CDATA[Rule]]></value></data>
   <data name="Enum.CategorySource.Ai" xml:space="preserve"><value><![CDATA[Ai]]></value><comment>Matches the "Ai" wording referenced in Review.Subtitle</comment></data>
   <data name="Enum.CategorySource.Manual" xml:space="preserve"><value><![CDATA[Manual]]></value></data>
+  <data name="Enum.CategorySource.History" xml:space="preserve"><value><![CDATA[History]]></value></data>
 
   <!-- Rules.razor -->
   <data name="Rules.PageTitle" xml:space="preserve"><value><![CDATA[Categorization rules]]></value></data>
@@ -294,12 +340,19 @@
 
   <!-- Budgets.razor -->
   <data name="Budgets.Subtitle" xml:space="preserve"><value><![CDATA[Set a monthly EUR limit per category. A limit on a parent category counts spending in that category and all of its subcategories. Progress shows on the dashboard.]]></value></data>
-  <data name="Budgets.SetBudgetTitle" xml:space="preserve"><value><![CDATA[Set a budget]]></value></data>
+  <data name="Budgets.AddTitle" xml:space="preserve"><value><![CDATA[Add budget]]></value></data>
+  <data name="Budgets.EditTitle" xml:space="preserve"><value><![CDATA[Edit budget]]></value></data>
   <data name="Budgets.MonthlyLimitLabel" xml:space="preserve"><value><![CDATA[Monthly limit (€)]]></value></data>
+  <data name="Budgets.StartMonthLabel" xml:space="preserve"><value><![CDATA[Start month]]></value></data>
+  <data name="Budgets.EndMonthLabel" xml:space="preserve"><value><![CDATA[End month]]></value></data>
+  <data name="Budgets.EndMonthOngoingPlaceholder" xml:space="preserve"><value><![CDATA[Ongoing]]></value></data>
   <data name="Budgets.CurrentBudgetsHeading" xml:space="preserve"><value><![CDATA[Current budgets]]></value></data>
   <data name="Budgets.EmptyTitle" xml:space="preserve"><value><![CDATA[No budgets set yet]]></value></data>
   <data name="Budgets.EmptyText" xml:space="preserve"><value><![CDATA[Set a monthly limit for a category above to start tracking it.]]></value></data>
   <data name="Budgets.ColMonthlyLimit" xml:space="preserve"><value><![CDATA[Monthly limit]]></value></data>
+  <data name="Budgets.ColStartMonth" xml:space="preserve"><value><![CDATA[From]]></value></data>
+  <data name="Budgets.ColEndMonth" xml:space="preserve"><value><![CDATA[To]]></value></data>
+  <data name="Budgets.Ongoing" xml:space="preserve"><value><![CDATA[Ongoing]]></value></data>
   <data name="Budgets.DeletedCategory" xml:space="preserve"><value><![CDATA[(deleted category)]]></value></data>
   <data name="Budgets.SavedTitle" xml:space="preserve"><value><![CDATA[Budget saved]]></value></data>
   <data name="Budgets.RemovedTitle" xml:space="preserve"><value><![CDATA[Budget removed]]></value></data>
@@ -324,6 +377,7 @@
   <data name="Planning.Use" xml:space="preserve"><value><![CDATA[Use]]></value></data>
   <data name="Planning.MatchHeading" xml:space="preserve"><value><![CDATA[Match “{0}” ({1})]]></value><comment>{0} = occurrence description, {1} = formatted due date</comment></data>
   <data name="Planning.NoCandidates" xml:space="preserve"><value><![CDATA[No unmatched transactions near this date.]]></value></data>
+  <data name="Planning.ManageItemsTitle" xml:space="preserve"><value><![CDATA[Planned items]]></value></data>
   <data name="Planning.AddItemTitle" xml:space="preserve"><value><![CDATA[Add planned item]]></value></data>
   <data name="Planning.EditItemTitle" xml:space="preserve"><value><![CDATA[Edit planned item]]></value></data>
   <data name="Planning.TypeLabel" xml:space="preserve"><value><![CDATA[Type]]></value></data>
@@ -406,6 +460,9 @@
   <data name="AccountDelete.PlannedMatchesMany" xml:space="preserve"><value><![CDATA[{0} planned matches]]></value></data>
   <data name="AccountDelete.PlannedItemsOne" xml:space="preserve"><value><![CDATA[{0} planned item]]></value></data>
   <data name="AccountDelete.PlannedItemsMany" xml:space="preserve"><value><![CDATA[{0} planned items]]></value></data>
+  <data name="AccountClear.Nothing" xml:space="preserve"><value><![CDATA[This account has no imported history to clear.]]></value></data>
+  <data name="AccountClear.Removes" xml:space="preserve"><value><![CDATA[Removes {0}.]]></value><comment>{0} = joined list of what is removed</comment></data>
+  <data name="AccountClear.KeepsAccount" xml:space="preserve"><value><![CDATA[The account itself, its balance and its crypto holdings stay.]]></value></data>
 
   <!-- Accounts.razor -->
   <data name="Accounts.ShowDeactivated" xml:space="preserve"><value><![CDATA[Show deactivated]]></value></data>
@@ -444,6 +501,11 @@
   <data name="Accounts.ReactivatedMessage" xml:space="preserve"><value><![CDATA[Account reactivated]]></value></data>
   <data name="Accounts.DeletedMessage" xml:space="preserve"><value><![CDATA[Account deleted]]></value></data>
   <data name="Accounts.PermanentlyDeletedMessage" xml:space="preserve"><value><![CDATA[Account permanently deleted]]></value></data>
+  <data name="Accounts.TransactionsClearedMessage" xml:space="preserve"><value><![CDATA[Imported history cleared]]></value></data>
+  <data name="Accounts.ClearTransactionsTooltip" xml:space="preserve"><value><![CDATA[Clear imported history…]]></value></data>
+  <data name="Accounts.ClearTransactionsTitle" xml:space="preserve"><value><![CDATA[Clear imported history]]></value></data>
+  <data name="Accounts.ClearTransactionsAction" xml:space="preserve"><value><![CDATA[Clear history]]></value></data>
+  <data name="Accounts.ClearTransactionsConfirm" xml:space="preserve"><value><![CDATA[Clear the imported history of '{0}'? {1} This cannot be undone, but the account can be synced or imported again afterwards.]]></value><comment>{0} = account name, {1} = the clear-impact sentence</comment></data>
   <data name="Accounts.DeleteTitle" xml:space="preserve"><value><![CDATA[Delete account]]></value></data>
   <data name="Accounts.HardDeleteTitle" xml:space="preserve"><value><![CDATA[Delete account permanently]]></value></data>
   <data name="Accounts.HardDeleteAction" xml:space="preserve"><value><![CDATA[Delete permanently]]></value></data>
@@ -480,7 +542,18 @@
   <data name="Connections.RotateTokenPlaceholder" xml:space="preserve"><value><![CDATA[Enter new token to rotate]]></value></data>
   <data name="Connections.SaveToken" xml:space="preserve"><value><![CDATA[Save token]]></value></data>
   <data name="Connections.SyncBalances" xml:space="preserve"><value><![CDATA[Sync balances]]></value></data>
+  <data name="Connections.ImportAccounts" xml:space="preserve"><value><![CDATA[Import accounts]]></value></data>
+  <data name="Connections.ImportAccountsTooltip" xml:space="preserve"><value><![CDATA[Create an account for every Wise balance and jar not linked yet]]></value></data>
+  <data name="Connections.ImportFailedTitle" xml:space="preserve"><value><![CDATA[Import failed]]></value></data>
+  <data name="Connections.FullSync" xml:space="preserve"><value><![CDATA[Full sync]]></value></data>
+  <data name="Connections.FullSyncTooltip" xml:space="preserve"><value><![CDATA[Re-fetch this connection's entire available transaction history, ignoring what's already been synced]]></value></data>
+  <data name="Connections.FullSyncConfirmTitle" xml:space="preserve"><value><![CDATA[Full sync]]></value></data>
+  <data name="Connections.FullSyncConfirm" xml:space="preserve"><value><![CDATA[Re-fetch the entire available transaction history for every account on this connection? This can take longer than a regular sync and re-process a lot of data.]]></value></data>
+  <data name="Connections.FullSyncConfirmAction" xml:space="preserve"><value><![CDATA[Full sync]]></value></data>
+  <data name="Connections.FullSyncPartialTitle" xml:space="preserve"><value><![CDATA[Full sync had errors]]></value></data>
+  <data name="Connections.FullSyncDoneTitle" xml:space="preserve"><value><![CDATA[Full sync complete]]></value></data>
   <data name="Connections.BalanceEntry" xml:space="preserve"><value><![CDATA[{0} {1} (id {2})]]></value><comment>{0} = formatted amount, {1} = currency code, {2} = Wise balance id</comment></data>
+  <data name="Connections.BalanceEntryNamed" xml:space="preserve"><value><![CDATA[{0} {1} {2} (id {3})]]></value><comment>{0} = jar name, {1} = formatted amount, {2} = currency code, {3} = Wise balance id</comment></data>
   <data name="Connections.LinkedAccountsCount" xml:space="preserve"><value><![CDATA[{0} linked account(s)]]></value><comment>{0} = count</comment></data>
   <data name="Connections.Connect" xml:space="preserve"><value><![CDATA[Connect]]></value></data>
   <data name="Connections.Reconnect" xml:space="preserve"><value><![CDATA[Reconnect]]></value></data>
@@ -516,4 +589,47 @@
   <data name="Sync.ConnectionGone" xml:space="preserve"><value><![CDATA[The account's connection no longer exists — re-link it (Settings → {0}).]]></value><comment>{0} = Nav.Accounts, so the pointer matches the menu entry it names</comment></data>
   <data name="Sync.ConsentExpiredOn" xml:space="preserve"><value><![CDATA[The {0} consent expired on {1} — reconnect it under Settings → {2}.]]></value><comment>{0} = provider, {1} = expiry date, {2} = Nav.Connections</comment></data>
   <data name="Sync.ConsentNotAuthorized" xml:space="preserve"><value><![CDATA[The {0} consent is not authorized — connect it under Settings → {1}.]]></value><comment>{0} = provider, {1} = Nav.Connections</comment></data>
+  <!-- Cash — the per-user cash account with hand-entered transactions. -->
+  <data name="Nav.Cash" xml:space="preserve"><value><![CDATA[Cash]]></value></data>
+  <data name="Enum.AccountType.Cash" xml:space="preserve"><value><![CDATA[Cash]]></value></data>
+  <data name="Enum.SyncMethod.Manual" xml:space="preserve"><value><![CDATA[Manual]]></value></data>
+  <data name="Cash.Subtitle" xml:space="preserve"><value><![CDATA[Your own cash: every transaction is typed in by hand and counts like any other.]]></value></data>
+  <data name="Cash.NoAccountTitle" xml:space="preserve"><value><![CDATA[No cash account yet]]></value></data>
+  <data name="Cash.NoAccountText" xml:space="preserve"><value><![CDATA[Create your personal cash account to record what you spend and receive in cash. Each household member keeps their own.]]></value></data>
+  <data name="Cash.CreateTitle" xml:space="preserve"><value><![CDATA[Create cash account]]></value></data>
+  <data name="Cash.DefaultName" xml:space="preserve"><value><![CDATA[Cash]]></value><comment>Default name of a newly created cash account; the owner's user name is appended</comment></data>
+  <data name="Cash.OpeningBalanceLabel" xml:space="preserve"><value><![CDATA[Opening balance ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.CreateButton" xml:space="preserve"><value><![CDATA[Create]]></value></data>
+  <data name="Cash.CreatingBusyText" xml:space="preserve"><value><![CDATA[Creating…]]></value></data>
+  <data name="Cash.CreatedMessage" xml:space="preserve"><value><![CDATA[Cash account created]]></value></data>
+  <data name="Cash.CreateFailedTitle" xml:space="preserve"><value><![CDATA[Could not create the cash account]]></value></data>
+  <data name="Cash.AddAccountTooltip" xml:space="preserve"><value><![CDATA[Add another cash account…]]></value></data>
+  <data name="Cash.BalanceTitle" xml:space="preserve"><value><![CDATA[Cash on hand]]></value></data>
+  <data name="Cash.SpentThisMonth" xml:space="preserve"><value><![CDATA[Spent this month]]></value></data>
+  <data name="Cash.ReceivedThisMonth" xml:space="preserve"><value><![CDATA[Received this month]]></value></data>
+  <data name="Cash.AdjustHint" xml:space="preserve"><value><![CDATA[Counted your cash? Enter the amount and the difference is recorded as an adjustment.]]></value></data>
+  <data name="Cash.CountedBalanceLabel" xml:space="preserve"><value><![CDATA[Counted balance ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.AdjustButton" xml:space="preserve"><value><![CDATA[Adjust]]></value></data>
+  <data name="Cash.AdjustmentDescription" xml:space="preserve"><value><![CDATA[Balance adjustment]]></value><comment>Description of the transaction recorded for the difference after counting</comment></data>
+  <data name="Cash.AdjustNoDifference" xml:space="preserve"><value><![CDATA[The counted balance matches — nothing to adjust.]]></value></data>
+  <data name="Cash.EntryTitle" xml:space="preserve"><value><![CDATA[Record transaction]]></value></data>
+  <data name="Cash.KindLabel" xml:space="preserve"><value><![CDATA[Kind]]></value></data>
+  <data name="Cash.KindExpense" xml:space="preserve"><value><![CDATA[Expense]]></value></data>
+  <data name="Cash.KindIncome" xml:space="preserve"><value><![CDATA[Income]]></value></data>
+  <data name="Cash.AmountLabel" xml:space="preserve"><value><![CDATA[Amount ({0})]]></value><comment>{0} = currency code</comment></data>
+  <data name="Cash.DescriptionPlaceholder" xml:space="preserve"><value><![CDATA[e.g. bakery, tip, market]]></value></data>
+  <data name="Cash.CounterpartyLabel" xml:space="preserve"><value><![CDATA[Counterparty (optional)]]></value></data>
+  <data name="Cash.CategoryHint" xml:space="preserve"><value><![CDATA[Leave empty and the rules or the AI categorize it.]]></value></data>
+  <data name="Cash.SaveEntry" xml:space="preserve"><value><![CDATA[Record]]></value></data>
+  <data name="Cash.SavingBusyText" xml:space="preserve"><value><![CDATA[Saving…]]></value></data>
+  <data name="Cash.EntrySavedMessage" xml:space="preserve"><value><![CDATA[Transaction recorded]]></value></data>
+  <data name="Cash.EntryFailedTitle" xml:space="preserve"><value><![CDATA[Could not record the transaction]]></value></data>
+  <data name="Cash.NoEntries" xml:space="preserve"><value><![CDATA[No cash transactions yet.]]></value></data>
+  <data name="Cash.DeleteEntryTooltip" xml:space="preserve"><value><![CDATA[Delete transaction…]]></value></data>
+  <data name="Cash.DeleteEntryTitle" xml:space="preserve"><value><![CDATA[Delete transaction]]></value></data>
+  <data name="Cash.EntryDeletedMessage" xml:space="preserve"><value><![CDATA[Transaction deleted]]></value></data>
+  <data name="Cash.RateUnavailableTitle" xml:space="preserve"><value><![CDATA[Recorded without EUR value]]></value></data>
+  <data name="Cash.RateUnavailableMessage" xml:space="preserve"><value><![CDATA[The exchange rate was not available; the EUR value is filled in by the next conversion run.]]></value></data>
+  <data name="Cash.OwnerUnknownHint" xml:space="preserve"><value><![CDATA[You could not be matched to a household user, so every cash account is shown.]]></value></data>
+  <data name="Cash.TransferHint" xml:space="preserve"><value><![CDATA[Withdrew cash from a bank account? Link both transactions as a transfer on the {0} page so the withdrawal does not count as spending.]]></value><comment>{0} = Nav.Transactions, so the pointer matches the menu entry it names</comment></data>
 </root>

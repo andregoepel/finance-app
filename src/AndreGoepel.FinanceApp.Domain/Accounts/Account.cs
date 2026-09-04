@@ -85,6 +85,9 @@ public enum AccountType
     CreditCard,
     Crypto,
     MultiCurrency,
+
+    /// <summary>Physical cash, maintained by hand. Appended last: Marten stores enums as integers.</summary>
+    Cash,
 }
 
 public enum AccountStatus
@@ -97,4 +100,7 @@ public enum SyncMethod
 {
     CsvUpload,
     Api,
+
+    /// <summary>No import at all — entries are typed in by hand (cash). Appended last: Marten stores enums as integers.</summary>
+    Manual,
 }

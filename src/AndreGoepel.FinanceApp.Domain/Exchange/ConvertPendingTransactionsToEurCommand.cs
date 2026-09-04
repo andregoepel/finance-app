@@ -1,5 +1,6 @@
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
+using Marten.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace AndreGoepel.FinanceApp.Domain.Exchange;
@@ -65,7 +66,25 @@ public static class ConvertPendingTransactionsToEurCommandHandler
                     );
                 }
             }
-            await session.SaveChangesAsync(cancellationToken);
+
+            try
+            {
+                await session.SaveChangesAsync(cancellationToken);
+            }
+            catch (ConcurrentUpdateException)
+            {
+                // This command is published after every account sync, so a burst of
+                // syncs (e.g. "Sync All") can have two runs pick up the same pending
+                // transaction and race to append its conversion event. Whichever loses
+                // is simply skipped here rather than failing the whole message — the
+                // winner already converted it, and anything genuinely still pending
+                // gets picked up by the next publish.
+                logger.LogInformation(
+                    "Skipped a batch of {Currency} conversions on {Date}: a concurrent run already applied them.",
+                    group.Key.Currency,
+                    group.Key.BookingDate
+                );
+            }
         }
     }
 

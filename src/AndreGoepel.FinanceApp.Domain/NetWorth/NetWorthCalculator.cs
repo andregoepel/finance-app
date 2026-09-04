@@ -22,13 +22,27 @@ public static class NetWorthCalculator
             .ToList();
     }
 
-    private static decimal BalanceAt(AccountAnchor account, DateOnly date) =>
-        account.AnchorEur
-        + CumulativeUpTo(account, date)
-        - CumulativeUpTo(account, account.AnchorDate);
+    /// <summary>One account's EUR balance at <paramref name="date"/>.</summary>
+    public static decimal BalanceAt(AccountAnchor account, DateOnly date) =>
+        BalanceAt(account.AnchorEur, account.AnchorDate, account.Transactions, date);
 
-    private static decimal CumulativeUpTo(AccountAnchor account, DateOnly date) =>
-        account.Transactions.Where(t => t.Date <= date).Sum(t => t.AmountEur);
+    /// <summary>
+    /// The currency-agnostic core: a balance known as of <paramref name="anchorDate"/>,
+    /// moved to <paramref name="date"/> by the transactions in between. Transactions
+    /// dated on the anchor day count as already reflected in the anchor. The same
+    /// formula serves the EUR series and an account's native-currency balance.
+    /// </summary>
+    public static decimal BalanceAt(
+        decimal anchor,
+        DateOnly anchorDate,
+        IReadOnlyList<(DateOnly Date, decimal Amount)> transactions,
+        DateOnly date
+    ) => anchor + CumulativeUpTo(transactions, date) - CumulativeUpTo(transactions, anchorDate);
+
+    private static decimal CumulativeUpTo(
+        IReadOnlyList<(DateOnly Date, decimal Amount)> transactions,
+        DateOnly date
+    ) => transactions.Where(t => t.Date <= date).Sum(t => t.Amount);
 }
 
 /// <summary>

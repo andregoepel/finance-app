@@ -1,35 +1,26 @@
 @page "/settings/budgets"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using AndreGoepel.FinanceApp.Categorization
+@using AndreGoepel.FinanceApp.Components.Settings.Dialogs
 @using AndreGoepel.FinanceApp.Domain.Budgets
 
 @inject IQuerySession QuerySession
 @inject IMessageBus MessageBus
 @inject NotificationService NotificationService
 @inject ConfirmService ConfirmService
+@inject DialogService DialogService
 @inject IStringLocalizer<Strings> L
 
 <AppPageTitle Title="@L["Nav.Budgets"]" Breadcrumb="@L["Common.SettingsBreadcrumb", L["Nav.Budgets"]]" />
 
 <PageBody>
 
-    <PageHeader Title="@L["Nav.Budgets"]" Subtitle="@L["Budgets.Subtitle"]" />
-
-    <SectionCard Title="@L["Budgets.SetBudgetTitle"]">
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap">
-            <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
-                <RadzenDropDown TValue="Guid?" @bind-Value=@selectedCategoryId Name="Category"
-                                Data=@categoryOptions ValueProperty="Id" TextProperty="Path"
-                                AllowClear="true" AllowFiltering="true" Placeholder="@L["Common.SelectCategoryPlaceholder"]"
-                                Style="min-width: 18rem;" />
-            </FormField>
-            <FormField Label="@L["Budgets.MonthlyLimitLabel"]" For="Limit">
-                <RadzenNumeric TValue="decimal" @bind-Value=@limitInput Name="Limit" Min="0" Style="width: 9rem;" />
-            </FormField>
-            <RadzenButton Text="@L["Common.Save"]" Icon="save" ButtonStyle="ButtonStyle.Primary"
-                          Disabled=@(selectedCategoryId is null || limitInput <= 0) Click=@SaveAsync />
-        </RadzenStack>
-    </SectionCard>
+    <PageHeader Title="@L["Nav.Budgets"]" Subtitle="@L["Budgets.Subtitle"]">
+        <Actions>
+            <RadzenButton Text="@L["Budgets.AddTitle"]" Icon="add" ButtonStyle="ButtonStyle.Primary" Click=@AddAsync />
+        </Actions>
+    </PageHeader>
 
     <RadzenText TextStyle="TextStyle.H6" Style="margin: 0;">@L["Budgets.CurrentBudgetsHeading"]</RadzenText>
     @if (budgetRows.Count == 0)
@@ -45,10 +36,16 @@
                     <RadzenDataGridColumn TItem="BudgetRow" Property="Limit" Title="@L["Budgets.ColMonthlyLimit"]" Width="150px" TextAlign="TextAlign.Right">
                         <Template Context="row">@Money.Eur(row.Limit)</Template>
                     </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="BudgetRow" Property="StartMonth" Title="@L["Budgets.ColStartMonth"]" Width="110px">
+                        <Template Context="row">@Dates.Month(row.StartMonth)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="BudgetRow" Property="EndMonth" Title="@L["Budgets.ColEndMonth"]" Width="110px">
+                        <Template Context="row">@(row.EndMonth is DateOnly end ? Dates.Month(end) : L["Budgets.Ongoing"])</Template>
+                    </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="BudgetRow" Title="" Width="110px" TextAlign="TextAlign.End" Sortable="false">
                         <Template Context="row">
                             <RowActions>
-                                <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => StartEdit(row)) />
+                                <IconButton Icon="edit" Title="@L["Common.Edit"]" Click=@(_ => EditAsync(row)) />
                                 <IconButton Icon="delete" Title="@L["Common.Delete"]" Danger="true" Click=@(_ => DeleteAsync(row)) />
                             </RowActions>
                         </Template>
@@ -61,72 +58,57 @@
 </PageBody>
 
 @code {
-    private sealed record CategoryOption(Guid Id, string Path);
-    private sealed record BudgetRow(Guid CategoryId, string Path, decimal Limit);
+    private sealed record BudgetRow(
+        Guid Id,
+        Guid CategoryId,
+        string Path,
+        decimal Limit,
+        DateOnly StartMonth,
+        DateOnly? EndMonth
+    );
 
     private List<CategoryOption> categoryOptions = [];
+    private List<Budget> budgets = [];
     private List<BudgetRow> budgetRows = [];
-    private Guid? selectedCategoryId;
-    private decimal limitInput;
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
     private async Task LoadAsync()
     {
-        var categories = (await QuerySession.Query<Category>().ToListAsync()).ToList();
-        var byId = categories.ToDictionary(c => c.Id);
-        string Path(Category c)
-        {
-            var parts = new List<string>();
-            var current = c;
-            var guard = 0;
-            while (current is not null && guard++ < 64)
-            {
-                parts.Insert(0, current.Name);
-                current = current.ParentId is Guid p && byId.TryGetValue(p, out var parent) ? parent : null;
-            }
-            return string.Join(" › ", parts);
-        }
-
-        categoryOptions = categories
-            .Select(c => new CategoryOption(c.Id, Path(c)))
-            .OrderBy(o => o.Path)
-            .ToList();
-
+        var categories = await QuerySession.Query<Category>().ToListAsync();
+        categoryOptions = CategoryPaths.Build(categories);
         var pathById = categoryOptions.ToDictionary(o => o.Id, o => o.Path);
-        var budgets = await QuerySession.Query<Budget>().ToListAsync();
+
+        budgets = (await QuerySession.Query<Budget>().ToListAsync()).ToList();
         budgetRows = budgets
             .Select(b => new BudgetRow(
                 b.Id,
-                pathById.TryGetValue(b.Id, out var path) ? path : L["Budgets.DeletedCategory"],
-                b.MonthlyLimit))
+                b.CategoryId,
+                pathById.TryGetValue(b.CategoryId, out var path) ? path : L["Budgets.DeletedCategory"],
+                b.MonthlyLimit,
+                b.StartMonth,
+                b.EndMonth))
             .OrderBy(r => r.Path)
+            .ThenBy(r => r.StartMonth)
             .ToList();
     }
 
-    private void StartEdit(BudgetRow row)
-    {
-        selectedCategoryId = row.CategoryId;
-        limitInput = row.Limit;
-    }
+    private Task AddAsync() => OpenFormAsync(null);
 
-    private async Task SaveAsync()
+    private Task EditAsync(BudgetRow row) =>
+        OpenFormAsync(budgets.FirstOrDefault(b => b.Id == row.Id));
+
+    private async Task OpenFormAsync(Budget? budget)
     {
-        if (selectedCategoryId is not Guid categoryId)
+        var result = await DialogService.OpenAsync(
+            titleContent: _ => @<DialogHeader Title="@(budget is null ? L["Budgets.AddTitle"] : L["Budgets.EditTitle"])" />,
+            childContent: _ => @<BudgetFormDialog Budget="@budget" CategoryOptions="@categoryOptions" />
+        );
+        if (result is true)
         {
-            return;
+            await LoadAsync();
+            NotificationService.Success(L["Budgets.SavedTitle"]);
         }
-        var result = await MessageBus.InvokeAsync<Result<Budget>>(
-            new SetBudgetCommand(categoryId, limitInput));
-        if (result.IsFailure)
-        {
-            NotificationService.Error(L["Common.SavingFailedTitle"], result.Error);
-            return;
-        }
-        selectedCategoryId = null;
-        limitInput = 0;
-        await LoadAsync();
-        NotificationService.Success(L["Budgets.SavedTitle"]);
     }
 
     private async Task DeleteAsync(BudgetRow row)
@@ -138,7 +120,7 @@
         {
             return;
         }
-        var result = await MessageBus.InvokeAsync<Result>(new DeleteBudgetCommand(row.CategoryId));
+        var result = await MessageBus.InvokeAsync<Result>(new DeleteBudgetCommand(row.Id));
         if (result.IsFailure)
         {
             NotificationService.Error(L["Common.DeleteFailedTitle"], result.Error);

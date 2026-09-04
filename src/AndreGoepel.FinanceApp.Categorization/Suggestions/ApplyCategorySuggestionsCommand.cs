@@ -39,7 +39,7 @@ public static class ApplyCategorySuggestionsCommandHandler
                 transactionId,
                 cancellationToken
             );
-            if (stream.Aggregate is { CategoryId: null })
+            if (stream.Aggregate is { IsCategorized: false })
             {
                 stream.AppendOne(
                     new TransactionCategorized(suggestion.CategoryId, CategorySource.Manual, null)

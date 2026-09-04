@@ -37,12 +37,16 @@ public sealed class WiseApiClientTests
     }
 
     [Fact]
-    public async Task GetBalancesAsync_SuccessResponse_ParsesDecimalAmountsAndCurrency()
+    public async Task GetBalancesAsync_ParsesAmountsTypesJarNamesAndPrimary()
     {
-        // Arrange
+        // Arrange — a primary standard balance (name null), a savings jar with a
+        // name, and a second, non-primary standard balance sharing a currency with
+        // the first (Wise's "grouped balances"), trimmed to the fields this client
+        // reads.
         const string json = """
-            [{"id":306149,"currency":"EUR","amount":{"value":999334.00,"currency":"EUR"}},
-             {"id":306112,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"}}]
+            [{"id":306149,"currency":"EUR","amount":{"value":999334.00,"currency":"EUR"},"type":"STANDARD","name":null,"primary":true},
+             {"id":306999,"currency":"USD","amount":{"value":1000000.00,"currency":"USD"},"type":"SAVINGS","name":"Vacation","primary":false},
+             {"id":306150,"currency":"EUR","amount":{"value":0,"currency":"EUR"},"type":"STANDARD","name":"Set aside","primary":false}]
             """;
         var client = ClientReturning(json, out var handler);
 
@@ -58,22 +62,88 @@ public sealed class WiseApiClientTests
         Assert.True(result.IsSuccess);
         Assert.Collection(
             result.Value!,
-            eur =>
+            standard =>
             {
-                Assert.Equal(306149, eur.Id);
-                Assert.Equal("EUR", eur.Currency);
-                Assert.Equal(999334.00m, eur.Amount);
+                Assert.Equal(306149, standard.Id);
+                Assert.Equal("EUR", standard.Currency);
+                Assert.Equal(999334.00m, standard.Amount);
+                Assert.Equal("STANDARD", standard.Type);
+                Assert.Null(standard.Name);
+                Assert.True(standard.Primary);
             },
-            usd =>
+            jar =>
             {
-                Assert.Equal("USD", usd.Currency);
-                Assert.Equal(1000000.00m, usd.Amount);
+                Assert.Equal("USD", jar.Currency);
+                Assert.Equal(1000000.00m, jar.Amount);
+                Assert.Equal("SAVINGS", jar.Type);
+                Assert.Equal("Vacation", jar.Name);
+                Assert.False(jar.Primary);
+            },
+            grouped =>
+            {
+                Assert.Equal(306150, grouped.Id);
+                Assert.Equal("EUR", grouped.Currency);
+                Assert.Equal("STANDARD", grouped.Type);
+                Assert.Equal("Set aside", grouped.Name);
+                Assert.False(grouped.Primary);
             }
         );
         Assert.Equal(
-            "https://api.wise.com/v4/profiles/42/balances?types=STANDARD",
+            "https://api.wise.com/v4/profiles/42/balances?types=STANDARD,SAVINGS",
             handler.LastRequestUri!.ToString()
         );
+    }
+
+    [Fact]
+    public async Task GetBalancesAsync_MissingPrimaryField_DoesNotDefaultToTrue()
+    {
+        // Arrange — no "primary" field at all. Defaulting this to true would risk
+        // syncing a balance's transactions when it isn't actually the one true
+        // primary balance for its currency, duplicating the real primary's history.
+        const string json = """
+            [{"id":306149,"currency":"EUR","amount":{"value":100.00,"currency":"EUR"},"type":"STANDARD"}]
+            """;
+        var client = ClientReturning(json, out _);
+
+        // Act
+        var result = await client.GetBalancesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var balance = Assert.Single(result.Value!);
+        Assert.False(balance.Primary);
+    }
+
+    [Fact]
+    public async Task GetBalancesAsync_MissingTypeField_DoesNotDefaultToStandard()
+    {
+        // Arrange — a balance object without a "type" field at all, e.g. a schema
+        // drift or a balance shape Wise didn't populate it for. Defaulting this to
+        // "STANDARD" previously let a jar's activity sync through undetected.
+        const string json = """
+            [{"id":306149,"currency":"EUR","amount":{"value":100.00,"currency":"EUR"}}]
+            """;
+        var client = ClientReturning(json, out _);
+
+        // Act
+        var result = await client.GetBalancesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — Type is neither "STANDARD" nor "SAVINGS", so downstream code
+        // (WiseConnector) fails loudly instead of guessing either way.
+        Assert.True(result.IsSuccess);
+        var balance = Assert.Single(result.Value!);
+        Assert.NotEqual("STANDARD", balance.Type);
+        Assert.NotEqual("SAVINGS", balance.Type);
     }
 
     [Fact]
@@ -99,6 +169,111 @@ public sealed class WiseApiClientTests
         Assert.Contains("401", result.Error);
     }
 
+    [Fact]
+    public async Task GetActivitiesAsync_FollowsTheCursorAcrossPages()
+    {
+        // Arrange — page one hands back a cursor, page two ends the feed.
+        var client = ClientReturningInOrder(
+            out var handler,
+            """
+            {"cursor":"page-2","activities":[
+              {"id":"a1","type":"TRANSFER","status":"COMPLETED","createdOn":"2026-07-04T10:00:00.000Z",
+               "primaryAmount":"<positive>+ 10 EUR</positive>","title":"One"}]}
+            """,
+            """
+            {"activities":[
+              {"id":"a2","type":"TRANSFER","status":"COMPLETED","createdOn":"2026-07-03T10:00:00.000Z",
+               "primaryAmount":"5 EUR","title":"Two"}]}
+            """
+        );
+
+        // Act
+        var result = await client.GetActivitiesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            new DateOnly(2026, 7, 1),
+            new DateOnly(2026, 7, 31),
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — both pages import, and the second request carried the cursor.
+        Assert.True(result.IsSuccess);
+        Assert.Equal(["a1", "a2"], result.Value!.Select(a => a.Id));
+        Assert.Equal(2, handler.RequestCount);
+        Assert.Contains("nextCursor=page-2", handler.LastRequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task GetActivitiesAsync_ManyPages_KeepsPagingWithoutAVolumeLimit()
+    {
+        // Arrange — 250 pages, well past any page count this client used to allow.
+        // A long window must not be a reason to stop reading.
+        var pages = Enumerable
+            .Range(1, 250)
+            .Select(i =>
+                i < 250
+                    ? $$"""
+                        {"cursor":"page-{{i + 1}}","activities":[
+                          {"id":"a{{i}}","type":"TRANSFER","status":"COMPLETED",
+                           "createdOn":"2026-07-04T10:00:00.000Z","primaryAmount":"5 EUR","title":"x"}]}
+                        """
+                    : """
+                        {"activities":[
+                          {"id":"last","type":"TRANSFER","status":"COMPLETED",
+                           "createdOn":"2026-07-04T10:00:00.000Z","primaryAmount":"5 EUR","title":"x"}]}
+                        """
+            )
+            .ToArray();
+        var client = ClientReturningInOrder(out var handler, pages);
+
+        // Act
+        var result = await client.GetActivitiesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            new DateOnly(2015, 1, 1),
+            new DateOnly(2026, 9, 2),
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — every page was read to the end.
+        Assert.True(result.IsSuccess);
+        Assert.Equal(250, result.Value!.Count);
+        Assert.Equal(250, handler.RequestCount);
+    }
+
+    [Fact]
+    public async Task GetActivitiesAsync_CursorThatStopsAdvancing_FailsInsteadOfLoopingForever()
+    {
+        // Arrange — every page hands back the same cursor, so the feed never ends.
+        // Returning what was collected would silently drop the oldest history
+        // (the feed is newest first).
+        var client = ClientReturning(
+            """
+            {"cursor":"stuck","activities":[
+              {"id":"a1","type":"TRANSFER","status":"COMPLETED","createdOn":"2026-07-04T10:00:00.000Z",
+               "primaryAmount":"5 EUR","title":"One"}]}
+            """,
+            out var handler
+        );
+
+        // Act
+        var result = await client.GetActivitiesAsync(
+            "token",
+            ProviderEnvironment.Production,
+            42,
+            new DateOnly(2015, 1, 1),
+            new DateOnly(2026, 9, 2),
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert — stops at the repeat rather than spinning, and says why.
+        Assert.True(result.IsFailure);
+        Assert.Contains("already used", result.Error);
+        Assert.Equal(2, handler.RequestCount);
+    }
+
     private static WiseApiClient ClientReturning(
         string body,
         out StubHandler handler,
@@ -112,10 +287,33 @@ public sealed class WiseApiClientTests
         return new WiseApiClient(factory);
     }
 
-    private sealed class StubHandler(string body, HttpStatusCode status) : HttpMessageHandler
+    private static WiseApiClient ClientReturningInOrder(
+        out StubHandler handler,
+        params string[] bodies
+    )
     {
+        handler = new StubHandler(bodies);
+        var httpClient = new HttpClient(handler);
+        var factory = Substitute.For<IHttpClientFactory>();
+        factory.CreateClient(Arg.Any<string>()).Returns(httpClient);
+        return new WiseApiClient(factory);
+    }
+
+    /// <summary>
+    /// Replies with <paramref name="bodies"/> in order, repeating the last one once
+    /// they run out — so a single body stands in for "every page looks like this".
+    /// </summary>
+    private sealed class StubHandler(string[] bodies, HttpStatusCode status) : HttpMessageHandler
+    {
+        public StubHandler(string body, HttpStatusCode status)
+            : this([body], status) { }
+
+        public StubHandler(string[] bodies)
+            : this(bodies, HttpStatusCode.OK) { }
+
         public Uri? LastRequestUri { get; private set; }
         public string? LastAuthorization { get; private set; }
+        public int RequestCount { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -124,6 +322,8 @@ public sealed class WiseApiClientTests
         {
             LastRequestUri = request.RequestUri;
             LastAuthorization = request.Headers.Authorization?.ToString();
+            var body = bodies[Math.Min(RequestCount, bodies.Length - 1)];
+            RequestCount++;
             return Task.FromResult(
                 new HttpResponseMessage(status)
                 {

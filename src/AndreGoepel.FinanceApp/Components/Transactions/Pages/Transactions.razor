@@ -30,7 +30,7 @@
         </RadzenAlert>
     }
 
-    <FilterBar OnApply="ReloadAsync" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Secondary">
+    <FilterBar OnApply="@(() => ReloadAsync(resetPage: true))" ApplyText="@L["Common.Apply"]" ApplyStyle="ButtonStyle.Primary">
         <ChildContent>
             <FormField Label="@L["Common.Account"]" For="Account">
                 <RadzenDropDown TValue="Guid?"
@@ -41,7 +41,7 @@
                                 AllowClear="true"
                                 Placeholder="@L["Common.AllPlaceholder"]"
                                 Style="min-width: 12rem;"
-                                Change=@(_ => ReloadAsync()) />
+                                Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Common.Owner"]" For="Owner">
                 <RadzenDropDown TValue="Guid?"
@@ -52,22 +52,23 @@
                                 AllowClear="true"
                                 Placeholder="@L["Common.AllPlaceholder"]"
                                 Style="min-width: 12rem;"
-                                Change=@(_ => ReloadAsync()) />
+                                Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Dashboard.ColCategory"]" For="Category">
-                <CategoryPicker Options="@categoryOptions" Name="Category"
+                <CategoryPicker Options="@categoryFilterOptions" Name="Category"
                                 Value="@categoryFilter"
-                                ValueChanged="@(v => { categoryFilter = v; return ReloadAsync(); })"
+                                ValueChanged="@(v => { categoryFilter = v; return ReloadAsync(resetPage: true); })"
                                 Placeholder="@L["Common.AllPlaceholder"]" Style="min-width: 13rem;" />
             </FormField>
             <FormField Label="@L["Common.From"]" For="From">
-                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@fromFilter Name="From" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Common.To"]" For="To">
-                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync()) />
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value=@toFilter Name="To" DateFormat="@Dates.ShortFormat" Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
             <FormField Label="@L["Common.Search"]" For="Search">
-                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;" />
+                <RadzenTextBox @bind-Value=@textFilter Name="Search" Placeholder="@L["Transactions.SearchPlaceholder"]" Style="min-width: 14rem;"
+                               Change=@(_ => ReloadAsync(resetPage: true)) />
             </FormField>
         </ChildContent>
         <Actions>
@@ -80,6 +81,7 @@
     </FilterBar>
 
     <RadzenDataGrid TItem="TransactionView"
+                    @ref="grid"
                     Data=@transactions
                     AllowPaging="true"
                     PageSize="25"
@@ -107,13 +109,26 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="220px" Sortable="false">
+            <RadzenDataGridColumn TItem="TransactionView" Title="@L["Dashboard.ColCategory"]" Width="260px" Sortable="false">
                 <Template Context="transaction">
-                    <CategoryPicker Options="@categoryOptions"
-                                    Value="@transaction.CategoryId"
-                                    ValueChanged="@(v => CategorizeAsync(transaction, v))"
-                                    AllowClear="false"
-                                    Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" AlignItems="AlignItems.Center">
+                        @if (transaction.CategoryLines.Count > 1)
+                        {
+                            <StatusBadge Variant="BadgeVariant.Neutral"
+                                         Text="@L["Transactions.SplitBadge", transaction.CategoryLines.Count]" />
+                        }
+                        else
+                        {
+                            <CategoryPicker Options="@categoryOptions"
+                                            Value="@transaction.CategoryId"
+                                            ValueChanged="@(v => CategorizeAsync(transaction, v))"
+                                            AllowClear="false"
+                                            Placeholder="@L["Transactions.UncategorizedPlaceholder"]" />
+                        }
+                        <IconButton Icon="call_split"
+                                    Title="@(transaction.CategoryLines.Count > 1 ? L["Transactions.EditSplitTooltip"] : L["Transactions.SplitTooltip"])"
+                                    Click=@(_ => StartSplit(transaction)) />
+                    </RadzenStack>
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="TransactionView" Title="" Width="110px" Sortable="false">
@@ -135,20 +150,61 @@
         </Columns>
     </RadzenDataGrid>
 
+    @if (splitting is not null)
+    {
+        <SectionCard Title="@L["Transactions.SplitTitle"]">
+            <RadzenStack Gap="0.75rem">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                    <span>@splitting.Description</span>
+                    <AmountText Amount="splitting.Amount" Currency="@splitting.Currency" />
+                </RadzenStack>
+                @foreach (var line in splitLines)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <CategoryPicker Options="@categoryOptions" Name="SplitCategory"
+                                        @bind-Value=@line.CategoryId
+                                        AllowClear="false"
+                                        Placeholder="@L["Dashboard.ColCategory"]" Style="min-width: 15rem;" />
+                        <RadzenNumeric TValue="decimal" @bind-Value=@line.Amount Style="width: 9rem;" />
+                        <IconButton Icon="delete" Title="@L["Common.Delete"]" Click=@(_ => splitLines.Remove(line)) />
+                    </RadzenStack>
+                }
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                    <RadzenButton Text="@L["Transactions.AddSplitLine"]" Icon="add" ButtonStyle="ButtonStyle.Light"
+                                  Click=@(() => splitLines.Add(new SplitLine())) />
+                    <span>@L["Transactions.SplitRemaining"]: <AmountText Amount="SplitRemaining" Currency="@splitting.Currency" /></span>
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenButton Text="@L["Common.Save"]" Icon="save" ButtonStyle="ButtonStyle.Primary"
+                                  Disabled="@(!CanSaveSplit)" Click=@SaveSplitAsync />
+                    <RadzenButton Text="@L["Common.Cancel"]" ButtonStyle="ButtonStyle.Light" Click=@(() => splitting = null) />
+                </RadzenStack>
+            </RadzenStack>
+        </SectionCard>
+    }
+
 </PageBody>
 
 @code {
     private const int MaxRows = 1000;
 
+    /// <summary>Sentinel id for the "Uncategorized" entry in <see cref="categoryFilterOptions"/> — never a real category id, so it can't collide.</summary>
+    private static readonly Guid UncategorizedFilterId = Guid.Empty;
+
     private readonly CancellationTokenSource _cts = new();
+
+    private RadzenDataGrid<TransactionView> grid = null!;
 
     private List<Account> accounts = [];
     private IReadOnlyList<User> users = [];
     private List<CategoryOption> categoryOptions = [];
+    private List<CategoryOption> categoryFilterOptions = [];
     private List<TransactionView> transactions = [];
     private IList<TransactionView> selected = [];
 
     private RuleOffer? ruleOffer;
+    private TransactionView? splitting;
+    private List<SplitLine> splitLines = [];
     private Guid? accountFilter;
     private Guid? ownerFilter;
     private Guid? categoryFilter;
@@ -156,8 +212,16 @@
     private DateOnly? toFilter;
     private string textFilter = "";
 
+    /// <summary>
+    /// Pre-selects the account filter when the page is opened from a link such as
+    /// the dashboard's account list (<c>transactions?account=…</c>).
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "account")]
+    public Guid? AccountFromQuery { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        accountFilter = AccountFromQuery;
         accounts = (await QuerySession.Query<Account>().ToListAsync(_cts.Token)).OrderBy(a => a.Name).ToList();
         users = await UserManager
             .Users.Where(u => !u.Deleted)
@@ -165,16 +229,29 @@
             .ToListAsync(_cts.Token);
         var categories = await QuerySession.Query<Category>().ToListAsync(_cts.Token);
         categoryOptions = CategoryPaths.Build(categories);
+        categoryFilterOptions =
+        [
+            new CategoryOption(UncategorizedFilterId, L["Transactions.CategoryFilterUncategorizedOption"]),
+            .. categoryOptions,
+        ];
         await ReloadAsync();
     }
 
-    private async Task ReloadAsync()
+    private async Task ReloadAsync(bool resetPage = false)
     {
+        var page = resetPage ? 0 : (grid?.CurrentPage ?? 0);
+
         var accountIds = FilteredAccountIds();
         var query = QuerySession.Query<TransactionView>().Where(t => t.AccountId.IsOneOf(accountIds));
-        if (categoryFilter is Guid categoryId)
+        if (categoryFilter == UncategorizedFilterId)
         {
-            query = query.Where(t => t.CategoryId == categoryId);
+            query = query.Where(t => !t.IsCategorized);
+        }
+        else if (categoryFilter is Guid categoryId)
+        {
+            query = query.Where(t =>
+                t.CategoryId == categoryId || t.CategoryLines.Any(l => l.CategoryId == categoryId)
+            );
         }
         if (fromFilter is DateOnly from)
         {
@@ -199,6 +276,11 @@
 
         transactions = loaded.ToList();
         selected = [];
+
+        if (grid is not null)
+        {
+            await grid.GoToPage(page);
+        }
     }
 
     private Guid[] FilteredAccountIds()
@@ -244,6 +326,60 @@
         }
 
         await ReloadAsync();
+    }
+
+    private void StartSplit(TransactionView transaction)
+    {
+        splitting = transaction;
+        splitLines =
+            transaction.CategoryLines.Count > 1
+                ? transaction
+                    .CategoryLines.Select(l => new SplitLine
+                    {
+                        CategoryId = l.CategoryId,
+                        Amount = l.Amount,
+                    })
+                    .ToList()
+                : [new SplitLine { CategoryId = transaction.CategoryId, Amount = transaction.Amount }, new()];
+    }
+
+    private decimal SplitRemaining => (splitting?.Amount ?? 0) - splitLines.Sum(l => l.Amount);
+
+    private bool CanSaveSplit =>
+        splitting is not null
+        && splitLines.Count >= 2
+        && splitLines.All(l => l.CategoryId is not null && l.Amount != 0)
+        && SplitRemaining == 0;
+
+    private async Task SaveSplitAsync()
+    {
+        if (splitting is null || !CanSaveSplit)
+        {
+            return;
+        }
+
+        var lines = splitLines
+            .Select(l => new CategoryLine(l.CategoryId!.Value, l.Amount))
+            .ToList();
+        var result = await MessageBus.InvokeAsync<Result>(
+            new SplitTransactionCategoryCommand(splitting.Id, lines),
+            _cts.Token
+        );
+        if (result.IsFailure)
+        {
+            NotificationService.Error(L["Transactions.SplitFailedTitle"], result.Error);
+            return;
+        }
+
+        NotificationService.Success(L["Transactions.SplitSavedTitle"], L["Transactions.SplitSavedMessage"]);
+        splitting = null;
+        await ReloadAsync();
+    }
+
+    private sealed class SplitLine
+    {
+        public Guid? CategoryId { get; set; }
+        public decimal Amount { get; set; }
     }
 
     private async Task CreateRuleFromOfferAsync()

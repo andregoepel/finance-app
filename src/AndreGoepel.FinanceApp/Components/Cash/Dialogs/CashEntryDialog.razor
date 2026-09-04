@@ -1,0 +1,151 @@
+@using AndreGoepel.FinanceApp.Categorization
+@using AndreGoepel.FinanceApp.Domain.Exchange
+
+@inject IMessageBus MessageBus
+@inject IExchangeRateProvider ExchangeRateProvider
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IStringLocalizer<Strings> L
+
+@* Record a manual cash transaction (#166) — the dialog body opened from
+   Cash.razor. There is no edit mode: an existing entry can only be deleted and
+   re-entered, same as before this moved into a dialog. Closes with `true`
+   once saved, so the caller knows to reload. *@
+
+<DialogForm TItem="EntryModel"
+            Data="entry"
+            Submit="SaveAsync"
+            SubmitText="@L["Cash.SaveEntry"]"
+            CancelText="@L["Common.Cancel"]"
+            IsBusy="isSaving"
+            BusyText="@L["Cash.SavingBusyText"]">
+    <div class="ag-form-grid">
+        <FormField Label="@L["Common.Date"]" For="EntryDate">
+            <RadzenDatePicker TValue="DateOnly?" @bind-Value=@entry.Date Name="EntryDate"
+                              DateFormat="@Dates.ShortFormat" Disabled=@isSaving Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Cash.KindLabel"]" For="EntryKind">
+            <RadzenSelectBar TValue="bool" @bind-Value=@entry.IsIncome Name="EntryKind" Disabled=@isSaving>
+                <Items>
+                    <RadzenSelectBarItem Text="@L["Cash.KindExpense"]" Value="@false" />
+                    <RadzenSelectBarItem Text="@L["Cash.KindIncome"]" Value="@true" />
+                </Items>
+            </RadzenSelectBar>
+        </FormField>
+    </div>
+    <FormField Label="@L["Cash.AmountLabel", Account.Currency]" For="EntryAmount">
+        <RadzenNumeric TValue="decimal?" @bind-Value=@entry.Amount Name="EntryAmount" Disabled=@isSaving Style="width: 100%;" />
+    </FormField>
+    <div class="ag-form-grid">
+        <FormField Label="@L["Common.Description"]" For="EntryDescription">
+            <RadzenTextBox @bind-Value=@entry.Description Name="EntryDescription" Disabled=@isSaving
+                           Placeholder="@L["Cash.DescriptionPlaceholder"]" Style="width: 100%;" />
+        </FormField>
+        <FormField Label="@L["Cash.CounterpartyLabel"]" For="EntryCounterparty">
+            <RadzenTextBox @bind-Value=@entry.Counterparty Name="EntryCounterparty" Disabled=@isSaving Style="width: 100%;" />
+        </FormField>
+    </div>
+    <FormField Label="@L["Dashboard.ColCategory"]" For="EntryCategory">
+        <CategoryPicker Options="@CategoryOptions" Name="EntryCategory"
+                        @bind-Value=@entry.CategoryId
+                        Placeholder="@L["Cash.CategoryHint"]" />
+    </FormField>
+</DialogForm>
+
+@code {
+    [Parameter, EditorRequired]
+    public Account Account { get; set; } = null!;
+
+    [Parameter]
+    public string? CurrentUserName { get; set; }
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CategoryOption> CategoryOptions { get; set; } = [];
+
+    private EntryModel entry = new();
+    private bool isSaving;
+
+    private async Task SaveAsync()
+    {
+        if (isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var magnitude = Math.Abs(entry.Amount ?? 0m);
+            var amount = entry.IsIncome ? magnitude : -magnitude;
+            var date = entry.Date ?? DateOnly.FromDateTime(DateTime.Today);
+
+            var amountEur = await ToEurAsync(amount, Account.Currency, date);
+            if (amountEur is null)
+            {
+                NotificationService.Warning(L["Cash.RateUnavailableTitle"], L["Cash.RateUnavailableMessage"]);
+            }
+
+            var result = await MessageBus.InvokeAsync<Result<TransactionView>>(
+                new RecordManualTransactionCommand(
+                    Account.Id,
+                    date,
+                    amount,
+                    amountEur,
+                    entry.Description,
+                    entry.Counterparty,
+                    entry.CategoryId,
+                    CurrentUserName
+                )
+            );
+            if (result.IsFailure)
+            {
+                NotificationService.Error(L["Cash.EntryFailedTitle"], result.Error);
+                return;
+            }
+
+            // Same follow-ups as an import, published top-level from application code
+            // (the proven Wolverine delivery path); none of them can fail the entry.
+            var recorded = result.Value!;
+            if (recorded.AmountEur is null)
+            {
+                await MessageBus.PublishAsync(new ConvertPendingTransactionsToEurCommand());
+            }
+            await MessageBus.PublishAsync(new MatchTransfersCommand());
+            if (recorded.CategoryId is null)
+            {
+                await MessageBus.PublishAsync(new CategorizeImportedTransactionsCommand(recorded.ImportBatchId));
+            }
+            await MessageBus.PublishAsync(new MatchPlannedTransactionsCommand());
+
+            NotificationService.Success(L["Cash.EntrySavedMessage"]);
+            DialogService.Close(true);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    // EUR is a pass-through; anything else is converted at the entry's date so the
+    // handler can keep the EUR anchor exact. Null when no rate is available.
+    private async Task<decimal?> ToEurAsync(decimal amount, string currency, DateOnly date)
+    {
+        if (string.Equals(currency, "EUR", StringComparison.OrdinalIgnoreCase))
+        {
+            return amount;
+        }
+
+        var rate = await ExchangeRateProvider.GetEurRateAsync(currency, date);
+        return rate.IsSuccess ? amount * rate.Value!.EurPerUnit : null;
+    }
+
+    private sealed class EntryModel
+    {
+        public DateOnly? Date { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public bool IsIncome { get; set; }
+        public decimal? Amount { get; set; }
+        public string Description { get; set; } = "";
+        public string Counterparty { get; set; } = "";
+        public Guid? CategoryId { get; set; }
+    }
+}

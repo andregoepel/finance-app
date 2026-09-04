@@ -20,7 +20,10 @@ public interface IWiseApiClient
         CancellationToken cancellationToken = default
     );
 
-    /// <summary>Standard balances held under a profile, with their current amounts.</summary>
+    /// <summary>
+    /// Balances held under a profile — standard currency balances and savings
+    /// jars — with their current amounts.
+    /// </summary>
     Task<Result<IReadOnlyList<WiseBalance>>> GetBalancesAsync(
         string apiToken,
         ProviderEnvironment environment,
@@ -30,8 +33,11 @@ public interface IWiseApiClient
 
     /// <summary>
     /// Monetary activities of a profile in a time window (newest first, all
-    /// currencies — the caller filters). Follows cursor pagination until the
-    /// window is exhausted.
+    /// currencies — the caller filters). Follows cursor pagination for as long as
+    /// Wise keeps handing back pages, however far the window reaches. Anything
+    /// that would leave the feed half-read fails instead of returning what was
+    /// collected: the missing part is always the oldest history, which silently
+    /// skews every balance reconstructed from it.
     /// </summary>
     Task<Result<IReadOnlyList<WiseActivity>>> GetActivitiesAsync(
         string apiToken,
@@ -45,8 +51,24 @@ public interface IWiseApiClient
 
 public sealed record WiseProfile(long Id, string Type);
 
-/// <summary><paramref name="Id"/> is the Wise balance id used to link an account (its external id).</summary>
-public sealed record WiseBalance(long Id, string Currency, decimal Amount);
+/// <summary>
+/// <paramref name="Id"/> is the Wise balance id used to link an account (its
+/// external id). <paramref name="Type"/> is STANDARD or SAVINGS (a jar).
+/// Wise allows several STANDARD balances per currency ("grouped" balances);
+/// <paramref name="Primary"/> distinguishes the one true default balance for
+/// that currency from the others — only it can be attributed from the
+/// profile-wide, currency-filtered activity feed. <paramref name="Name"/> is
+/// set for jars and non-primary grouped balances alike (the default primary
+/// balance of each currency carries none).
+/// </summary>
+public sealed record WiseBalance(
+    long Id,
+    string Currency,
+    decimal Amount,
+    string Type = "STANDARD",
+    string? Name = null,
+    bool Primary = true
+);
 
 /// <summary>
 /// One entry of the Wise activity feed. <paramref name="Amount"/> is the signed
