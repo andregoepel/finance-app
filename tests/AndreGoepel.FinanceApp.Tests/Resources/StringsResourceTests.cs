@@ -1121,6 +1121,30 @@ public sealed class StringsResourceTests
     [InlineData("de", "Planning.MatchNow", "Jetzt zuordnen")]
     [InlineData("en", "Planning.EstimatedEndOfMonthValue", "Estimated end-of-month value")]
     [InlineData("de", "Planning.EstimatedEndOfMonthValue", "Geschätzter Wert zum Monatsende")]
+    [InlineData("en", "Planning.MonthlyCategoryPlan", "Monthly category plan")]
+    [InlineData("de", "Planning.MonthlyCategoryPlan", "Monatlicher Kategorieplan")]
+    [InlineData(
+        "en",
+        "Planning.NoCategoryPlan",
+        "Add a planned expense or budget to start the category plan."
+    )]
+    [InlineData(
+        "de",
+        "Planning.NoCategoryPlan",
+        "Füge eine geplante Ausgabe oder ein Budget hinzu, um den Kategorieplan zu beginnen."
+    )]
+    [InlineData("en", "Planning.ColBudget", "Budget")]
+    [InlineData("de", "Planning.ColBudget", "Budget")]
+    [InlineData("en", "Planning.ColFixedRemaining", "Fixed remaining")]
+    [InlineData("de", "Planning.ColFixedRemaining", "Noch fest eingeplant")]
+    [InlineData("en", "Planning.ColForecast", "Forecast")]
+    [InlineData("de", "Planning.ColForecast", "Prognose")]
+    [InlineData("en", "Planning.ColFlexibleRemaining", "Flexible remaining")]
+    [InlineData("de", "Planning.ColFlexibleRemaining", "Flexibel verfügbar")]
+    [InlineData("en", "Planning.SetBudget", "Set budget")]
+    [InlineData("de", "Planning.SetBudget", "Budget festlegen")]
+    [InlineData("en", "Planning.EditBudget", "Edit budget")]
+    [InlineData("de", "Planning.EditBudget", "Budget bearbeiten")]
     [InlineData("en", "Planning.ThisMonthsPlan", "This month's plan")]
     [InlineData("de", "Planning.ThisMonthsPlan", "Plan für diesen Monat")]
     [InlineData("en", "Planning.ColDue", "Due")]

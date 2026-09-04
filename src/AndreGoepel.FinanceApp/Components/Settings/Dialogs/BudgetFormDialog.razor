@@ -41,6 +41,12 @@
     [Parameter]
     public Budget? Budget { get; set; }
 
+    [Parameter]
+    public Guid? InitialCategoryId { get; set; }
+
+    [Parameter]
+    public DateOnly? InitialStartMonth { get; set; }
+
     [Parameter, EditorRequired]
     public IReadOnlyList<CategoryOption> CategoryOptions { get; set; } = [];
 
@@ -51,6 +57,11 @@
     {
         if (Budget is null)
         {
+            form.CategoryId = InitialCategoryId;
+            if (InitialStartMonth is DateOnly startMonth)
+            {
+                form.StartMonth = startMonth.ToDateTime(TimeOnly.MinValue);
+            }
             return;
         }
 
