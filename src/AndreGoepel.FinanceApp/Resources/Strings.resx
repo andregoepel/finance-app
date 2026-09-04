@@ -270,7 +270,10 @@
   <data name="Dashboard.BalanceAsOf" xml:space="preserve"><value><![CDATA[as of {0}]]></value><comment>{0} = date the balance was last set</comment></data>
   <data name="Dashboard.NoBalanceYet" xml:space="preserve"><value><![CDATA[no balance yet —]]></value><comment>A "set one" link follows</comment></data>
   <data name="Dashboard.AccountsTotal" xml:space="preserve"><value><![CDATA[Total]]></value></data>
-  <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[No budgets set —]]></value><comment>An "add one" link follows</comment></data>
+  <data name="Dashboard.NoBudgetsSet" xml:space="preserve"><value><![CDATA[No budgets or planned expenses —]]></value><comment>An "add one" link follows</comment></data>
+  <data name="Dashboard.BudgetForecast" xml:space="preserve"><value><![CDATA[{0} spent + {1} planned / {2} budget]]></value></data>
+  <data name="Dashboard.PlannedOnly" xml:space="preserve"><value><![CDATA[{0} planned]]></value></data>
+  <data name="Planning.Unallocated" xml:space="preserve"><value><![CDATA[Unallocated]]></value></data>
   <data name="Dashboard.AddOneLink" xml:space="preserve"><value><![CDATA[add one]]></value></data>
   <data name="Dashboard.HoldingsLink" xml:space="preserve"><value><![CDATA[Holdings]]></value></data>
   <data name="Common.NoPriceYet" xml:space="preserve"><value><![CDATA[no price yet]]></value><comment>Shared by the Dashboard crypto tile and the CryptoHoldings grid</comment></data>

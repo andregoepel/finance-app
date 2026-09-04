@@ -29,9 +29,15 @@ public sealed record MonthlyOverview(
 public sealed record CategorySpend(string Category, decimal Amount);
 
 /// <summary>A budgeted category's limit and month-to-date spend (EUR).</summary>
-public sealed record BudgetProgress(string Category, decimal Limit, decimal Spent)
+public sealed record BudgetProgress(
+    string? Category,
+    decimal? Limit,
+    decimal Spent,
+    decimal PlannedRemaining = 0
+)
 {
-    public decimal Percent => Limit <= 0 ? 0 : Math.Round(Spent / Limit * 100, 0);
+    public decimal ForecastSpent => Spent + PlannedRemaining;
+    public decimal Percent => Limit is > 0 ? Math.Round(ForecastSpent / Limit.Value * 100, 0) : 0;
 
-    public bool IsOver => Spent > Limit;
+    public bool IsOver => Limit is decimal limit && ForecastSpent > limit;
 }

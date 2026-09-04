@@ -49,6 +49,7 @@ public static class Initialization
         services.AddScoped<IRecurringService, RecurringService>();
         services.AddScoped<ICryptoService, CryptoService>();
         services.AddScoped<IPlanningService, PlanningService>();
+        services.AddScoped<IMonthlyCategoryPlanService, MonthlyCategoryPlanService>();
 
         return services;
     }
