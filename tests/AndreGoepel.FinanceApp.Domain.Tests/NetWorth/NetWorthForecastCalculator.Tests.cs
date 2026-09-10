@@ -23,9 +23,9 @@ public sealed class NetWorthForecastCalculatorTests
 
         Assert.Equal(13, result.Count);
         Assert.Equal(new NetWorthPoint(today, 10_000m), result[0]);
-        Assert.Equal(13_200m, result[1].Amount);
-        Assert.Equal(14_400m, result[2].Amount);
-        Assert.Equal(26_400m, result[^1].Amount);
+        Assert.Equal(12_000m, result[1].Amount);
+        Assert.Equal(13_200m, result[2].Amount);
+        Assert.Equal(25_200m, result[^1].Amount);
     }
 
     [Fact]
@@ -47,8 +47,66 @@ public sealed class NetWorthForecastCalculatorTests
             new HashSet<(Guid, DateOnly)>()
         );
 
-        Assert.Equal(1_300m, result[1].Amount);
-        Assert.All(result.Skip(1), point => Assert.Equal(1_300m, point.Amount));
+        Assert.Equal(900m, result[1].Amount);
+        Assert.All(result.Skip(2), point => Assert.Equal(1_300m, point.Amount));
+    }
+
+    [Fact]
+    public void Compute_UsesOnlyCurrentBudgetRemainderThenFullFutureBudgets()
+    {
+        var today = new DateOnly(2026, 9, 20);
+        var groceries = Guid.NewGuid();
+        var budget = new Domain.Budgets.Budget
+        {
+            Id = Guid.NewGuid(),
+            CategoryId = groceries,
+            MonthlyLimit = 600m,
+            StartMonth = new DateOnly(2026, 9, 1),
+        };
+
+        var result = NetWorthForecastCalculator.Compute(
+            10_000m,
+            today,
+            [],
+            new HashSet<(Guid, DateOnly)>(),
+            new Dictionary<Guid, Guid?> { [groceries] = null },
+            [budget],
+            [(groceries, 570m)],
+            months: 2
+        );
+
+        Assert.Equal(9_970m, result[1].Amount);
+        Assert.Equal(9_370m, result[2].Amount);
+    }
+
+    [Fact]
+    public void Compute_DoesNotDoubleCountPlannedExpenseInsideBudget()
+    {
+        var today = new DateOnly(2026, 9, 20);
+        var groceries = Guid.NewGuid();
+        var planned = Create(-80m, PlannedFrequency.OneTime, new DateOnly(2026, 9, 25));
+        planned.CategoryId = groceries;
+        var budget = new Domain.Budgets.Budget
+        {
+            Id = Guid.NewGuid(),
+            CategoryId = groceries,
+            MonthlyLimit = 600m,
+            StartMonth = new DateOnly(2026, 9, 1),
+            EndMonth = new DateOnly(2026, 9, 1),
+        };
+
+        var result = NetWorthForecastCalculator.Compute(
+            10_000m,
+            today,
+            [planned],
+            new HashSet<(Guid, DateOnly)>(),
+            new Dictionary<Guid, Guid?> { [groceries] = null },
+            [budget],
+            [(groceries, 570m)],
+            months: 1
+        );
+
+        Assert.Equal(9_920m, result[1].Amount);
     }
 
     private static PlannedItem Create(

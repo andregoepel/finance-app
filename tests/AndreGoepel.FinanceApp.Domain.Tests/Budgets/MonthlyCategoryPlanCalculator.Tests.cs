@@ -31,7 +31,39 @@ public sealed class MonthlyCategoryPlanCalculatorTests
         Assert.Equal(1_100m, plan.ActualSpent);
         Assert.Equal(1_350m, plan.PlannedRemaining);
         Assert.Equal(2_450m, plan.ForecastSpent);
+        Assert.Equal(1_350m, plan.ForecastRemaining);
         Assert.Equal(-950m, plan.FlexibleRemaining);
+    }
+
+    [Fact]
+    public void Compute_UsesBudgetAsExpectedSpendWithoutAddingPlansTwice()
+    {
+        var result = MonthlyCategoryPlanCalculator.Compute(
+            new Dictionary<Guid, Guid?> { [_rent] = null },
+            [(_rent, 570m)],
+            [(_rent, 20m)],
+            new Dictionary<Guid, decimal> { [_rent] = 600m }
+        );
+
+        var plan = Assert.Single(result);
+        Assert.Equal(600m, plan.ForecastSpent);
+        Assert.Equal(30m, plan.ForecastRemaining);
+        Assert.Equal(10m, plan.FlexibleRemaining);
+    }
+
+    [Fact]
+    public void Compute_OverBudgetAddsOnlyConcreteRemainingPlans()
+    {
+        var result = MonthlyCategoryPlanCalculator.Compute(
+            new Dictionary<Guid, Guid?> { [_rent] = null },
+            [(_rent, 630m)],
+            [(_rent, 80m)],
+            new Dictionary<Guid, decimal> { [_rent] = 600m }
+        );
+
+        var plan = Assert.Single(result);
+        Assert.Equal(710m, plan.ForecastSpent);
+        Assert.Equal(80m, plan.ForecastRemaining);
     }
 
     [Fact]
