@@ -108,17 +108,25 @@
                             <RadzenText TextStyle="TextStyle.H4" Style="margin: 0;">@Money.Eur(netWorth.Current)</RadzenText>
                             @if (netWorthChart.Count > 1)
                             {
-                                <RadzenChart Style="height: 180px;">
-                                    <RadzenAreaSeries Data="@netWorthChart" CategoryProperty="Label" ValueProperty="Amount"
-                                                      Title="@L["Dashboard.ActualNetWorth"]" />
-                                    @if (netWorthForecastChart.Count > 1)
-                                    {
+                                <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">@L["Dashboard.ActualNetWorth"]</RadzenText>
+                                <div data-testid="net-worth-history-chart">
+                                    <RadzenChart Style="height: 180px;">
+                                        <RadzenAreaSeries Data="@netWorthChart" CategoryProperty="Label" ValueProperty="Amount"
+                                                          Title="@L["Dashboard.ActualNetWorth"]" />
+                                        <RadzenValueAxis Formatter="@(v => $"{v:N0} €")" />
+                                    </RadzenChart>
+                                </div>
+                            }
+                            @if (netWorthForecastChart.Count > 1)
+                            {
+                                <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin: 0;">@L["Dashboard.ForecastNetWorth"]</RadzenText>
+                                <div data-testid="net-worth-forecast-chart">
+                                    <RadzenChart Style="height: 180px;">
                                         <RadzenLineSeries Data="@netWorthForecastChart" CategoryProperty="Label" ValueProperty="Amount"
                                                           Title="@L["Dashboard.ForecastNetWorth"]" LineType="LineType.Dashed" StrokeWidth="3" />
-                                    }
-                                    <RadzenValueAxis Formatter="@(v => $"{v:N0} €")" />
-                                    <RadzenLegend Position="LegendPosition.Bottom" />
-                                </RadzenChart>
+                                        <RadzenValueAxis Formatter="@(v => $"{v:N0} €")" />
+                                    </RadzenChart>
+                                </div>
                             }
                             @if (netWorth.AccountsWithoutBalance > 0)
                             {
