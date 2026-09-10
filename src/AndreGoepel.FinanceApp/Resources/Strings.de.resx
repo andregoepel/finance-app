@@ -218,6 +218,8 @@
 
   <!-- Import.razor -->
   <data name="Import.SelectAccountPlaceholder" xml:space="preserve"><value><![CDATA[Konto auswählen]]></value></data>
+  <data name="Import.ShowDeactivatedAccounts" xml:space="preserve"><value><![CDATA[Deaktivierte Konten anzeigen]]></value></data>
+  <data name="Import.DeactivatedHistoryOnly" xml:space="preserve"><value><![CDATA[Dieses Konto ist deaktiviert. Der gespeicherte Import-Verlauf ist unten verfügbar, neue Uploads sind jedoch deaktiviert.]]></value></data>
   <data name="Import.ProviderCaption" xml:space="preserve"><value><![CDATA[Anbieter: {0} — CSV-Export hochladen; unbekannte Formate werden abgelehnt, nichts wird überraschend teilweise importiert.]]></value><comment>{0} = the provider (proper noun, e.g. DKB)</comment></data>
   <data name="Import.PreviewTitle" xml:space="preserve"><value><![CDATA[Vorschau — {0} ({1})]]></value><comment>{0} = file name, {1} = detected parser id</comment></data>
   <data name="Import.NewCount" xml:space="preserve"><value><![CDATA[{0} neu]]></value><comment>{0} = count of new rows</comment></data>

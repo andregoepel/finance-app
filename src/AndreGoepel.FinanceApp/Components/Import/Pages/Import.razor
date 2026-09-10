@@ -23,22 +23,32 @@
                 <FormField Label="@L["Common.Account"]" For="Account">
                     <RadzenDropDown TValue="Guid?"
                                     @bind-Value=@selectedAccountId Name="Account"
-                                    Data=@accounts
-                                    TextProperty="Name"
+                                    Data=@VisibleAccounts
+                                    TextProperty="DisplayName"
                                     ValueProperty="Id"
                                     Placeholder="@L["Import.SelectAccountPlaceholder"]"
                                     Style="min-width: 14rem;"
                                     Change=@(_ => OnAccountChangedAsync()) />
                 </FormField>
                 <div>
-                    <InputFile class="import-file-input" OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(selectedAccountId is null) />
+                    <InputFile class="import-file-input" OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(SelectedAccount?.IsActive != true) />
                 </div>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenSwitch @bind-Value=@showDeactivatedAccounts />
+                    <RadzenText TextStyle="TextStyle.Body2">@L["Import.ShowDeactivatedAccounts"]</RadzenText>
+                </RadzenStack>
             </RadzenStack>
             @if (SelectedAccount is not null)
             {
                 <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
                     @L["Import.ProviderCaption", SelectedAccount.Provider]
                 </RadzenText>
+                @if (!SelectedAccount.IsActive)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="false">
+                        @L["Import.DeactivatedHistoryOnly"]
+                    </RadzenAlert>
+                }
             }
         </RadzenStack>
     </RadzenCard>
@@ -162,8 +172,9 @@
 
     private readonly CancellationTokenSource _cts = new();
 
-    private List<Account> accounts = [];
+    private List<ImportAccountOption> accounts = [];
     private Guid? selectedAccountId;
+    private bool showDeactivatedAccounts;
     private string fileName = "";
     private StatementParseResult? preview;
     private string? parseFailure;
@@ -176,7 +187,10 @@
     private bool isImporting;
 
     private Account? SelectedAccount =>
-        accounts.FirstOrDefault(a => a.Id == selectedAccountId);
+        accounts.FirstOrDefault(a => a.Id == selectedAccountId)?.Account;
+
+    private IEnumerable<ImportAccountOption> VisibleAccounts =>
+        showDeactivatedAccounts ? accounts : accounts.Where(a => a.Account.IsActive);
 
     private int NewRowCount =>
         preview is null
@@ -191,10 +205,16 @@
         accounts = (
             await QuerySession
                 .Query<Account>()
-                .Where(a => a.Status == AccountStatus.Active && a.SyncMethod != SyncMethod.Manual)
+                .Where(a => a.SyncMethod != SyncMethod.Manual)
                 .ToListAsync(_cts.Token)
         )
             .OrderBy(a => a.Name)
+            .Select(a =>
+                new ImportAccountOption(
+                    a,
+                    a.IsActive ? a.Name : $"{a.Name} ({L["Accounts.StatusDeactivated"]})"
+                )
+            )
             .ToList();
     }
 
@@ -246,7 +266,7 @@
 
     private async Task OnFileSelectedAsync(InputFileChangeEventArgs args)
     {
-        if (SelectedAccount is not Account account)
+        if (SelectedAccount is not Account { IsActive: true } account)
         {
             return;
         }
@@ -307,6 +327,11 @@
     private bool IsDuplicate(NormalizedTransaction row) =>
         duplicateHashes.TryGetValue(row.SourceRow, out var duplicate) && duplicate;
 
+    private sealed record ImportAccountOption(Account Account, string DisplayName)
+    {
+        public Guid Id => Account.Id;
+    }
+
     private void ToggleForceImport(int sourceRow, bool force)
     {
         if (force)
@@ -321,7 +346,7 @@
 
     private async Task RunImportAsync()
     {
-        if (preview is null || SelectedAccount is not Account account)
+        if (preview is null || SelectedAccount is not Account { IsActive: true } account)
         {
             return;
         }

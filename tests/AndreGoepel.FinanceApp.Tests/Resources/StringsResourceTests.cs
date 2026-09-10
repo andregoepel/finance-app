@@ -602,6 +602,8 @@ public sealed class StringsResourceTests
     [Theory]
     [InlineData("en", "Import.SelectAccountPlaceholder", "Select account")]
     [InlineData("de", "Import.SelectAccountPlaceholder", "Konto auswählen")]
+    [InlineData("en", "Import.ShowDeactivatedAccounts", "Show deactivated accounts")]
+    [InlineData("de", "Import.ShowDeactivatedAccounts", "Deaktivierte Konten anzeigen")]
     [InlineData("en", "Import.ColRow", "Row")]
     [InlineData("de", "Import.ColRow", "Zeile")]
     [InlineData("en", "Import.DuplicateBadge", "Duplicate")]
