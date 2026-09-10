@@ -83,7 +83,14 @@ public sealed record MonthlyCategoryPlanTotal(
     decimal PlannedRemaining
 )
 {
-    public decimal ForecastSpent => ActualSpent + PlannedRemaining;
+    /// <summary>
+    /// Expected total spend for the month. A budget is the expected variable-spend
+    /// envelope; concrete planned expenses only raise the forecast when they exceed it.
+    /// </summary>
+    public decimal ForecastSpent => Math.Max(ActualSpent + PlannedRemaining, BudgetLimit ?? 0m);
 
-    public decimal? FlexibleRemaining => BudgetLimit - ForecastSpent;
+    /// <summary>Expense still expected after the spending already booked this month.</summary>
+    public decimal ForecastRemaining => Math.Max(0m, ForecastSpent - ActualSpent);
+
+    public decimal? FlexibleRemaining => BudgetLimit - ActualSpent - PlannedRemaining;
 }

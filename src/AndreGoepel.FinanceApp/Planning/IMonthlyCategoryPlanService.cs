@@ -17,9 +17,11 @@ public sealed record MonthlyCategoryPlan(
     decimal PlannedRemaining
 )
 {
-    public decimal ForecastSpent => ActualSpent + PlannedRemaining;
+    public decimal ForecastSpent => Math.Max(ActualSpent + PlannedRemaining, BudgetLimit ?? 0m);
 
-    public decimal? FlexibleRemaining => BudgetLimit - ForecastSpent;
+    public decimal ForecastRemaining => Math.Max(0m, ForecastSpent - ActualSpent);
+
+    public decimal? FlexibleRemaining => BudgetLimit - ActualSpent - PlannedRemaining;
 
     public decimal Percent =>
         BudgetLimit is > 0 ? Math.Round(ForecastSpent / BudgetLimit.Value * 100, 0) : 0;

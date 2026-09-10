@@ -1,4 +1,6 @@
 using AndreGoepel.FinanceApp.Domain.Accounts;
+using AndreGoepel.FinanceApp.Domain.Budgets;
+using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.NetWorth;
 using AndreGoepel.FinanceApp.Domain.Planning;
 using AndreGoepel.FinanceApp.Domain.Transactions;
@@ -122,7 +124,39 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
             .Select(match => (match.PlannedItemId, match.DueDate))
             .ToHashSet();
 
-        return NetWorthForecastCalculator.Compute(current, today, items, matchedOccurrences);
+        var categories = await session.Query<Category>().ToListAsync(cancellationToken);
+        var categoryParents = categories.ToDictionary(
+            category => category.Id,
+            category => category.ParentId
+        );
+        var budgets = await session.Query<Budget>().ToListAsync(cancellationToken);
+        var monthStart = new DateOnly(today.Year, today.Month, 1);
+        var actualTransactions = await session
+            .Query<TransactionView>()
+            .Where(transaction =>
+                transaction.BookingDate >= monthStart
+                && transaction.BookingDate <= today
+                && transaction.TransferCounterpartId == null
+                && transaction.AmountEur < 0
+            )
+            .ToListAsync(cancellationToken);
+        var actualExpenses = actualTransactions
+            .SelectMany(transaction =>
+                transaction.EffectiveCategoryLines.Select(line =>
+                    ((Guid?)line.CategoryId, Amount: -transaction.EurAmountFor(line)!.Value)
+                )
+            )
+            .ToList();
+
+        return NetWorthForecastCalculator.Compute(
+            current,
+            today,
+            items,
+            matchedOccurrences,
+            categoryParents,
+            budgets,
+            actualExpenses
+        );
     }
 
     private static AccountBalance ToBalance(
