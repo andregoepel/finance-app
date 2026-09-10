@@ -18,3 +18,9 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+
+  # Keep the tag@sha256 .NET base-image references current through reviewed PRs.
+  - package-ecosystem: docker
+    directory: "/src/AndreGoepel.FinanceApp"
+    schedule:
+      interval: weekly

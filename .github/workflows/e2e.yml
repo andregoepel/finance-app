@@ -9,7 +9,7 @@ on:
 
 jobs:
   e2e:
-    uses: andregoepel/workflows/.github/workflows/e2e.yml@main
+    uses: andregoepel/workflows/.github/workflows/e2e.yml@698e9211a976c908e5e841dfcb4aacdc3693590e # https://github.com/andregoepel/workflows/commit/698e9211a976c908e5e841dfcb4aacdc3693590e
     with:
       e2e-project: tests/AndreGoepel.FinanceApp.E2ETests/AndreGoepel.FinanceApp.E2ETests.csproj
       global-json-file: global.json
