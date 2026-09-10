@@ -2,11 +2,13 @@
 
 The app ships as a single container image, built from
 [`src/AndreGoepel.FinanceApp/Dockerfile`](../src/AndreGoepel.FinanceApp/Dockerfile)
-and pushed to `ghcr.io/andregoepel/finance-app:latest` on every push to `main`
-(`.github/workflows/docker-image.yml`). It expects a Postgres database and a
-TLS-terminating reverse proxy in front of it. This guide describes the
-reference setup: Docker Compose with a shared nginx proxy and a shared Postgres
-container on one VPS, reachable as `finance.andregoepel.dev`.
+and pushed to GHCR on every push to `main` (`.github/workflows/docker-image.yml`).
+The workflow publishes convenience tags and records the immutable manifest
+digest; production selects only a reviewed digest-qualified reference. The app
+expects a Postgres database and a TLS-terminating reverse proxy in front of it.
+This guide describes the reference setup: Docker Compose with a shared nginx
+proxy and a shared Postgres container on one VPS, reachable as
+`finance.andregoepel.dev`.
 
 Adjust hostnames, paths and the container IP to your environment. The only
 values the app itself cares about are the environment variables in the
@@ -81,6 +83,18 @@ Next to the `docker-compose.yml`:
 echo 'FINANCE_CERTIFICATE_PASSWORD=<password>' >> .env
 ```
 
+After the approved `main` build has finished, copy the
+`Published ghcr.io/andregoepel/finance-app@sha256:…` reference from its
+**Record immutable image digest** step and add it as the deployment's explicit
+image identity:
+
+```dotenv
+FINANCE_APP_IMAGE=ghcr.io/andregoepel/finance-app@sha256:<approved-main-build-digest>
+```
+
+Changing this line is the production deployment decision. Never set it to
+`latest`, a commit tag, or a semantic-version tag.
+
 ### 4. Registry access
 
 If the GHCR package is private, the VPS needs a `docker login ghcr.io` with a
@@ -94,7 +108,7 @@ free on the `nerdventures` network (`172.28.0.0/16`).
 
 ```yaml
   finance.andregoepel.dev:
-    image: ghcr.io/andregoepel/finance-app:latest
+    image: ${FINANCE_APP_IMAGE:?Set FINANCE_APP_IMAGE to an immutable ghcr.io/andregoepel/finance-app@sha256 digest}
     container_name: finance-andregoepel-dev
     restart: unless-stopped
     depends_on:
@@ -162,8 +176,21 @@ HTTP-to-HTTPS redirect for the hostname is expected to exist already (a
 ## First start
 
 ```bash
+export FINANCE_APP_IMAGE=ghcr.io/andregoepel/finance-app@sha256:<approved-main-build-digest>
 docker compose pull finance.andregoepel.dev && docker compose up -d finance.andregoepel.dev && docker compose exec proxy nginx -s reload
 ```
+
+Verify that the running container uses the selected local image object:
+
+```bash
+expected_image_id=$(docker image inspect --format '{{.Id}}' "$FINANCE_APP_IMAGE")
+actual_image_id=$(docker inspect --format '{{.Image}}' finance-andregoepel-dev)
+test "$actual_image_id" = "$expected_image_id"
+actual_repo_digests=$(docker image inspect --format '{{join .RepoDigests "\n"}}' "$actual_image_id")
+printf '%s\n' "$actual_repo_digests" | grep -Fx "$FINANCE_APP_IMAGE"
+```
+
+Record the selected manifest digest and actual image ID in the deployment log.
 
 Then:
 
@@ -185,12 +212,30 @@ Then:
 
 ## Updating
 
+Wait for the chosen `main` build to succeed, then export its digest-qualified
+reference and put the same value in the VPS `.env`. Apply and verify it:
+
 ```bash
+export FINANCE_APP_IMAGE=ghcr.io/andregoepel/finance-app@sha256:<new-approved-main-build-digest>
+# Replace the FINANCE_APP_IMAGE line in .env with this exact value before continuing.
 docker compose pull finance.andregoepel.dev && docker compose up -d finance.andregoepel.dev
+expected_image_id=$(docker image inspect --format '{{.Id}}' "$FINANCE_APP_IMAGE")
+actual_image_id=$(docker inspect --format '{{.Image}}' finance-andregoepel-dev)
+test "$actual_image_id" = "$expected_image_id"
+actual_repo_digests=$(docker image inspect --format '{{join .RepoDigests "\n"}}' "$actual_image_id")
+printf '%s\n' "$actual_repo_digests" | grep -Fx "$FINANCE_APP_IMAGE"
 ```
 
-Only pushes to `main` produce a new `latest` image, so a feature branch has to
-be merged first.
+Only pushes to `main` publish images. A moving tag may help locate a build, but
+it is never the production identity.
+
+## Rolling back
+
+Export the previous digest-qualified reference, restore the identical
+`FINANCE_APP_IMAGE=...@sha256:...` line in `.env`, run the same pull/up commands,
+and repeat the image-ID and `RepoDigests` verification. Preserve every
+successfully deployed digest so rollback never depends on where a mutable tag
+points later.
 
 ## Troubleshooting
 
