@@ -1,0 +1,73 @@
+name: Release Container Image
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  promote:
+    name: Promote tested image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag must use SemVer syntax, for example v1.2.0 or v1.2.0-rc.1." >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Resolve and validate release commit
+        id: release
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          source_sha=$(git rev-list -n 1 "$RELEASE_TAG")
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$source_sha" origin/main; then
+            echo "Release commit $source_sha is not contained in main." >&2
+            exit 1
+          fi
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@bb05f3f519dd87d3ba754cc423b652a5edd6d2cc # v4.2.0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bd20940b903adbbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Promote commit image to release tag
+        id: promote
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          SOURCE_SHA: ${{ steps.release.outputs.source_sha }}
+        run: |
+          source_digest=$(docker buildx imagetools inspect "$IMAGE:$SOURCE_SHA" --format '{{.Manifest.Digest}}')
+          docker buildx imagetools create --tag "$IMAGE:$RELEASE_TAG" "$IMAGE@$source_digest"
+          release_digest=$(docker buildx imagetools inspect "$IMAGE:$RELEASE_TAG" --format '{{.Manifest.Digest}}')
+
+          if [[ "$release_digest" != "$source_digest" ]]; then
+            echo "Release digest $release_digest does not match source digest $source_digest." >&2
+            exit 1
+          fi
+
+          release_ref="$RELEASE_TAG@$release_digest"
+          echo "digest=$release_digest" >> "$GITHUB_OUTPUT"
+          echo "release_ref=$release_ref" >> "$GITHUB_OUTPUT"
+          echo "Published $IMAGE:$release_ref"
+          printf '### Container image\n\n`FINANCE_APP_REF=%s`\n' "$release_ref" >> "$GITHUB_STEP_SUMMARY"
+

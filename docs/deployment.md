@@ -4,7 +4,10 @@ The app ships as a single container image, built from
 [`src/AndreGoepel.FinanceApp/Dockerfile`](../src/AndreGoepel.FinanceApp/Dockerfile)
 and pushed to GHCR on every push to `main` (`.github/workflows/docker-image.yml`).
 The workflow publishes convenience tags and records the immutable manifest
-digest; production selects only a reviewed digest-qualified reference. The app
+digest. Publishing a GitHub Release promotes that already-built commit image
+to the release's SemVer tag (`.github/workflows/release-image.yml`); it does not
+rebuild it. Production selects the readable tag together with its immutable
+digest. The app
 expects a Postgres database and a TLS-terminating reverse proxy in front of it.
 This guide describes the reference setup: Docker Compose with a shared nginx
 proxy and a shared Postgres container on one VPS, reachable as
@@ -83,17 +86,16 @@ Next to the `docker-compose.yml`:
 echo 'FINANCE_CERTIFICATE_PASSWORD=<password>' >> .env
 ```
 
-After the approved `main` build has finished, copy the
-`Published ghcr.io/andregoepel/finance-app@sha256:…` reference from its
-**Record immutable image digest** step and add it as the deployment's explicit
-image identity:
+After a GitHub Release has been published, copy the `FINANCE_APP_REF` value
+from the **Release Container Image** workflow summary and add it as the
+deployment's explicit image identity:
 
 ```dotenv
-FINANCE_APP_IMAGE=ghcr.io/andregoepel/finance-app@sha256:<approved-main-build-digest>
+FINANCE_APP_REF=v1.2.0@sha256:<release-digest>
 ```
 
 Changing this line is the production deployment decision. Never set it to
-`latest`, a commit tag, or a semantic-version tag.
+`latest` or to a tag without its digest.
 
 ### 4. Registry access
 
@@ -108,7 +110,7 @@ free on the `nerdventures` network (`172.28.0.0/16`).
 
 ```yaml
   finance.andregoepel.dev:
-    image: ${FINANCE_APP_IMAGE:?Set FINANCE_APP_IMAGE to an immutable ghcr.io/andregoepel/finance-app@sha256 digest}
+    image: ghcr.io/andregoepel/finance-app:${FINANCE_APP_REF:?Set FINANCE_APP_REF to release-tag@sha256:digest}
     container_name: finance-andregoepel-dev
     restart: unless-stopped
     depends_on:
@@ -176,18 +178,20 @@ HTTP-to-HTTPS redirect for the hostname is expected to exist already (a
 ## First start
 
 ```bash
-export FINANCE_APP_IMAGE=ghcr.io/andregoepel/finance-app@sha256:<approved-main-build-digest>
+export FINANCE_APP_REF=v1.2.0@sha256:<release-digest>
 docker compose pull finance.andregoepel.dev && docker compose up -d finance.andregoepel.dev && docker compose exec proxy nginx -s reload
 ```
 
 Verify that the running container uses the selected local image object:
 
 ```bash
-expected_image_id=$(docker image inspect --format '{{.Id}}' "$FINANCE_APP_IMAGE")
+finance_app_image="ghcr.io/andregoepel/finance-app:$FINANCE_APP_REF"
+expected_image_id=$(docker image inspect --format '{{.Id}}' "$finance_app_image")
 actual_image_id=$(docker inspect --format '{{.Image}}' finance-andregoepel-dev)
 test "$actual_image_id" = "$expected_image_id"
 actual_repo_digests=$(docker image inspect --format '{{join .RepoDigests "\n"}}' "$actual_image_id")
-printf '%s\n' "$actual_repo_digests" | grep -Fx "$FINANCE_APP_IMAGE"
+expected_digest_ref="ghcr.io/andregoepel/finance-app@${FINANCE_APP_REF#*@}"
+printf '%s\n' "$actual_repo_digests" | grep -Fx "$expected_digest_ref"
 ```
 
 Record the selected manifest digest and actual image ID in the deployment log.
@@ -210,29 +214,44 @@ Then:
    `AppFoundation__KnownProxyNetworks` does not cover the proxy's source
    address.
 
+## Creating a release
+
+1. Wait until CI, E2E, and Docker Image CI for the selected `main` commit are
+   successful.
+2. Create and publish a GitHub Release with a SemVer tag such as `v1.2.0`. The
+   tagged commit must be contained in `main`.
+3. Wait for **Release Container Image** to succeed. Its summary contains the
+   exact `FINANCE_APP_REF=v1.2.0@sha256:…` value for deployment.
+
+The release workflow promotes the existing commit-SHA image. It fails rather
+than rebuilding when that image is missing, so the released artifact remains
+byte-identical to the image tested for the selected `main` commit.
+
 ## Updating
 
-Wait for the chosen `main` build to succeed, then export its digest-qualified
-reference and put the same value in the VPS `.env`. Apply and verify it:
+Put the `FINANCE_APP_REF` from the successful release workflow in the VPS
+`.env`. Apply and verify it:
 
 ```bash
-export FINANCE_APP_IMAGE=ghcr.io/andregoepel/finance-app@sha256:<new-approved-main-build-digest>
-# Replace the FINANCE_APP_IMAGE line in .env with this exact value before continuing.
+export FINANCE_APP_REF=v1.2.0@sha256:<release-digest>
+# Replace the FINANCE_APP_REF line in .env with this exact value before continuing.
 docker compose pull finance.andregoepel.dev && docker compose up -d finance.andregoepel.dev
-expected_image_id=$(docker image inspect --format '{{.Id}}' "$FINANCE_APP_IMAGE")
+finance_app_image="ghcr.io/andregoepel/finance-app:$FINANCE_APP_REF"
+expected_image_id=$(docker image inspect --format '{{.Id}}' "$finance_app_image")
 actual_image_id=$(docker inspect --format '{{.Image}}' finance-andregoepel-dev)
 test "$actual_image_id" = "$expected_image_id"
 actual_repo_digests=$(docker image inspect --format '{{join .RepoDigests "\n"}}' "$actual_image_id")
-printf '%s\n' "$actual_repo_digests" | grep -Fx "$FINANCE_APP_IMAGE"
+expected_digest_ref="ghcr.io/andregoepel/finance-app@${FINANCE_APP_REF#*@}"
+printf '%s\n' "$actual_repo_digests" | grep -Fx "$expected_digest_ref"
 ```
 
-Only pushes to `main` publish images. A moving tag may help locate a build, but
-it is never the production identity.
+Only pushes to `main` publish new images. Release tags are readable aliases for
+an existing image; the digest remains the production identity.
 
 ## Rolling back
 
-Export the previous digest-qualified reference, restore the identical
-`FINANCE_APP_IMAGE=...@sha256:...` line in `.env`, run the same pull/up commands,
+Export the previous release reference, restore the identical
+`FINANCE_APP_REF=v...@sha256:...` line in `.env`, run the same pull/up commands,
 and repeat the image-ID and `RepoDigests` verification. Preserve every
 successfully deployed digest so rollback never depends on where a mutable tag
 points later.
