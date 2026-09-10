@@ -19,20 +19,25 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
         CancellationToken cancellationToken = default
     )
     {
-        var accounts = await session
-            .Query<Account>()
-            .Where(a => a.Status == AccountStatus.Active)
-            .ToListAsync(cancellationToken);
+        // Deactivation is an operational/UI concern, not deletion of financial history.
+        // All retained accounts contribute to the aggregate series, while only active
+        // accounts are exposed in the current per-account balance cards below.
+        var accountSelection = NetWorthAccountSelection.Create(
+            await session.Query<Account>().ToListAsync(cancellationToken)
+        );
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         var anchors = new List<AccountAnchor>();
-        var balances = new List<AccountBalance>(accounts.Count);
+        var balances = new List<AccountBalance>(accountSelection.BalanceCardAccountIds.Count);
 
-        foreach (var account in accounts)
+        foreach (var account in accountSelection.ReportingAccounts)
         {
             if (account.CurrentBalanceEur is null || account.BalanceUpdatedAt is null)
             {
-                balances.Add(ToBalance(account, balance: null, balanceEur: null));
+                if (accountSelection.BalanceCardAccountIds.Contains(account.Id))
+                {
+                    balances.Add(ToBalance(account, balance: null, balanceEur: null));
+                }
                 continue;
             }
 
@@ -73,7 +78,12 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
                 )
                 : null;
 
-            balances.Add(ToBalance(account, native, NetWorthCalculator.BalanceAt(anchor, today)));
+            if (accountSelection.BalanceCardAccountIds.Contains(account.Id))
+            {
+                balances.Add(
+                    ToBalance(account, native, NetWorthCalculator.BalanceAt(anchor, today))
+                );
+            }
         }
 
         var series = NetWorthCalculator.Compute(anchors, BuildSampleDates(months, today));
@@ -145,4 +155,21 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
         dates.Add(today);
         return dates;
     }
+}
+
+internal sealed record NetWorthAccountSelection(
+    IReadOnlyList<Account> ReportingAccounts,
+    IReadOnlySet<Guid> BalanceCardAccountIds
+)
+{
+    // An Account document only exists while its financial history is retained.
+    // Deactivation must therefore never remove it from aggregate reporting.
+    public static NetWorthAccountSelection Create(IReadOnlyList<Account> retainedAccounts) =>
+        new(
+            retainedAccounts,
+            retainedAccounts
+                .Where(account => account.IsActive)
+                .Select(account => account.Id)
+                .ToHashSet()
+        );
 }

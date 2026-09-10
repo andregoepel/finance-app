@@ -67,8 +67,9 @@ public sealed class Account
     public DateTimeOffset? BalanceUpdatedAt { get; set; }
 
     /// <summary>
-    /// Deactivated accounts are hidden from selection lists (import, new-account
-    /// owner pickers) but keep all their transactions and history. Reversible via
+    /// Deactivated accounts are excluded from synchronization, new imports, and
+    /// default active-account lists, but remain part of financial reporting and
+    /// keep all transactions, balances, and import history. Reversible via
     /// reactivation; permanent deletion is a separate, guarded action.
     /// </summary>
     public AccountStatus Status { get; set; } = AccountStatus.Active;
