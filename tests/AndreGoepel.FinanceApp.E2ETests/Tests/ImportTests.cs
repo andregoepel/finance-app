@@ -43,6 +43,34 @@ public sealed class ImportTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixt
         await SelectAccountAndUploadAsync(accountName);
         await Expect(Page.GetByText("0 new", new() { Exact = true }).First).ToBeVisibleAsync();
         await Expect(Page.GetByText(DuplicatesBadge).First).ToBeVisibleAsync();
+
+        // Act — deactivation hides the account from normal import targets, but must not make its
+        // retained import or transaction history undiscoverable.
+        await Page.GotoAsync("/settings/accounts");
+        var accountRow = Page.GetByRole(AriaRole.Row, new() { Name = accountName });
+        await accountRow.GetByLabel("Deactivate").ClickAsync();
+        await Expect(accountRow.GetByText("Deactivated", new() { Exact = true }))
+            .ToBeVisibleAsync();
+
+        await Page.GotoAsync("/import");
+        await Page.GetByLabel("Show deactivated accounts").ClickAsync();
+        await Page.SelectDropDownAsync("Account", $"{accountName} (Deactivated)");
+
+        // Assert — history remains visible while the upload control stays disabled.
+        await Expect(
+                Page.GetByText(
+                    "This account is deactivated. Its retained import history is available below, but new uploads are disabled."
+                )
+            )
+            .ToBeVisibleAsync();
+        await Expect(Page.Locator("input[type='file']")).ToBeDisabledAsync();
+        await Expect(Page.GetByText("statement-v1.csv").First).ToBeVisibleAsync();
+
+        // Transactions has always been a reporting view: the deactivated account remains a valid
+        // explicit filter and its imported rows are still present.
+        await Page.GotoAsync("/transactions");
+        await Page.SelectDropDownAsync("Account", accountName);
+        await Expect(Page.Locator(".rz-data-row").First).ToBeVisibleAsync();
     }
 
     /// <summary>
