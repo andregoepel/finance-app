@@ -1,27 +1,39 @@
 using AndreGoepel.FinanceApp.Components.Pages;
+using AndreGoepel.FinanceApp.Components.Shared;
 using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using AndreGoepel.FinanceApp.Insights;
+using Bunit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Radzen;
+using Radzen.Blazor;
 
 namespace AndreGoepel.FinanceApp.Tests.Components.Pages;
 
 public sealed class DashboardTests : LocalizedTestContext
 {
-    private void RegisterDashboardService(
+    private IDashboardService RegisterDashboardService(
         MonthlyOverview overview,
         CryptoOverview? cryptoOverview = null,
-        NetWorthOverview? netWorthOverview = null
+        NetWorthOverview? netWorthOverview = null,
+        IReadOnlyList<MonthlyAccountOption>? monthlyAccounts = null
     )
     {
         var service = Substitute.For<IDashboardService>();
         service
-            .GetMonthlyOverviewAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .GetMonthlyOverviewAsync(
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<IReadOnlyCollection<Guid>?>()
+            )
             .Returns(Task.FromResult(overview));
+        service
+            .GetMonthlyAccountOptionsAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(monthlyAccounts ?? (IReadOnlyList<MonthlyAccountOption>)[]));
         Services.AddSingleton(service);
 
         var netWorth = Substitute.For<INetWorthService>();
@@ -45,6 +57,115 @@ public sealed class DashboardTests : LocalizedTestContext
             .GetOverviewAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(cryptoOverview ?? new CryptoOverview(0m, [], null)));
         Services.AddSingleton(crypto);
+
+        return service;
+    }
+
+    [Fact]
+    public void Render_WithMonthlyAccountDefaults_RequestsOverviewForDefaultSelection()
+    {
+        var included = new MonthlyAccountOption(Guid.NewGuid(), "Household", true);
+        var excluded = new MonthlyAccountOption(Guid.NewGuid(), "Savings", false);
+        var service = RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            monthlyAccounts: [included, excluded]
+        );
+
+        var cut = Render<Dashboard>();
+
+        Assert.NotNull(cut.Find("[data-testid='monthly-account-filter']"));
+        service
+            .Received(1)
+            .GetMonthlyOverviewAsync(
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Is<IReadOnlyCollection<Guid>>(ids =>
+                    ids.Count == 1 && ids.Contains(included.Id) && !ids.Contains(excluded.Id)
+                )
+            );
+    }
+
+    [Fact]
+    public async Task MonthlyAccountOverride_IsKeptWhenMonthChanges()
+    {
+        var first = new MonthlyAccountOption(Guid.NewGuid(), "Household", true);
+        var second = new MonthlyAccountOption(Guid.NewGuid(), "Savings", false);
+        var service = RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            monthlyAccounts: [first, second]
+        );
+        var cut = Render<Dashboard>();
+        var dropdown = cut.FindComponent<RadzenDropDown<IEnumerable<Guid>>>();
+        var overridden = (IEnumerable<Guid>)[second.Id];
+
+        await cut.InvokeAsync(() => dropdown.Instance.ValueChanged.InvokeAsync(overridden));
+        await cut.InvokeAsync(() => dropdown.Instance.Change.InvokeAsync(overridden));
+        var navigator = cut.FindComponent<MonthNavigator>();
+        await cut.InvokeAsync(() =>
+            navigator.Instance.MonthChanged.InvokeAsync(new DateOnly(2026, 8, 1))
+        );
+
+        await service
+            .Received()
+            .GetMonthlyOverviewAsync(
+                2026,
+                8,
+                Arg.Any<CancellationToken>(),
+                Arg.Is<IReadOnlyCollection<Guid>>(ids =>
+                    ids.Count == 1 && ids.Contains(second.Id) && !ids.Contains(first.Id)
+                )
+            );
+    }
+
+    [Fact]
+    public async Task MonthlyAccountOverride_AllowsEmptySelection()
+    {
+        var account = new MonthlyAccountOption(Guid.NewGuid(), "Household", true);
+        var service = RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            monthlyAccounts: [account]
+        );
+        var cut = Render<Dashboard>();
+        var dropdown = cut.FindComponent<RadzenDropDown<IEnumerable<Guid>>>();
+        var empty = (IEnumerable<Guid>)[];
+
+        await cut.InvokeAsync(() => dropdown.Instance.ValueChanged.InvokeAsync(empty));
+        await cut.InvokeAsync(() => dropdown.Instance.Change.InvokeAsync(empty));
+
+        await service
+            .Received()
+            .GetMonthlyOverviewAsync(
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 0)
+            );
+    }
+
+    [Fact]
+    public void NewDashboardInstance_RestoresPersistedAccountDefaults()
+    {
+        var included = new MonthlyAccountOption(Guid.NewGuid(), "Household", true);
+        var excluded = new MonthlyAccountOption(Guid.NewGuid(), "Savings", false);
+        var service = RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            monthlyAccounts: [included, excluded]
+        );
+
+        using var firstVisit = Render<Dashboard>();
+        using var reloadedVisit = Render<Dashboard>();
+
+        service
+            .Received(2)
+            .GetMonthlyOverviewAsync(
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Is<IReadOnlyCollection<Guid>>(ids =>
+                    ids.Count == 1 && ids.Contains(included.Id) && !ids.Contains(excluded.Id)
+                )
+            );
     }
 
     [Fact]

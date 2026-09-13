@@ -7,12 +7,19 @@ namespace AndreGoepel.FinanceApp.Insights;
 /// </summary>
 public interface IDashboardService
 {
+    Task<IReadOnlyList<MonthlyAccountOption>> GetMonthlyAccountOptionsAsync(
+        CancellationToken cancellationToken = default
+    );
+
     Task<MonthlyOverview> GetMonthlyOverviewAsync(
         int year,
         int month,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? accountIds = null
     );
 }
+
+public sealed record MonthlyAccountOption(Guid Id, string Name, bool IncludedByDefault);
 
 /// <summary>Income/expense totals and spending breakdown for one month (EUR).</summary>
 public sealed record MonthlyOverview(

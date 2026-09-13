@@ -1,3 +1,4 @@
+using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using AndreGoepel.FinanceApp.Planning;
@@ -15,10 +16,28 @@ internal sealed class DashboardService(
     IMonthlyCategoryPlanService monthlyCategoryPlanService
 ) : IDashboardService
 {
+    public async Task<IReadOnlyList<MonthlyAccountOption>> GetMonthlyAccountOptionsAsync(
+        CancellationToken cancellationToken = default
+    ) =>
+        (
+            await session
+                .Query<Account>()
+                .Where(account => account.Status == AccountStatus.Active)
+                .ToListAsync(cancellationToken)
+        )
+            .OrderBy(account => account.Name)
+            .Select(account => new MonthlyAccountOption(
+                account.Id,
+                account.Name,
+                account.IncludeInMonthlyOverviewByDefault
+            ))
+            .ToList();
+
     public async Task<MonthlyOverview> GetMonthlyOverviewAsync(
         int year,
         int month,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? accountIds = null
     )
     {
         var start = new DateOnly(year, month, 1);
@@ -31,6 +50,14 @@ internal sealed class DashboardService(
                 t.BookingDate >= start && t.BookingDate < end && t.TransferCounterpartId == null
             )
             .ToListAsync(cancellationToken);
+
+        if (accountIds is not null)
+        {
+            var selectedAccountIds = accountIds.ToHashSet();
+            transactions = transactions
+                .Where(t => selectedAccountIds.Contains(t.AccountId))
+                .ToList();
+        }
 
         var income = transactions.Where(t => t.AmountEur > 0).Sum(t => t.AmountEur!.Value);
         var expenses = -transactions.Where(t => t.AmountEur < 0).Sum(t => t.AmountEur!.Value);
@@ -55,7 +82,9 @@ internal sealed class DashboardService(
             .OrderByDescending(s => s.Amount)
             .ToList();
 
-        var budgets = (await monthlyCategoryPlanService.GetAsync(year, month, cancellationToken))
+        var budgets = (
+            await monthlyCategoryPlanService.GetAsync(year, month, cancellationToken, accountIds)
+        )
             .Select(plan => new BudgetProgress(
                 plan.Category,
                 plan.BudgetLimit,

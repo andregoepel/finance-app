@@ -252,6 +252,9 @@
   <!-- Dashboard.razor. Counted nouns keep the "(en)" hedge, mirroring the English "(s)" —
        .resx/IStringLocalizer has no plural support, and the app's counts are rarely exactly one. -->
   <data name="Dashboard.Title" xml:space="preserve"><value><![CDATA[Übersicht]]></value></data>
+  <data name="Dashboard.AllAccounts" xml:space="preserve"><value><![CDATA[Alle Konten]]></value></data>
+  <data name="Dashboard.SelectedAccounts" xml:space="preserve"><value><![CDATA[{0} von {1} Konten]]></value><comment>{0} = ausgewählte Anzahl, {1} = verfügbare Anzahl</comment></data>
+  <data name="Dashboard.NoAccountsSelected" xml:space="preserve"><value><![CDATA[Keine Konten]]></value></data>
   <data name="Dashboard.AwaitingConversion" xml:space="preserve"><value><![CDATA[{0} Transaktion(en) in diesem Monat warten auf die EUR-Umrechnung und sind noch nicht in den Summen enthalten.]]></value><comment>{0} = count of unconverted transactions</comment></data>
   <data name="Dashboard.Income" xml:space="preserve"><value><![CDATA[Einnahmen]]></value></data>
   <data name="Dashboard.Expenses" xml:space="preserve"><value><![CDATA[Ausgaben]]></value></data>
@@ -498,6 +501,7 @@
   <data name="Accounts.EditTitle" xml:space="preserve"><value><![CDATA[Konto bearbeiten]]></value></data>
   <data name="Accounts.SavingBusyText" xml:space="preserve"><value><![CDATA[Wird gespeichert…]]></value></data>
   <data name="Accounts.SharedLabel" xml:space="preserve"><value><![CDATA[Gemeinsam]]></value></data>
+  <data name="Accounts.IncludeInMonthlyOverviewLabel" xml:space="preserve"><value><![CDATA[Standardmäßig in die Monatsübersicht einbeziehen]]></value></data>
   <data name="Accounts.OwnersLabel" xml:space="preserve"><value><![CDATA[Inhaber]]></value></data>
   <data name="Accounts.SelectUsersPlaceholder" xml:space="preserve"><value><![CDATA[Benutzer auswählen]]></value></data>
   <data name="Accounts.SelectUserPlaceholder" xml:space="preserve"><value><![CDATA[Benutzer auswählen]]></value></data>
