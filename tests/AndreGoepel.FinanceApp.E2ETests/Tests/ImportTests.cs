@@ -52,7 +52,7 @@ public sealed class ImportTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixt
         await Expect(accountRow).Not.ToBeVisibleAsync();
 
         await Page.GotoAsync("/import");
-        await Page.GetByLabel("Show deactivated accounts").ClickAsync();
+        await Page.GetByText("Show deactivated accounts", new() { Exact = true }).ClickAsync();
         await Page.SelectDropDownAsync("Account", $"{accountName} (Deactivated)");
 
         // Assert — history remains visible while the upload control stays disabled.
