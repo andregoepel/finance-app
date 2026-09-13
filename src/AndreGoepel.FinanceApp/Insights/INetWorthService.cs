@@ -43,7 +43,9 @@ public sealed record AccountBalance(
     string Currency,
     decimal? Balance,
     decimal? BalanceEur,
-    DateTimeOffset? AsOf
+    DateTimeOffset? AsOf,
+    Guid? ConnectionId = null,
+    string? ConnectionLabel = null
 )
 {
     public bool HasBalance => BalanceEur is not null;

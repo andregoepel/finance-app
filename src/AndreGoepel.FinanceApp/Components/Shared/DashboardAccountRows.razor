@@ -1,0 +1,42 @@
+@using AndreGoepel.FinanceApp.Insights
+
+@inject IStringLocalizer<Strings> L
+
+@foreach (var account in Accounts)
+{
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Style="padding: 0.2rem 0;">
+        <RadzenStack Gap="0" Style="flex: 1; min-width: 0;">
+            <RadzenLink Path="@($"transactions?account={account.AccountId}")" Text="@account.Name" />
+            <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
+                @account.Provider
+                @if (account.AsOf is DateTimeOffset asOf)
+                {
+                    <text> · @L["Dashboard.BalanceAsOf", Dates.Short(asOf.LocalDateTime)]</text>
+                }
+            </RadzenText>
+        </RadzenStack>
+        @if (account.BalanceEur is decimal balanceEur)
+        {
+            <RadzenStack Gap="0" AlignItems="AlignItems.End">
+                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">@Money.Eur(balanceEur)</RadzenText>
+                @if (account.IsForeignCurrency && account.Balance is decimal native)
+                {
+                    <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
+                        @Money.Format(native, account.Currency)
+                    </RadzenText>
+                }
+            </RadzenStack>
+        }
+        else
+        {
+            <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
+                @L["Dashboard.NoBalanceYet"] <RadzenLink Path="settings/accounts" Text="@L["Dashboard.SetOneLink"]" />
+            </RadzenText>
+        }
+    </RadzenStack>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<AccountBalance> Accounts { get; set; } = [];
+}
