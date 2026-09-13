@@ -185,6 +185,24 @@ public sealed class DashboardTests : LocalizedTestContext
         Assert.Contains("Budgets", cut.Markup);
     }
 
+    [Fact]
+    public void Render_AccountsAndUpcoming_UseResponsiveHalfWidthColumns()
+    {
+        RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
+
+        var cut = Render<Dashboard>();
+
+        var row = cut.Find("[data-testid='accounts-upcoming-row']");
+        var accountsColumn = row.QuerySelector("[data-testid='accounts-column']");
+        var upcomingColumn = row.QuerySelector("[data-testid='upcoming-column']");
+        Assert.NotNull(accountsColumn);
+        Assert.NotNull(upcomingColumn);
+        Assert.Contains("rz-col-12", accountsColumn.ClassList);
+        Assert.Contains("rz-col-md-6", accountsColumn.ClassList);
+        Assert.Contains("rz-col-12", upcomingColumn.ClassList);
+        Assert.Contains("rz-col-md-6", upcomingColumn.ClassList);
+    }
+
     /// <summary>
     /// The counterpart to the English render above: the same page under the German culture. This is
     /// the first end-to-end proof that the whole chain — request culture, the injected
