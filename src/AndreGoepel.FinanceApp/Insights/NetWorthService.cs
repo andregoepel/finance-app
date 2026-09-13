@@ -3,6 +3,7 @@ using AndreGoepel.FinanceApp.Domain.Budgets;
 using AndreGoepel.FinanceApp.Domain.Categories;
 using AndreGoepel.FinanceApp.Domain.NetWorth;
 using AndreGoepel.FinanceApp.Domain.Planning;
+using AndreGoepel.FinanceApp.Domain.Providers;
 using AndreGoepel.FinanceApp.Domain.Transactions;
 using Marten;
 
@@ -27,6 +28,9 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
         var accountSelection = NetWorthAccountSelection.Create(
             await session.Query<Account>().ToListAsync(cancellationToken)
         );
+        var connectionLabels = (
+            await session.Query<ProviderConnection>().ToListAsync(cancellationToken)
+        ).ToDictionary(connection => connection.Id, connection => connection.Label);
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         var anchors = new List<AccountAnchor>();
@@ -38,7 +42,9 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
             {
                 if (accountSelection.BalanceCardAccountIds.Contains(account.Id))
                 {
-                    balances.Add(ToBalance(account, balance: null, balanceEur: null));
+                    balances.Add(
+                        ToBalance(account, balance: null, balanceEur: null, connectionLabels)
+                    );
                 }
                 continue;
             }
@@ -83,7 +89,12 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
             if (accountSelection.BalanceCardAccountIds.Contains(account.Id))
             {
                 balances.Add(
-                    ToBalance(account, native, NetWorthCalculator.BalanceAt(anchor, today))
+                    ToBalance(
+                        account,
+                        native,
+                        NetWorthCalculator.BalanceAt(anchor, today),
+                        connectionLabels
+                    )
                 );
             }
         }
@@ -162,7 +173,8 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
     private static AccountBalance ToBalance(
         Account account,
         decimal? balance,
-        decimal? balanceEur
+        decimal? balanceEur,
+        IReadOnlyDictionary<Guid, string> connectionLabels
     ) =>
         new(
             account.Id,
@@ -172,7 +184,12 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
             account.Currency,
             balance,
             balanceEur,
-            balanceEur is null ? null : account.BalanceUpdatedAt
+            balanceEur is null ? null : account.BalanceUpdatedAt,
+            account.ConnectionId,
+            account.ConnectionId is Guid connectionId
+            && connectionLabels.TryGetValue(connectionId, out var connectionLabel)
+                ? connectionLabel
+                : null
         );
 
     /// <summary>Month-end dates for the trailing window, ending with today.</summary>

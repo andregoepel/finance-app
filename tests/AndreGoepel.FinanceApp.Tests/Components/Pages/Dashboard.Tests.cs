@@ -298,7 +298,7 @@ public sealed class DashboardTests : LocalizedTestContext
                 new AccountBalance(
                     checkingId,
                     "Main EUR",
-                    ProviderKind.Wise,
+                    ProviderKind.Dkb,
                     AccountType.Checking,
                     "EUR",
                     Balance: 1_000m,
@@ -308,7 +308,7 @@ public sealed class DashboardTests : LocalizedTestContext
                 new AccountBalance(
                     Guid.NewGuid(),
                     "Pesos",
-                    ProviderKind.Wise,
+                    ProviderKind.Dkb,
                     AccountType.Checking,
                     "PHP",
                     Balance: 33_000m,
@@ -345,6 +345,93 @@ public sealed class DashboardTests : LocalizedTestContext
         Assert.Contains($"{1_500m:N2} €", cut.Markup);
         Assert.Contains($"{1_650m:N2} €", cut.Markup);
         Assert.Contains($"transactions?account={checkingId}", cut.Markup);
+    }
+
+    [Fact]
+    public void Render_WithWiseConnections_CollapsesEachConnectionAndExpandsIndependently()
+    {
+        var andreConnectionId = Guid.NewGuid();
+        var daniConnectionId = Guid.NewGuid();
+        var overview = new NetWorthOverview(
+            Current: 1_750m,
+            Series: [],
+            AccountsWithoutBalance: 0,
+            Accounts:
+            [
+                new AccountBalance(
+                    Guid.NewGuid(),
+                    "André EUR",
+                    ProviderKind.Wise,
+                    AccountType.MultiCurrency,
+                    "EUR",
+                    1_000m,
+                    1_000m,
+                    DateTimeOffset.UtcNow,
+                    andreConnectionId,
+                    "Wise André"
+                ),
+                new AccountBalance(
+                    Guid.NewGuid(),
+                    "André jar",
+                    ProviderKind.Wise,
+                    AccountType.MultiCurrency,
+                    "EUR",
+                    250m,
+                    250m,
+                    DateTimeOffset.UtcNow,
+                    andreConnectionId,
+                    "Wise André"
+                ),
+                new AccountBalance(
+                    Guid.NewGuid(),
+                    "Dani EUR",
+                    ProviderKind.Wise,
+                    AccountType.MultiCurrency,
+                    "EUR",
+                    400m,
+                    400m,
+                    DateTimeOffset.UtcNow,
+                    daniConnectionId,
+                    "Wise Dani"
+                ),
+                new AccountBalance(
+                    Guid.NewGuid(),
+                    "Orphaned jar",
+                    ProviderKind.Wise,
+                    AccountType.MultiCurrency,
+                    "EUR",
+                    100m,
+                    100m,
+                    DateTimeOffset.UtcNow,
+                    Guid.NewGuid(),
+                    null
+                ),
+            ]
+        );
+        RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            netWorthOverview: overview
+        );
+
+        var cut = Render<Dashboard>();
+
+        Assert.Contains("Wise André", cut.Markup);
+        Assert.Contains("Wise Dani", cut.Markup);
+        Assert.Contains("Unlinked Wise accounts", cut.Markup);
+        Assert.DoesNotContain("André EUR", cut.Markup);
+        Assert.DoesNotContain("Dani EUR", cut.Markup);
+        var andreToggle = cut.FindAll("[data-testid='wise-account-group-toggle']")
+            .Single(element => element.TextContent.Contains("Wise André"));
+        Assert.Equal("false", andreToggle.GetAttribute("aria-expanded"));
+
+        andreToggle.Click();
+
+        Assert.Contains("André EUR", cut.Markup);
+        Assert.Contains("André jar", cut.Markup);
+        Assert.DoesNotContain("Dani EUR", cut.Markup);
+        var expandedAndreToggle = cut.FindAll("[data-testid='wise-account-group-toggle']")
+            .Single(element => element.TextContent.Contains("Wise André"));
+        Assert.Equal("true", expandedAndreToggle.GetAttribute("aria-expanded"));
     }
 
     [Fact]

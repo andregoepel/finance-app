@@ -861,6 +861,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Dashboard.HoldingsPageLink", "Bestandsseite")]
     [InlineData("en", "Dashboard.UpcomingOverdue", "Upcoming & overdue")]
     [InlineData("de", "Dashboard.UpcomingOverdue", "Anstehend & überfällig")]
+    [InlineData("en", "Dashboard.UnlinkedWiseAccounts", "Unlinked Wise accounts")]
+    [InlineData("de", "Dashboard.UnlinkedWiseAccounts", "Nicht verknüpfte Wise-Konten")]
     [InlineData("en", "Dashboard.AllAccounts", "All accounts")]
     [InlineData("de", "Dashboard.AllAccounts", "Alle Konten")]
     [InlineData(
