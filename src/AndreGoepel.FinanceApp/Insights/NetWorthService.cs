@@ -19,15 +19,22 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
 {
     public async Task<NetWorthOverview> GetAsync(
         int months = 12,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? accountIds = null
     )
     {
         // Deactivation is an operational/UI concern, not deletion of financial history.
         // All retained accounts contribute to the aggregate series, while only active
         // accounts are exposed in the current per-account balance cards below.
-        var accountSelection = NetWorthAccountSelection.Create(
-            await session.Query<Account>().ToListAsync(cancellationToken)
-        );
+        var retainedAccounts = await session.Query<Account>().ToListAsync(cancellationToken);
+        if (accountIds is not null)
+        {
+            var selectedAccountIds = accountIds.ToHashSet();
+            retainedAccounts = retainedAccounts
+                .Where(account => selectedAccountIds.Contains(account.Id))
+                .ToList();
+        }
+        var accountSelection = NetWorthAccountSelection.Create(retainedAccounts);
         var connectionLabels = (
             await session.Query<ProviderConnection>().ToListAsync(cancellationToken)
         ).ToDictionary(connection => connection.Id, connection => connection.Label);
@@ -102,7 +109,7 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
         var series = NetWorthCalculator.Compute(anchors, BuildSampleDates(months, today));
         var current = series.Count > 0 ? series[^1].Amount : 0m;
         var withoutBalance = balances.Count(b => !b.HasBalance);
-        var forecast = await BuildForecastAsync(current, today, cancellationToken);
+        var forecast = await BuildForecastAsync(current, today, cancellationToken, accountIds);
 
         return new NetWorthOverview(
             current,
@@ -116,13 +123,25 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
     private async Task<IReadOnlyList<NetWorthPoint>> BuildForecastAsync(
         decimal current,
         DateOnly today,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<Guid>? accountIds
     )
     {
         var items = await session
             .Query<PlannedItem>()
             .Where(item => item.Active)
             .ToListAsync(cancellationToken);
+        HashSet<Guid>? selectedAccountIds = null;
+        if (accountIds is not null)
+        {
+            selectedAccountIds = accountIds.ToHashSet();
+            items = items
+                .Where(item =>
+                    item.ExpectedAccountId is null
+                    || selectedAccountIds.Contains(item.ExpectedAccountId.Value)
+                )
+                .ToList();
+        }
         var itemIds = items.Select(item => item.Id).ToArray();
         var matches =
             itemIds.Length == 0
@@ -151,6 +170,12 @@ internal sealed class NetWorthService(IQuerySession session) : INetWorthService
                 && transaction.AmountEur < 0
             )
             .ToListAsync(cancellationToken);
+        if (selectedAccountIds is not null)
+        {
+            actualTransactions = actualTransactions
+                .Where(transaction => selectedAccountIds.Contains(transaction.AccountId))
+                .ToList();
+        }
         var actualExpenses = actualTransactions
             .SelectMany(transaction =>
                 transaction.EffectiveCategoryLines.Select(line =>

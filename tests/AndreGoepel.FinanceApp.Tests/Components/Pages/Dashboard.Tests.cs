@@ -38,7 +38,11 @@ public sealed class DashboardTests : LocalizedTestContext
 
         var netWorth = Substitute.For<INetWorthService>();
         netWorth
-            .GetAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .GetAsync(
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<IReadOnlyCollection<Guid>?>()
+            )
             .Returns(Task.FromResult(netWorthOverview ?? new NetWorthOverview(0m, [], 0, [])));
         Services.AddSingleton(netWorth);
 
@@ -74,6 +78,16 @@ public sealed class DashboardTests : LocalizedTestContext
         var cut = Render<Dashboard>();
 
         Assert.NotNull(cut.Find("[data-testid='monthly-account-filter']"));
+        var netWorth = Services.GetRequiredService<INetWorthService>();
+        netWorth
+            .Received(1)
+            .GetAsync(
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Is<IReadOnlyCollection<Guid>>(ids =>
+                    ids.Count == 1 && ids.Contains(included.Id) && !ids.Contains(excluded.Id)
+                )
+            );
         service
             .Received(1)
             .GetMonthlyOverviewAsync(
@@ -137,6 +151,38 @@ public sealed class DashboardTests : LocalizedTestContext
             .Received()
             .GetMonthlyOverviewAsync(
                 Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 0)
+            );
+    }
+
+    [Fact]
+    public async Task MonthlyAccountOverride_NormalizesClearedNullSelection()
+    {
+        var account = new MonthlyAccountOption(Guid.NewGuid(), "Household", true);
+        var service = RegisterDashboardService(
+            new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0),
+            monthlyAccounts: [account]
+        );
+        var cut = Render<Dashboard>();
+        var dropdown = cut.FindComponent<RadzenDropDown<IEnumerable<Guid>>>();
+
+        await cut.InvokeAsync(() => dropdown.Instance.ValueChanged.InvokeAsync(null));
+        await cut.InvokeAsync(() => dropdown.Instance.Change.InvokeAsync(null));
+
+        await service
+            .Received()
+            .GetMonthlyOverviewAsync(
+                Arg.Any<int>(),
+                Arg.Any<int>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 0)
+            );
+        await Services
+            .GetRequiredService<INetWorthService>()
+            .Received()
+            .GetAsync(
                 Arg.Any<int>(),
                 Arg.Any<CancellationToken>(),
                 Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 0)
@@ -348,7 +394,7 @@ public sealed class DashboardTests : LocalizedTestContext
     }
 
     [Fact]
-    public void Render_WithWiseConnections_CollapsesEachConnectionAndExpandsIndependently()
+    public void Render_WithWiseConnections_ExpandsEachConnectionAndCollapsesIndependently()
     {
         var andreConnectionId = Guid.NewGuid();
         var daniConnectionId = Guid.NewGuid();
@@ -418,20 +464,20 @@ public sealed class DashboardTests : LocalizedTestContext
         Assert.Contains("Wise André", cut.Markup);
         Assert.Contains("Wise Dani", cut.Markup);
         Assert.Contains("Unlinked Wise accounts", cut.Markup);
-        Assert.DoesNotContain("André EUR", cut.Markup);
-        Assert.DoesNotContain("Dani EUR", cut.Markup);
+        Assert.Contains("André EUR", cut.Markup);
+        Assert.Contains("Dani EUR", cut.Markup);
         var andreToggle = cut.FindAll("[data-testid='wise-account-group-toggle']")
             .Single(element => element.TextContent.Contains("Wise André"));
-        Assert.Equal("false", andreToggle.GetAttribute("aria-expanded"));
+        Assert.Equal("true", andreToggle.GetAttribute("aria-expanded"));
 
         andreToggle.Click();
 
-        Assert.Contains("André EUR", cut.Markup);
-        Assert.Contains("André jar", cut.Markup);
-        Assert.DoesNotContain("Dani EUR", cut.Markup);
+        Assert.DoesNotContain("André EUR", cut.Markup);
+        Assert.DoesNotContain("André jar", cut.Markup);
+        Assert.Contains("Dani EUR", cut.Markup);
         var expandedAndreToggle = cut.FindAll("[data-testid='wise-account-group-toggle']")
             .Single(element => element.TextContent.Contains("Wise André"));
-        Assert.Equal("true", expandedAndreToggle.GetAttribute("aria-expanded"));
+        Assert.Equal("false", expandedAndreToggle.GetAttribute("aria-expanded"));
     }
 
     [Fact]

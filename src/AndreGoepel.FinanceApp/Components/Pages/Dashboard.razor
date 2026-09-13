@@ -22,7 +22,7 @@
                                 @bind-Value=@selectedAccountIds
                                 Data=@accountOptions ValueProperty="Id" TextProperty="Name"
                                 Multiple="true" AllowClear="true" AllowSelectAll="true"
-                                MaxSelectedLabels="0" SelectedItemsText="@AccountSelectionSummary"
+                                MaxSelectedLabels="0" SelectedItemsText="@AccountSelectionSuffix"
                                 Placeholder="@L["Dashboard.NoAccountsSelected"]"
                                 Change=@OnAccountSelectionChangedAsync
                                 Style="min-width: 13rem;" />
@@ -216,7 +216,7 @@
                     {
                         @foreach (var group in WiseAccountGroups)
                         {
-                            var expanded = expandedWiseGroups.Contains(group.Key);
+                            var expanded = !collapsedWiseGroups.Contains(group.Key);
                             <div data-testid="wise-account-group" data-connection-id="@group.Key">
                                 <button type="button"
                                         data-testid="wise-account-group-toggle"
@@ -224,8 +224,8 @@
                                         @onclick="@(() => ToggleWiseGroup(group.Key))"
                                         style="border: 0; border-bottom: 1px solid var(--rz-border-color, rgba(128,128,128,0.25)); background: transparent; color: inherit; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 0 0 0.25rem; margin-bottom: 0.25rem; width: 100%;">
                                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
-                                        <span class="material-symbols-outlined" aria-hidden="true">@(expanded ? "expand_less" : "expand_more")</span>
-                                        <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">@group.Label</RadzenText>
+                                        <RadzenIcon Icon="@(expanded ? "expand_less" : "expand_more")" aria-hidden="true" />
+                                        <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0; font-weight: 700;">@group.Label</RadzenText>
                                     </RadzenStack>
                                     <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">
                                         @Money.Eur(group.Accounts.Sum(account => account.BalanceEur ?? 0m))
@@ -242,7 +242,7 @@
                             <div>
                                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center"
                                              Style="border-bottom: 1px solid var(--rz-border-color, rgba(128,128,128,0.25)); padding-bottom: 0.25rem; margin-bottom: 0.25rem;">
-                                    <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">@L[$"Enum.AccountType.{group.Key}"]</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0; font-weight: 700;">@L[$"Enum.AccountType.{group.Key}"]</RadzenText>
                                     <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">
                                         @Money.Eur(group.Sum(a => a.BalanceEur ?? 0m))
                                     </RadzenText>
@@ -350,7 +350,7 @@
     private IReadOnlyList<ChartPoint> netWorthChart = [];
     private IReadOnlyList<ChartPoint> netWorthForecastChart = [];
     private IReadOnlyList<PlannedOccurrence> upcoming = [];
-    private readonly HashSet<Guid> expandedWiseGroups = [];
+    private readonly HashSet<Guid> collapsedWiseGroups = [];
 
     private IReadOnlyList<WiseAccountGroup> WiseAccountGroups =>
         (netWorth?.Accounts ?? [])
@@ -376,21 +376,21 @@
             .Where(account => account.Provider != ProviderKind.Wise)
             .GroupBy(account => account.Type);
     private IReadOnlyList<MonthlyAccountOption> accountOptions = [];
-    private IEnumerable<Guid> selectedAccountIds = [];
+    private IEnumerable<Guid>? selectedAccountIds = [];
+    private IReadOnlyCollection<Guid> SelectedAccountIds =>
+        selectedAccountIds?.Distinct().ToArray() ?? [];
 
-    private string AccountSelectionSummary =>
-        selectedAccountIds.Count() == accountOptions.Count
-            ? L["Dashboard.AllAccounts"]
-            : L["Dashboard.SelectedAccounts", selectedAccountIds.Count(), accountOptions.Count];
+    private string AccountSelectionSuffix =>
+        L["Dashboard.SelectedAccountsSuffix", accountOptions.Count];
 
     private bool IsCurrentMonth =>
         MonthStart.Year == DateTime.Today.Year && MonthStart.Month == DateTime.Today.Month;
 
     private void ToggleWiseGroup(Guid key)
     {
-        if (!expandedWiseGroups.Add(key))
+        if (!collapsedWiseGroups.Add(key))
         {
-            expandedWiseGroups.Remove(key);
+            collapsedWiseGroups.Remove(key);
         }
     }
 
@@ -402,24 +402,30 @@
             .Select(account => account.Id)
             .ToArray();
         await LoadAsync();
-        netWorth = await NetWorthService.GetAsync(cancellationToken: _cts.Token);
+        upcoming = await PlanningService.GetUpcomingAsync(cancellationToken: _cts.Token);
+        crypto = await CryptoService.GetOverviewAsync(_cts.Token);
+    }
+
+    private async Task LoadAsync()
+    {
+        var accountIds = SelectedAccountIds;
+        overview = await DashboardService.GetMonthlyOverviewAsync(
+            MonthStart.Year,
+            MonthStart.Month,
+            _cts.Token,
+            accountIds
+        );
+        netWorth = await NetWorthService.GetAsync(
+            cancellationToken: _cts.Token,
+            accountIds: accountIds
+        );
         netWorthChart = netWorth
             .Series.Select(p => new ChartPoint(Dates.ChartMonth(p.Date), p.Amount))
             .ToList();
         netWorthForecastChart = (netWorth.Forecast ?? [])
             .Select(p => new ChartPoint(Dates.ChartMonth(p.Date), p.Amount))
             .ToList();
-        upcoming = await PlanningService.GetUpcomingAsync(cancellationToken: _cts.Token);
-        crypto = await CryptoService.GetOverviewAsync(_cts.Token);
     }
-
-    private async Task LoadAsync() =>
-        overview = await DashboardService.GetMonthlyOverviewAsync(
-            MonthStart.Year,
-            MonthStart.Month,
-            _cts.Token,
-            selectedAccountIds.ToArray()
-        );
 
     private async Task OnAccountSelectionChangedAsync(object _)
     {
