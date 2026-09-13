@@ -12,7 +12,8 @@ internal sealed class MonthlyCategoryPlanService(IQuerySession session)
     public async Task<IReadOnlyList<MonthlyCategoryPlan>> GetAsync(
         int year,
         int month,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? accountIds = null
     )
     {
         var start = new DateOnly(year, month, 1);
@@ -39,6 +40,13 @@ internal sealed class MonthlyCategoryPlanService(IQuerySession session)
                 && transaction.AmountEur < 0
             )
             .ToListAsync(cancellationToken);
+        if (accountIds is not null)
+        {
+            var selectedAccountIds = accountIds.ToHashSet();
+            transactions = transactions
+                .Where(transaction => selectedAccountIds.Contains(transaction.AccountId))
+                .ToList();
+        }
         var actual = transactions
             .SelectMany(transaction =>
                 transaction.EffectiveCategoryLines.Select(line =>

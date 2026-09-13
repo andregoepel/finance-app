@@ -17,7 +17,8 @@ public sealed record CreateAccountCommand(
     string? Iban,
     Guid? ConnectionId = null,
     string? ExternalId = null,
-    string? IdentificationHash = null
+    string? IdentificationHash = null,
+    bool IncludeInMonthlyOverviewByDefault = true
 );
 
 public static class CreateAccountCommandHandler
@@ -49,6 +50,7 @@ public static class CreateAccountCommandHandler
             IsShared = command.IsShared,
             OwnerUserIds = owners.Value!,
             SyncMethod = command.SyncMethod,
+            IncludeInMonthlyOverviewByDefault = command.IncludeInMonthlyOverviewByDefault,
             Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim(),
             ConnectionId = command.ConnectionId,
             ExternalId = string.IsNullOrWhiteSpace(command.ExternalId)

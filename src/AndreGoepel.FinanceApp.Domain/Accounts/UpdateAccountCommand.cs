@@ -21,7 +21,8 @@ public sealed record UpdateAccountCommand(
     string? Iban,
     Guid? ConnectionId = null,
     string? ExternalId = null,
-    string? IdentificationHash = null
+    string? IdentificationHash = null,
+    bool IncludeInMonthlyOverviewByDefault = true
 );
 
 public static class UpdateAccountCommandHandler
@@ -56,6 +57,7 @@ public static class UpdateAccountCommandHandler
         account.IsShared = command.IsShared;
         account.OwnerUserIds = owners.Value!;
         account.SyncMethod = command.SyncMethod;
+        account.IncludeInMonthlyOverviewByDefault = command.IncludeInMonthlyOverviewByDefault;
         account.Iban = string.IsNullOrWhiteSpace(command.Iban) ? null : command.Iban.Trim();
         account.ConnectionId = command.ConnectionId;
         account.ExternalId = string.IsNullOrWhiteSpace(command.ExternalId)

@@ -41,6 +41,11 @@
         <RadzenLabel Text="@L["Accounts.SharedLabel"]" Component="IsShared" />
     </RadzenStack>
 
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+        <RadzenSwitch @bind-Value=@form.IncludeInMonthlyOverviewByDefault Name="IncludeInMonthlyOverviewByDefault" Disabled=@isSaving />
+        <RadzenLabel Text="@L["Accounts.IncludeInMonthlyOverviewLabel"]" Component="IncludeInMonthlyOverviewByDefault" />
+    </RadzenStack>
+
     @if (form.IsShared)
     {
         <FormField Label="@L["Accounts.OwnersLabel"]" For="Owners">
@@ -168,6 +173,7 @@
             ExternalId = Account.ExternalId ?? "",
             IdentificationHash = Account.IdentificationHash,
             CurrentBalance = Account.CurrentBalance,
+            IncludeInMonthlyOverviewByDefault = Account.IncludeInMonthlyOverviewByDefault,
         };
         loadedBalance = Account.CurrentBalance;
     }
@@ -232,7 +238,8 @@
                         form.Iban,
                         connectionId,
                         externalId,
-                        identificationHash
+                        identificationHash,
+                        form.IncludeInMonthlyOverviewByDefault
                     )
                 )
                 : await MessageBus.InvokeAsync<Result<Account>>(
@@ -247,7 +254,8 @@
                         form.Iban,
                         connectionId,
                         externalId,
-                        identificationHash
+                        identificationHash,
+                        form.IncludeInMonthlyOverviewByDefault
                     )
                 );
 
@@ -313,5 +321,6 @@
         public string ExternalId { get; set; } = "";
         public string? IdentificationHash { get; set; }
         public decimal? CurrentBalance { get; set; }
+        public bool IncludeInMonthlyOverviewByDefault { get; set; } = true;
     }
 }

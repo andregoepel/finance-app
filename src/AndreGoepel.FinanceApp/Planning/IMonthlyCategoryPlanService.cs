@@ -5,7 +5,8 @@ public interface IMonthlyCategoryPlanService
     Task<IReadOnlyList<MonthlyCategoryPlan>> GetAsync(
         int year,
         int month,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? accountIds = null
     );
 }
 
