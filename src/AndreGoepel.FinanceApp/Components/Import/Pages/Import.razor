@@ -34,8 +34,8 @@
                     <InputFile class="import-file-input" OnChange="OnFileSelectedAsync" accept=".csv,.xlsx" disabled=@(SelectedAccount?.IsActive != true) />
                 </div>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <RadzenSwitch @bind-Value=@showDeactivatedAccounts />
-                    <RadzenText TextStyle="TextStyle.Body2">@L["Import.ShowDeactivatedAccounts"]</RadzenText>
+                    <RadzenSwitch @bind-Value=@showDeactivatedAccounts Name="ShowDeactivatedAccounts" />
+                    <RadzenLabel Text="@L["Import.ShowDeactivatedAccounts"]" Component="ShowDeactivatedAccounts" />
                 </RadzenStack>
             </RadzenStack>
             @if (SelectedAccount is not null)
