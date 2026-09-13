@@ -865,6 +865,8 @@ public sealed class StringsResourceTests
     [InlineData("de", "Dashboard.UnlinkedWiseAccounts", "Nicht verknüpfte Wise-Konten")]
     [InlineData("en", "Dashboard.AllAccounts", "All accounts")]
     [InlineData("de", "Dashboard.AllAccounts", "Alle Konten")]
+    [InlineData("en", "Dashboard.SelectedAccountsSuffix", "of {0} accounts")]
+    [InlineData("de", "Dashboard.SelectedAccountsSuffix", "von {0} Konten")]
     [InlineData(
         "en",
         "Accounts.IncludeInMonthlyOverviewLabel",

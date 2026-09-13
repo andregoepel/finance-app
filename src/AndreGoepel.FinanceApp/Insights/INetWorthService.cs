@@ -11,7 +11,11 @@ namespace AndreGoepel.FinanceApp.Insights;
 /// </summary>
 public interface INetWorthService
 {
-    Task<NetWorthOverview> GetAsync(int months = 12, CancellationToken cancellationToken = default);
+    Task<NetWorthOverview> GetAsync(
+        int months = 12,
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? accountIds = null
+    );
 }
 
 /// <summary>

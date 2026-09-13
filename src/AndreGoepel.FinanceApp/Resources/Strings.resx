@@ -254,6 +254,7 @@
   <data name="Dashboard.Title" xml:space="preserve"><value><![CDATA[Dashboard]]></value></data>
   <data name="Dashboard.AllAccounts" xml:space="preserve"><value><![CDATA[All accounts]]></value></data>
   <data name="Dashboard.SelectedAccounts" xml:space="preserve"><value><![CDATA[{0} of {1} accounts]]></value><comment>{0} = selected count, {1} = available count</comment></data>
+  <data name="Dashboard.SelectedAccountsSuffix" xml:space="preserve"><value><![CDATA[of {0} accounts]]></value><comment>Radzen prefixes the selected count; {0} = available count</comment></data>
   <data name="Dashboard.NoAccountsSelected" xml:space="preserve"><value><![CDATA[No accounts]]></value></data>
   <data name="Dashboard.AwaitingConversion" xml:space="preserve"><value><![CDATA[{0} transaction(s) this month are awaiting EUR conversion and are not yet included in the totals.]]></value><comment>{0} = count of unconverted transactions</comment></data>
   <data name="Dashboard.Income" xml:space="preserve"><value><![CDATA[Income]]></value></data>
