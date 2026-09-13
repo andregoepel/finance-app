@@ -31,6 +31,12 @@ public sealed class Account
 
     public required SyncMethod SyncMethod { get; set; }
 
+    /// <summary>
+    /// Whether this account's transactions are selected when the Dashboard is first opened.
+    /// The Dashboard may override the selection for its current component lifetime.
+    /// </summary>
+    public bool IncludeInMonthlyOverviewByDefault { get; set; } = true;
+
     public string? Iban { get; set; }
 
     /// <summary>Provider-side account identifier (set up in Phase 3 for API sync).</summary>

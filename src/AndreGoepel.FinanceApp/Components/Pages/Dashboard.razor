@@ -17,6 +17,16 @@
 
     <PageHeader Title="@L["Dashboard.Title"]">
         <Actions>
+            <div data-testid="monthly-account-filter">
+                <RadzenDropDown TValue="IEnumerable<Guid>"
+                                @bind-Value=@selectedAccountIds
+                                Data=@accountOptions ValueProperty="Id" TextProperty="Name"
+                                Multiple="true" AllowClear="true" AllowSelectAll="true"
+                                MaxSelectedLabels="0" SelectedItemsText="@AccountSelectionSummary"
+                                Placeholder="@L["Dashboard.NoAccountsSelected"]"
+                                Change=@OnAccountSelectionChangedAsync
+                                Style="min-width: 13rem;" />
+            </div>
             <MonthNavigator Month="MonthStart" DisableNext="IsCurrentMonth" MonthChanged="OnMonthChangedAsync" />
         </Actions>
     </PageHeader>
@@ -339,12 +349,24 @@
     private IReadOnlyList<ChartPoint> netWorthChart = [];
     private IReadOnlyList<ChartPoint> netWorthForecastChart = [];
     private IReadOnlyList<PlannedOccurrence> upcoming = [];
+    private IReadOnlyList<MonthlyAccountOption> accountOptions = [];
+    private IEnumerable<Guid> selectedAccountIds = [];
+
+    private string AccountSelectionSummary =>
+        selectedAccountIds.Count() == accountOptions.Count
+            ? L["Dashboard.AllAccounts"]
+            : L["Dashboard.SelectedAccounts", selectedAccountIds.Count(), accountOptions.Count];
 
     private bool IsCurrentMonth =>
         MonthStart.Year == DateTime.Today.Year && MonthStart.Month == DateTime.Today.Month;
 
     protected override async Task OnInitializedAsync()
     {
+        accountOptions = await DashboardService.GetMonthlyAccountOptionsAsync(_cts.Token);
+        selectedAccountIds = accountOptions
+            .Where(account => account.IncludedByDefault)
+            .Select(account => account.Id)
+            .ToArray();
         await LoadAsync();
         netWorth = await NetWorthService.GetAsync(cancellationToken: _cts.Token);
         netWorthChart = netWorth
@@ -361,8 +383,15 @@
         overview = await DashboardService.GetMonthlyOverviewAsync(
             MonthStart.Year,
             MonthStart.Month,
-            _cts.Token
+            _cts.Token,
+            selectedAccountIds.ToArray()
         );
+
+    private async Task OnAccountSelectionChangedAsync(object _)
+    {
+        overview = null;
+        await LoadAsync();
+    }
 
     private async Task OnMonthChangedAsync(DateOnly month)
     {

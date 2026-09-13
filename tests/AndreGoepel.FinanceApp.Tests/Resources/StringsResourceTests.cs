@@ -861,6 +861,18 @@ public sealed class StringsResourceTests
     [InlineData("de", "Dashboard.HoldingsPageLink", "Bestandsseite")]
     [InlineData("en", "Dashboard.UpcomingOverdue", "Upcoming & overdue")]
     [InlineData("de", "Dashboard.UpcomingOverdue", "Anstehend & überfällig")]
+    [InlineData("en", "Dashboard.AllAccounts", "All accounts")]
+    [InlineData("de", "Dashboard.AllAccounts", "Alle Konten")]
+    [InlineData(
+        "en",
+        "Accounts.IncludeInMonthlyOverviewLabel",
+        "Include in the monthly overview by default"
+    )]
+    [InlineData(
+        "de",
+        "Accounts.IncludeInMonthlyOverviewLabel",
+        "Standardmäßig in die Monatsübersicht einbeziehen"
+    )]
     [InlineData("en", "Dashboard.NothingUpcoming", "Nothing upcoming —")]
     [InlineData("de", "Dashboard.NothingUpcoming", "Nichts anstehend —")]
     [InlineData("en", "Dashboard.AddPlannedItemsLink", "add planned items")]

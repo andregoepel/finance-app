@@ -252,6 +252,9 @@
   <!-- Dashboard.razor. Counted nouns keep the "(s)" hedge in both languages (German: "(en)") —
        .resx/IStringLocalizer has no plural support, and the app's counts are rarely exactly one. -->
   <data name="Dashboard.Title" xml:space="preserve"><value><![CDATA[Dashboard]]></value></data>
+  <data name="Dashboard.AllAccounts" xml:space="preserve"><value><![CDATA[All accounts]]></value></data>
+  <data name="Dashboard.SelectedAccounts" xml:space="preserve"><value><![CDATA[{0} of {1} accounts]]></value><comment>{0} = selected count, {1} = available count</comment></data>
+  <data name="Dashboard.NoAccountsSelected" xml:space="preserve"><value><![CDATA[No accounts]]></value></data>
   <data name="Dashboard.AwaitingConversion" xml:space="preserve"><value><![CDATA[{0} transaction(s) this month are awaiting EUR conversion and are not yet included in the totals.]]></value><comment>{0} = count of unconverted transactions</comment></data>
   <data name="Dashboard.Income" xml:space="preserve"><value><![CDATA[Income]]></value></data>
   <data name="Dashboard.Expenses" xml:space="preserve"><value><![CDATA[Expenses]]></value></data>
@@ -498,6 +501,7 @@
   <data name="Accounts.EditTitle" xml:space="preserve"><value><![CDATA[Edit account]]></value></data>
   <data name="Accounts.SavingBusyText" xml:space="preserve"><value><![CDATA[Saving…]]></value></data>
   <data name="Accounts.SharedLabel" xml:space="preserve"><value><![CDATA[Shared]]></value></data>
+  <data name="Accounts.IncludeInMonthlyOverviewLabel" xml:space="preserve"><value><![CDATA[Include in the monthly overview by default]]></value></data>
   <data name="Accounts.OwnersLabel" xml:space="preserve"><value><![CDATA[Owners]]></value></data>
   <data name="Accounts.SelectUsersPlaceholder" xml:space="preserve"><value><![CDATA[Select users]]></value></data>
   <data name="Accounts.SelectUserPlaceholder" xml:space="preserve"><value><![CDATA[Select user]]></value></data>
