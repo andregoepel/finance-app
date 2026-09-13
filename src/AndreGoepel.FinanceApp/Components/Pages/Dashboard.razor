@@ -183,8 +183,10 @@
             </RadzenColumn>
         </RadzenRow>
 
-        @* ---------- Accounts with current balances ---------- *@
-        <SectionCard Title="@L["Dashboard.Accounts"]">
+        @* ---------- Accounts and upcoming planned items ---------- *@
+        <RadzenRow Gap="1rem" data-testid="accounts-upcoming-row">
+            <RadzenColumn Size="12" SizeMd="6" data-testid="accounts-column">
+        <SectionCard Title="@L["Dashboard.Accounts"]" FullHeight="true">
             <Actions>
                 <RadzenLink Path="settings/accounts" Text="@L["Nav.Accounts"]" />
             </Actions>
@@ -256,6 +258,37 @@
                 </RadzenStack>
             </ChildContent>
         </SectionCard>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMd="6" data-testid="upcoming-column">
+                <SectionCard Title="@L["Dashboard.UpcomingOverdue"]" FullHeight="true">
+                    <Actions>
+                        <RadzenLink Path="planning" Text="@L["Nav.Planning"]" />
+                    </Actions>
+                    <ChildContent>
+                        <RadzenStack Gap="0.75rem">
+                            @if (upcoming.Count == 0)
+                            {
+                                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
+                                    @L["Dashboard.NothingUpcoming"] <RadzenLink Path="planning" Text="@L["Dashboard.AddPlannedItemsLink"]" />.
+                                </RadzenText>
+                            }
+                            else
+                            {
+                                @foreach (var o in upcoming)
+                                {
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
+                                        <StatusBadge Variant="@(o.Status == PlannedOccurrenceStatus.Overdue ? BadgeVariant.Danger : BadgeVariant.Info)"
+                                                     Text="@Dates.DayMonth(o.DueDate)" />
+                                        <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; flex: 1;">@o.Description</RadzenText>
+                                        <AmountText Amount="o.Amount" />
+                                    </RadzenStack>
+                                }
+                            }
+                        </RadzenStack>
+                    </ChildContent>
+                </SectionCard>
+            </RadzenColumn>
+        </RadzenRow>
 
         @* ---------- Crypto holdings ---------- *@
         @if (crypto is { Positions.Count: > 0 })
@@ -295,34 +328,6 @@
             </RadzenRow>
         }
 
-        @* ---------- Upcoming & overdue planned items ---------- *@
-        <SectionCard Title="@L["Dashboard.UpcomingOverdue"]">
-            <Actions>
-                <RadzenLink Path="planning" Text="@L["Nav.Planning"]" />
-            </Actions>
-            <ChildContent>
-                <RadzenStack Gap="0.75rem">
-                    @if (upcoming.Count == 0)
-                    {
-                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-secondary-color);">
-                            @L["Dashboard.NothingUpcoming"] <RadzenLink Path="planning" Text="@L["Dashboard.AddPlannedItemsLink"]" />.
-                        </RadzenText>
-                    }
-                    else
-                    {
-                        @foreach (var o in upcoming)
-                        {
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem">
-                                <StatusBadge Variant="@(o.Status == PlannedOccurrenceStatus.Overdue ? BadgeVariant.Danger : BadgeVariant.Info)"
-                                             Text="@Dates.DayMonth(o.DueDate)" />
-                                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0; flex: 1;">@o.Description</RadzenText>
-                                <AmountText Amount="o.Amount" />
-                            </RadzenStack>
-                        }
-                    }
-                </RadzenStack>
-            </ChildContent>
-        </SectionCard>
     }
 
 </PageBody>

@@ -2,6 +2,7 @@ using AndreGoepel.FinanceApp.Components.Pages;
 using AndreGoepel.FinanceApp.Domain.Accounts;
 using AndreGoepel.FinanceApp.Domain.Providers;
 using AndreGoepel.FinanceApp.Insights;
+using Bunit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,6 +63,24 @@ public sealed class DashboardTests : LocalizedTestContext
         Assert.Contains("Spending by category", cut.Markup);
         Assert.Contains("Net worth", cut.Markup);
         Assert.Contains("Budgets", cut.Markup);
+    }
+
+    [Fact]
+    public void Render_AccountsAndUpcoming_UseResponsiveHalfWidthColumns()
+    {
+        RegisterDashboardService(new MonthlyOverview(0m, 0m, 0m, [], [], 0, 0));
+
+        var cut = Render<Dashboard>();
+
+        var row = cut.Find("[data-testid='accounts-upcoming-row']");
+        var accountsColumn = row.QuerySelector("[data-testid='accounts-column']");
+        var upcomingColumn = row.QuerySelector("[data-testid='upcoming-column']");
+        Assert.NotNull(accountsColumn);
+        Assert.NotNull(upcomingColumn);
+        Assert.Contains("rz-col-12", accountsColumn.ClassList);
+        Assert.Contains("rz-col-md-6", accountsColumn.ClassList);
+        Assert.Contains("rz-col-12", upcomingColumn.ClassList);
+        Assert.Contains("rz-col-md-6", upcomingColumn.ClassList);
     }
 
     /// <summary>
