@@ -202,7 +202,30 @@
                     }
                     else
                     {
-                        @foreach (var group in netWorth.Accounts.GroupBy(a => a.Type))
+                        @foreach (var group in WiseAccountGroups)
+                        {
+                            var expanded = expandedWiseGroups.Contains(group.Key);
+                            <div data-testid="wise-account-group" data-connection-id="@group.Key">
+                                <button type="button"
+                                        data-testid="wise-account-group-toggle"
+                                        aria-expanded="@expanded.ToString().ToLowerInvariant()"
+                                        @onclick="@(() => ToggleWiseGroup(group.Key))"
+                                        style="border: 0; border-bottom: 1px solid var(--rz-border-color, rgba(128,128,128,0.25)); background: transparent; color: inherit; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 0 0 0.25rem; margin-bottom: 0.25rem; width: 100%;">
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                                        <span class="material-symbols-outlined" aria-hidden="true">@(expanded ? "expand_less" : "expand_more")</span>
+                                        <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">@group.Label</RadzenText>
+                                    </RadzenStack>
+                                    <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">
+                                        @Money.Eur(group.Accounts.Sum(account => account.BalanceEur ?? 0m))
+                                    </RadzenText>
+                                </button>
+                                @if (expanded)
+                                {
+                                    <DashboardAccountRows Accounts="group.Accounts" />
+                                }
+                            </div>
+                        }
+                        @foreach (var group in NonWiseAccountGroups)
                         {
                             <div>
                                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center"
@@ -212,39 +235,7 @@
                                         @Money.Eur(group.Sum(a => a.BalanceEur ?? 0m))
                                     </RadzenText>
                                 </RadzenStack>
-                                @foreach (var account in group)
-                                {
-                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Style="padding: 0.2rem 0;">
-                                        <RadzenStack Gap="0" Style="flex: 1; min-width: 0;">
-                                            <RadzenLink Path="@($"transactions?account={account.AccountId}")" Text="@account.Name" />
-                                            <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
-                                                @account.Provider
-                                                @if (account.AsOf is DateTimeOffset asOf)
-                                                {
-                                                    <text> · @L["Dashboard.BalanceAsOf", Dates.Short(asOf.LocalDateTime)]</text>
-                                                }
-                                            </RadzenText>
-                                        </RadzenStack>
-                                        @if (account.BalanceEur is decimal balanceEur)
-                                        {
-                                            <RadzenStack Gap="0" AlignItems="AlignItems.End">
-                                                <RadzenText TextStyle="TextStyle.Body2" Style="margin: 0;">@Money.Eur(balanceEur)</RadzenText>
-                                                @if (account.IsForeignCurrency && account.Balance is decimal native)
-                                                {
-                                                    <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
-                                                        @Money.Format(native, account.Currency)
-                                                    </RadzenText>
-                                                }
-                                            </RadzenStack>
-                                        }
-                                        else
-                                        {
-                                            <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; color: var(--rz-text-secondary-color);">
-                                                @L["Dashboard.NoBalanceYet"] <RadzenLink Path="settings/accounts" Text="@L["Dashboard.SetOneLink"]" />
-                                            </RadzenText>
-                                        }
-                                    </RadzenStack>
-                                }
+                                <DashboardAccountRows Accounts="group.ToList()" />
                             </div>
                         }
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center"
@@ -329,6 +320,11 @@
 
 @code {
     private sealed record ChartPoint(string Label, decimal Amount);
+    private sealed record WiseAccountGroup(
+        Guid Key,
+        string Label,
+        IReadOnlyList<AccountBalance> Accounts
+    );
 
     private readonly CancellationTokenSource _cts = new();
 
@@ -339,9 +335,42 @@
     private IReadOnlyList<ChartPoint> netWorthChart = [];
     private IReadOnlyList<ChartPoint> netWorthForecastChart = [];
     private IReadOnlyList<PlannedOccurrence> upcoming = [];
+    private readonly HashSet<Guid> expandedWiseGroups = [];
+
+    private IReadOnlyList<WiseAccountGroup> WiseAccountGroups =>
+        (netWorth?.Accounts ?? [])
+            .Where(account => account.Provider == ProviderKind.Wise)
+            .GroupBy(account =>
+                account.ConnectionId is Guid connectionId
+                && !string.IsNullOrWhiteSpace(account.ConnectionLabel)
+                    ? connectionId
+                    : Guid.Empty
+            )
+            .Select(group => new WiseAccountGroup(
+                group.Key,
+                group.Key == Guid.Empty
+                    ? L["Dashboard.UnlinkedWiseAccounts"]
+                    : group.First().ConnectionLabel!,
+                group.OrderBy(account => account.Name).ToList()
+            ))
+            .OrderBy(group => group.Label)
+            .ToList();
+
+    private IEnumerable<IGrouping<AccountType, AccountBalance>> NonWiseAccountGroups =>
+        (netWorth?.Accounts ?? [])
+            .Where(account => account.Provider != ProviderKind.Wise)
+            .GroupBy(account => account.Type);
 
     private bool IsCurrentMonth =>
         MonthStart.Year == DateTime.Today.Year && MonthStart.Month == DateTime.Today.Month;
+
+    private void ToggleWiseGroup(Guid key)
+    {
+        if (!expandedWiseGroups.Add(key))
+        {
+            expandedWiseGroups.Remove(key);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

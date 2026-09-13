@@ -268,6 +268,7 @@
   <data name="Dashboard.SetOneLink" xml:space="preserve"><value><![CDATA[jetzt festlegen]]></value></data>
   <data name="Dashboard.ToIncludeThem" xml:space="preserve"><value><![CDATA[ und sie werden mitgezählt.]]></value><comment>Leading space is deliberate — the Razor puts none before this fragment</comment></data>
   <data name="Dashboard.Accounts" xml:space="preserve"><value><![CDATA[Konten]]></value></data>
+  <data name="Dashboard.UnlinkedWiseAccounts" xml:space="preserve"><value><![CDATA[Nicht verknüpfte Wise-Konten]]></value></data>
   <data name="Dashboard.NoAccounts" xml:space="preserve"><value><![CDATA[Noch keine Konten —]]></value><comment>An "add one" link follows</comment></data>
   <data name="Dashboard.BalanceAsOf" xml:space="preserve"><value><![CDATA[Stand {0}]]></value><comment>{0} = date the balance was last set</comment></data>
   <data name="Dashboard.NoBalanceYet" xml:space="preserve"><value><![CDATA[noch kein Kontostand —]]></value><comment>A "set one" link follows</comment></data>
