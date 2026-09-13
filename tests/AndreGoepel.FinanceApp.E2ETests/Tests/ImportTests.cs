@@ -49,8 +49,7 @@ public sealed class ImportTests(E2EAppFixture fixture) : FinanceE2ETestBase(fixt
         await Page.GotoAsync("/settings/accounts");
         var accountRow = Page.GetByRole(AriaRole.Row, new() { Name = accountName });
         await accountRow.GetByLabel("Deactivate").ClickAsync();
-        await Expect(accountRow.GetByText("Deactivated", new() { Exact = true }))
-            .ToBeVisibleAsync();
+        await Expect(accountRow).Not.ToBeVisibleAsync();
 
         await Page.GotoAsync("/import");
         await Page.GetByLabel("Show deactivated accounts").ClickAsync();
