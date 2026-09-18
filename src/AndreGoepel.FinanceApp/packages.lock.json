@@ -95,11 +95,11 @@
       },
       "Quartz.Extensions.Hosting": {
         "type": "Direct",
-        "requested": "[3.21.0, )",
-        "resolved": "3.21.0",
-        "contentHash": "Zgyj3yTIvlWFzk1rinXs2yr/W+H/QVSwsFM2AD84KMFjkM6MHHc3huHHj1+8aW68QcQXZIMbRD1GE7DFxdbUgg==",
+        "requested": "[4.1.0, )",
+        "resolved": "4.1.0",
+        "contentHash": "6VvH64knZzS9geEi80FR/dXYBNgvs1WDSP5d473WbULqnx2vJfQDYeihAH2STXpn/quYtkH+6tcpXN/W9Mrb+Q==",
         "dependencies": {
-          "Quartz.Extensions.DependencyInjection": "3.21.0"
+          "Quartz": "4.1.0"
         }
       },
       "Radzen.Blazor": {
@@ -575,16 +575,8 @@
       },
       "Quartz": {
         "type": "Transitive",
-        "resolved": "3.21.0",
-        "contentHash": "CmJsq4pQRuaEmiNksCsrV0T2D2fzlA9QcpjEPLKoLoCC6Xx3ghx1mbSUi5rywZ0koTxoCTwGDqREKILocKR1jw=="
-      },
-      "Quartz.Extensions.DependencyInjection": {
-        "type": "Transitive",
-        "resolved": "3.21.0",
-        "contentHash": "Kk2XM8GVg2otHneU/H23eP8BD52bzsqZUYjqqYlyw8nfN4ULYbpWHjMXlAibJ3ay9VwQg9dQzapDnHmLYuIibQ==",
-        "dependencies": {
-          "Quartz": "3.21.0"
-        }
+        "resolved": "4.1.0",
+        "contentHash": "PvDVogimvV3ZqpyXOFiQWPIAC9FmGRq/P8WLEuI2iVHvjo++riFdXFcu2P3T9EJ2p8KLAohy79TA9DXbFYMKOg=="
       },
       "Quartz.Serialization.SystemTextJson": {
         "type": "Transitive",
