@@ -1,7 +1,7 @@
 # Build context is the repository root so that Directory.{Build,Packages}.props
 # (centralised package management) and NuGet.config are visible to `dotnet restore`.
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:1fe86375600b62e6566b465da9553eef0621f13c67f40fe764cd8dbb1dee1497 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:6a94333d37514e385650a3c81a55e5350b67253dbe136e9cf17e499c35606a8c AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
