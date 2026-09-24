@@ -29,7 +29,7 @@ internal sealed class SyncScheduleService(
     )
     {
         var cron = (cronExpression ?? string.Empty).Trim();
-        if (enabled && !CronExpression.IsValidExpression(cron))
+        if (enabled && !CronExpression.TryParse(cron, out _))
         {
             return Result.Fail(localizer["Sync.InvalidCronExpression"]);
         }
@@ -53,17 +53,13 @@ internal sealed class SyncScheduleService(
         var schedule = await GetAsync(cancellationToken);
         var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
 
-        if (!await scheduler.CheckExists(JobKey, cancellationToken))
-        {
-            await scheduler.AddJob(
-                JobBuilder.Create<DailySyncJob>().WithIdentity(JobKey).StoreDurably().Build(),
-                replace: true,
-                cancellationToken
-            );
-        }
+        await scheduler.AddJob(
+            JobBuilder.Create<DailySyncJob>().WithIdentity(JobKey).StoreDurably().Build(),
+            AddJobOptions.Replacing,
+            cancellationToken
+        );
 
-        await scheduler.UnscheduleJob(TriggerKey, cancellationToken);
-        if (schedule.Enabled && CronExpression.IsValidExpression(schedule.CronExpression))
+        if (schedule.Enabled && CronExpression.TryParse(schedule.CronExpression, out _))
         {
             await scheduler.ScheduleJob(
                 TriggerBuilder
@@ -72,13 +68,18 @@ internal sealed class SyncScheduleService(
                     .ForJob(JobKey)
                     .WithCronSchedule(schedule.CronExpression)
                     .Build(),
+                ScheduleJobOptions.Replacing,
                 cancellationToken
             );
+        }
+        else
+        {
+            await scheduler.UnscheduleJob(TriggerKey, cancellationToken);
         }
     }
 
     public DateTimeOffset? NextRun(string cronExpression) =>
-        CronExpression.IsValidExpression(cronExpression)
-            ? new CronExpression(cronExpression).GetNextValidTimeAfter(DateTimeOffset.UtcNow)
+        CronExpression.TryParse(cronExpression, out var cron)
+            ? cron.GetNextValidTimeAfter(DateTimeOffset.UtcNow)
             : null;
 }

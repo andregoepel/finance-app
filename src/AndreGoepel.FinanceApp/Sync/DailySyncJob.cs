@@ -24,13 +24,13 @@ internal sealed class DailySyncJob(
     /// <summary>Quartz job identity, shared with the schedule service that manages its trigger.</summary>
     internal const string JobName = "daily-account-sync";
 
-    public async Task Execute(IJobExecutionContext context)
+    public async ValueTask Execute(IJobExecutionContext _, CancellationToken cancellationToken)
     {
         try
         {
             var summaries = await syncService.SyncAllAsync(
                 "scheduled",
-                cancellationToken: context.CancellationToken
+                cancellationToken: cancellationToken
             );
             foreach (var summary in summaries.Where(s => !s.Success))
             {

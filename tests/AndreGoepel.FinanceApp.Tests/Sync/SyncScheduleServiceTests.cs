@@ -69,7 +69,6 @@ public sealed class SyncScheduleServiceTests
     public async Task UpdateAsync_ValidCron_SavesAndReschedulesTrigger()
     {
         // Arrange
-        scheduler.CheckExists(Arg.Any<JobKey>(), Arg.Any<CancellationToken>()).Returns(true);
         var service = BuildService();
 
         // Act
@@ -87,14 +86,19 @@ public sealed class SyncScheduleServiceTests
                 Arg.Is<SyncSchedule>(s => s!.CronExpression == "0 0 4 * * ?" && s.Enabled),
                 Arg.Any<CancellationToken>()
             );
-        await scheduler.Received(1).ScheduleJob(Arg.Any<ITrigger>(), Arg.Any<CancellationToken>());
+        await scheduler
+            .Received(1)
+            .ScheduleJob(
+                Arg.Any<ITrigger>(),
+                Arg.Is<ScheduleJobOptions>(options => options.Replace),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
     public async Task UpdateAsync_Disabled_SavesButDoesNotScheduleTrigger()
     {
         // Arrange
-        scheduler.CheckExists(Arg.Any<JobKey>(), Arg.Any<CancellationToken>()).Returns(true);
         // ApplyAsync (called from UpdateAsync) re-reads via GetAsync, so the stub has to
         // reflect the just-saved state — the substitute doesn't persist what was written.
         settingsStore
@@ -113,14 +117,17 @@ public sealed class SyncScheduleServiceTests
         Assert.True(result.IsSuccess);
         await scheduler
             .DidNotReceive()
-            .ScheduleJob(Arg.Any<ITrigger>(), Arg.Any<CancellationToken>());
+            .ScheduleJob(
+                Arg.Any<ITrigger>(),
+                Arg.Is<ScheduleJobOptions>(options => options.Replace),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
-    public async Task ApplyAsync_JobNotYetRegistered_AddsDurableJob()
+    public async Task ApplyAsync_UpsertsDurableJob()
     {
         // Arrange
-        scheduler.CheckExists(Arg.Any<JobKey>(), Arg.Any<CancellationToken>()).Returns(false);
         var service = BuildService();
 
         // Act
@@ -129,7 +136,11 @@ public sealed class SyncScheduleServiceTests
         // Assert
         await scheduler
             .Received(1)
-            .AddJob(Arg.Any<IJobDetail>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+            .AddJob(
+                Arg.Any<IJobDetail>(),
+                Arg.Is<AddJobOptions>(options => options.Replace),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
