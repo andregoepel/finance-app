@@ -25,13 +25,13 @@
   </ItemGroup>
 
   <ItemGroup Label="Libraries">
-    <PackageVersion Include="Marten" Version="9.39.0" />
-    <PackageVersion Include="WolverineFx.Marten" Version="6.39.1" />
+    <PackageVersion Include="Marten" Version="9.39.1" />
+    <PackageVersion Include="WolverineFx.Marten" Version="6.40.0" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="4.1.1" />
-    <PackageVersion Include="Radzen.Blazor" Version="11.4.2" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="4.2.0" />
+    <PackageVersion Include="Radzen.Blazor" Version="11.4.3" />
     <PackageVersion
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
       Version="10.0.12"
