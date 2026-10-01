@@ -31,28 +31,16 @@ internal sealed class MonthlyCategoryPlanService(IQuerySession session)
             )
             .ToDictionary(budget => budget.CategoryId, budget => budget.MonthlyLimit);
 
-        var transactions = await session
-            .Query<TransactionView>()
-            .Where(transaction =>
-                transaction.BookingDate >= start
-                && transaction.BookingDate < end
-                && transaction.TransferCounterpartId == null
-                && transaction.AmountEur < 0
-            )
-            .ToListAsync(cancellationToken);
-        if (accountIds is not null)
-        {
-            var selectedAccountIds = accountIds.ToHashSet();
-            transactions = transactions
-                .Where(transaction => selectedAccountIds.Contains(transaction.AccountId))
-                .ToList();
-        }
-        var actual = transactions
-            .SelectMany(transaction =>
-                transaction.EffectiveCategoryLines.Select(line =>
-                    ((Guid?)line.CategoryId, Amount: -transaction.EurAmountFor(line)!.Value)
-                )
-            )
+        var actuals = await MonthlyActuals.LoadAsync(
+            session,
+            start,
+            end,
+            accountIds,
+            cancellationToken
+        );
+        var actual = actuals
+            .Lines.Where(line => line.AmountEur < 0)
+            .Select(line => (line.CategoryId, Amount: -line.AmountEur!.Value))
             .ToList();
 
         var items = await session

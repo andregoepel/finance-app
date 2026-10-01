@@ -43,38 +43,31 @@ internal sealed class DashboardService(
         var start = new DateOnly(year, month, 1);
         var end = start.AddMonths(1);
 
-        // TransferCounterpartId (not the computed IsTransfer) so Marten can translate it.
-        var transactions = await session
-            .Query<TransactionView>()
-            .Where(t =>
-                t.BookingDate >= start && t.BookingDate < end && t.TransferCounterpartId == null
-            )
-            .ToListAsync(cancellationToken);
-
-        if (accountIds is not null)
-        {
-            var selectedAccountIds = accountIds.ToHashSet();
-            transactions = transactions
-                .Where(t => selectedAccountIds.Contains(t.AccountId))
-                .ToList();
-        }
-
-        var income = transactions.Where(t => t.AmountEur > 0).Sum(t => t.AmountEur!.Value);
-        var expenses = -transactions.Where(t => t.AmountEur < 0).Sum(t => t.AmountEur!.Value);
+        var actuals = await MonthlyActuals.LoadAsync(
+            session,
+            start,
+            end,
+            accountIds,
+            cancellationToken
+        );
+        var transactions = actuals.Transactions;
+        var income = actuals
+            .Lines.Where(line => line.AmountEur > 0)
+            .Sum(line => line.AmountEur!.Value);
+        var expenses = -actuals
+            .Lines.Where(line => line.AmountEur < 0)
+            .Sum(line => line.AmountEur!.Value);
 
         var categoriesById = (
             await session.Query<Category>().ToListAsync(cancellationToken)
         ).ToDictionary(c => c.Id);
 
-        var expenseTransactions = transactions.Where(t => t.AmountEur < 0).ToList();
-
-        var spending = expenseTransactions
-            .SelectMany(t =>
-                t.EffectiveCategoryLines.Select(line =>
-                    (
-                        Category: TopLevelName(line.CategoryId, categoriesById),
-                        AmountEur: t.EurAmountFor(line)!.Value
-                    )
+        var spending = actuals
+            .Lines.Where(line => line.AmountEur < 0)
+            .Select(line =>
+                (
+                    Category: TopLevelName(line.CategoryId, categoriesById),
+                    AmountEur: line.AmountEur!.Value
                 )
             )
             .GroupBy(x => x.Category)
