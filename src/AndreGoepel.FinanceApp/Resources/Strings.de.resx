@@ -658,4 +658,6 @@
   <data name="Cash.RateUnavailableMessage" xml:space="preserve"><value><![CDATA[Der Wechselkurs war nicht verfügbar; der EUR-Wert wird beim nächsten Umrechnungslauf ergänzt.]]></value></data>
   <data name="Cash.OwnerUnknownHint" xml:space="preserve"><value><![CDATA[Du konntest keinem Haushaltsbenutzer zugeordnet werden, daher werden alle Bargeld-Kassen angezeigt.]]></value></data>
   <data name="Cash.TransferHint" xml:space="preserve"><value><![CDATA[Bargeld vom Bankkonto abgehoben? Verknüpfe beide Transaktionen auf der Seite „{0}“ als Umbuchung, damit die Abhebung nicht als Ausgabe zählt.]]></value><comment>{0} = Nav.Transactions, so the pointer matches the menu entry it names</comment></data>
+  <data name="Dashboard.BudgetSpentLegend" xml:space="preserve"><value>Ausgegeben</value></data>
+  <data name="Dashboard.BudgetPlannedLegend" xml:space="preserve"><value>Noch geplant</value></data>
 </root>

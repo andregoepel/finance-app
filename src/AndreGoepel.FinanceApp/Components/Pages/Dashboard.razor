@@ -163,6 +163,10 @@
                         }
                         else
                         {
+                            <div class="budget-legend">
+                                <span><i class="budget-key budget-spent"></i>@L["Dashboard.BudgetSpentLegend"]</span>
+                                <span><i class="budget-key budget-planned"></i>@L["Dashboard.BudgetPlannedLegend"]</span>
+                            </div>
                             @foreach (var budget in overview.Budgets)
                             {
                                 <div>
@@ -181,9 +185,13 @@
                                     </RadzenStack>
                                     @if (budget.Limit is not null)
                                     {
-                                        <RadzenProgressBar Value="@((double)Math.Min(budget.Percent, 100))" ShowValue="false"
-                                                           ProgressBarStyle="@(budget.IsOver ? ProgressBarStyle.Danger : ProgressBarStyle.Primary)"
-                                                           Style="height: 0.5rem;" />
+                                        var spentPercent = budget.Limit is > 0 ? Math.Clamp(budget.Spent / budget.Limit.Value * 100m, 0m, 100m) : 0m;
+                                        var plannedPercent = budget.Limit is > 0 ? Math.Clamp(budget.PlannedRemaining / budget.Limit.Value * 100m, 0m, 100m - spentPercent) : 0m;
+                                        <div class="budget-track" role="img"
+                                             aria-label="@L["Dashboard.BudgetForecast", Money.Eur(budget.Spent), Money.Eur(budget.PlannedRemaining), Money.Eur(budget.Limit.Value)]">
+                                            <span class="budget-spent" style="width: @(spentPercent.ToString(System.Globalization.CultureInfo.InvariantCulture))%;"></span>
+                                            <span class="budget-planned" style="width: @(plannedPercent.ToString(System.Globalization.CultureInfo.InvariantCulture))%;"></span>
+                                        </div>
                                     }
                                 </div>
                             }
