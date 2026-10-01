@@ -658,4 +658,6 @@
   <data name="Cash.RateUnavailableMessage" xml:space="preserve"><value><![CDATA[The exchange rate was not available; the EUR value is filled in by the next conversion run.]]></value></data>
   <data name="Cash.OwnerUnknownHint" xml:space="preserve"><value><![CDATA[You could not be matched to a household user, so every cash account is shown.]]></value></data>
   <data name="Cash.TransferHint" xml:space="preserve"><value><![CDATA[Withdrew cash from a bank account? Link both transactions as a transfer on the {0} page so the withdrawal does not count as spending.]]></value><comment>{0} = Nav.Transactions, so the pointer matches the menu entry it names</comment></data>
+  <data name="Dashboard.BudgetSpentLegend" xml:space="preserve"><value>Spent</value></data>
+  <data name="Dashboard.BudgetPlannedLegend" xml:space="preserve"><value>Still planned</value></data>
 </root>

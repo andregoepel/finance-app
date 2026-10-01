@@ -1,0 +1,40 @@
+.budget-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--rz-text-secondary-color);
+}
+
+.budget-legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.budget-key {
+    display: inline-block;
+    width: 0.875rem;
+    height: 0.5rem;
+}
+
+.budget-track {
+    display: flex;
+    height: 0.5rem;
+    overflow: hidden;
+    background: var(--rz-base-300);
+}
+
+.budget-spent {
+    background: var(--rz-primary);
+}
+
+.budget-planned {
+    background: repeating-linear-gradient(
+        135deg,
+        var(--rz-warning) 0,
+        var(--rz-warning) 3px,
+        var(--rz-base-300) 3px,
+        var(--rz-base-300) 5px
+    );
+}
