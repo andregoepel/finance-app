@@ -72,12 +72,10 @@ internal sealed class PlanningService(IQuerySession session, INetWorthService ne
     )
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var items = await session
-            .Query<PlannedItem>()
-            .Where(i => i.Active)
-            .ToListAsync(cancellationToken);
+        var items = await session.Query<PlannedItem>().ToListAsync(cancellationToken);
 
         var due = items
+            .Where(i => i.Active)
             .SelectMany(i =>
                 PlannedOccurrenceExpander
                     .Expand(i.Schedule, from, to)
@@ -85,14 +83,8 @@ internal sealed class PlanningService(IQuerySession session, INetWorthService ne
             )
             .ToList();
 
-        var itemIds = due.Select(o => o.Item.Id).Distinct().ToArray();
-        var matches =
-            itemIds.Length == 0
-                ? []
-                : await session
-                    .Query<PlannedMatch>()
-                    .Where(m => m.PlannedItemId.IsOneOf(itemIds))
-                    .ToListAsync(cancellationToken);
+        // Load every link so allocations include occurrences in other months and inactive items.
+        var matches = await session.Query<PlannedMatch>().ToListAsync(cancellationToken);
         var matchesByOccurrence = matches.ToLookup(m => (m.PlannedItemId, m.DueDate));
 
         var transactionIds = matches.Select(m => m.TransactionId).Distinct().ToArray();
@@ -105,12 +97,26 @@ internal sealed class PlanningService(IQuerySession session, INetWorthService ne
                     .ToListAsync(cancellationToken)
         ).ToDictionary(t => t.Id);
 
+        var itemById = items.ToDictionary(item => item.Id);
+        var allocations = matches
+            .GroupBy(match => match.TransactionId)
+            .SelectMany(group =>
+                PlannedAmountAllocator.Allocate(
+                    txnById.TryGetValue(group.Key, out var transaction)
+                        ? transaction.AmountEur
+                        : null,
+                    group,
+                    itemById
+                )
+            )
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+
         return due.Select(o =>
             {
                 var lines = matchesByOccurrence[(o.Item.Id, o.Date)]
                     .Select(m => new MatchedTransaction(
                         m.TransactionId,
-                        txnById.TryGetValue(m.TransactionId, out var t) ? t.AmountEur : null
+                        allocations.GetValueOrDefault(m.Id)
                     ))
                     .ToList();
 
