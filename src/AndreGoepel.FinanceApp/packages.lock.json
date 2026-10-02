@@ -48,11 +48,11 @@
       },
       "AndreGoepel.Design.Blazor": {
         "type": "Direct",
-        "requested": "[1.6.8, )",
-        "resolved": "1.6.8",
-        "contentHash": "MxK+AwfVthPJeA2CtW0U4djWalFqyAfiWhaK0cwnnzumMQRhAAtHPxgCS97TIEOZcmnqJ5Ndr62pGnqMXHnILQ==",
+        "requested": "[1.7.0, )",
+        "resolved": "1.7.0",
+        "contentHash": "DPTcUyWcVUZ2YiwaF3EGdrFQnSi0uVhcD9RXkRelsPWdIee09/zAi4Zx3Clx5EPW/ngt4mqxqqPIyLE/Z0doTQ==",
         "dependencies": {
-          "Radzen.Blazor": "11.4.2"
+          "Radzen.Blazor": "12.0.3"
         }
       },
       "AndreGoepel.Marten.Identity.Blazor": {
@@ -104,9 +104,9 @@
       },
       "Radzen.Blazor": {
         "type": "Direct",
-        "requested": "[11.5.1, )",
-        "resolved": "11.5.1",
-        "contentHash": "1grwHjm04KGvp9bwE+0ZPa/cCGepxi058eGza+NRMZxuTJeEc+PuQge7gvxxzjWk/VtkxrUxuaYVF8igEpHMSQ=="
+        "requested": "[12.0.3, )",
+        "resolved": "12.0.3",
+        "contentHash": "uGslOvB/ZP7rz5226iM7RTl71Ua+4R1IEXe4LeVT7CmolsA983OF8dJeD48WaQJlc2xE0cKUMcnApOTMjTvlvA=="
       },
       "AndreGoepel.AppFoundation.Core": {
         "type": "Transitive",
