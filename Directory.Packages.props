@@ -4,13 +4,13 @@
   </PropertyGroup>
 
   <ItemGroup Label="AndreGoepel">
-    <PackageVersion Include="AndreGoepel.AppFoundation" Version="2.2.1" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="2.2.1" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="2.2.1" />
+    <PackageVersion Include="AndreGoepel.AppFoundation" Version="2.2.2" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="2.2.2" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="2.2.2" />
     <PackageVersion Include="AndreGoepel.Core" Version="1.0.4" />
     <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.6.8" />
     <PackageVersion Include="AndreGoepel.Marten.Configuration" Version="1.2.6" />
-    <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="2.1.2" />
+    <PackageVersion Include="AndreGoepel.Marten.Identity.Blazor" Version="2.1.3" />
   </ItemGroup>
 
   <ItemGroup Label="AndreGoepel Testing">
