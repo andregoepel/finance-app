@@ -4,9 +4,9 @@
   </PropertyGroup>
 
   <ItemGroup Label="AndreGoepel">
-    <PackageVersion Include="AndreGoepel.AppFoundation" Version="2.3.0" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="2.3.0" />
-    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="2.3.0" />
+    <PackageVersion Include="AndreGoepel.AppFoundation" Version="2.3.1" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Aspire" Version="2.3.1" />
+    <PackageVersion Include="AndreGoepel.AppFoundation.Hosting" Version="2.3.1" />
     <PackageVersion Include="AndreGoepel.Core" Version="1.0.4" />
     <PackageVersion Include="AndreGoepel.Design.Blazor" Version="1.7.1" />
     <PackageVersion Include="AndreGoepel.Marten.Configuration" Version="1.2.6" />
@@ -19,19 +19,19 @@
   </ItemGroup>
 
   <ItemGroup Label="Aspire">
-    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.6.0" />
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.0" />
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.6.0" />
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.6.1" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.1" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.6.1" />
   </ItemGroup>
 
   <ItemGroup Label="Libraries">
-    <PackageVersion Include="Marten" Version="9.45.0" />
-    <PackageVersion Include="WolverineFx.Marten" Version="6.45.0" />
+    <PackageVersion Include="Marten" Version="9.47.0" />
+    <PackageVersion Include="WolverineFx.Marten" Version="6.48.2" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="4.3.0" />
-    <PackageVersion Include="Radzen.Blazor" Version="12.0.5" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="4.4.0" />
+    <PackageVersion Include="Radzen.Blazor" Version="12.0.7" />
     <PackageVersion
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
       Version="10.0.12"
@@ -44,7 +44,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Testing">
-    <PackageVersion Include="AndreGoepel.Marten.Testing" Version="1.2.5" />
+    <PackageVersion Include="AndreGoepel.Marten.Testing" Version="1.2.6" />
     <PackageVersion Include="bunit" Version="2.11.3" />
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
