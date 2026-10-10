@@ -67,13 +67,13 @@
       },
       "AndreGoepel.AppFoundation.Core": {
         "type": "Transitive",
-        "resolved": "2.3.0",
-        "contentHash": "DPw4Szlh3DINF/CKTAusjwb0r/QUDP7UNb2jaXYIL+2rdlf6DI896Bkv87rtcksjlCg5emaXNicIHK1rUwnmxw=="
+        "resolved": "2.3.1",
+        "contentHash": "5KGxQFNoBOwxxBt7KzkZvNtSiOyy+kItK0Owj6gVPLJ5JM4HUY7igb88ZI6uO3195dk8eUxGORBve0chUtsLOg=="
       },
       "AndreGoepel.AppFoundation.MailService": {
         "type": "Transitive",
-        "resolved": "2.3.0",
-        "contentHash": "GQRetsGCjoyndjN0ir2+uKRDNiVc8wHRtKm3C92DtlCaL2KeDeUAWOwDjljufVlTJ3PTYHCLipEfdQSzGKyOtg==",
+        "resolved": "2.3.1",
+        "contentHash": "5c3jbcraoawQbFJK+d+A3A76EODF39DVl8idwJesWRSY0mz3RnxFwfP7gOyUKnTDb/ZYBw1qpErMGmCu4JZ/pw==",
         "dependencies": {
           "AndreGoepel.Core": "1.0.4",
           "AndreGoepel.Marten.Configuration": "1.2.6",
@@ -85,8 +85,8 @@
       },
       "AndreGoepel.AppFoundation.ServiceDefaults": {
         "type": "Transitive",
-        "resolved": "2.3.0",
-        "contentHash": "/5SdUNIaZiD01Y4o4G7dRNTLAubS02QRO8tIAHFaOgxsRhLw6ZctxtIUor3mWz4LwJ1ss/5/hkdJNl2gs5ojmw==",
+        "resolved": "2.3.1",
+        "contentHash": "TYOQ5+b12/FGIdyMYs5PnbQJgeP64dL1l0NvI/ODetv0ARLzm4vTZusUvm93m+TwJIFjMNGrfmV+nvF5AistPA==",
         "dependencies": {
           "Microsoft.Extensions.Http.Resilience": "10.10.0",
           "Microsoft.Extensions.ServiceDiscovery": "10.10.0",
@@ -856,8 +856,8 @@
       "andregoepel.financeapp": {
         "type": "Project",
         "dependencies": {
-          "AndreGoepel.AppFoundation": "[2.3.0, )",
-          "AndreGoepel.AppFoundation.Hosting": "[2.3.0, )",
+          "AndreGoepel.AppFoundation": "[2.3.1, )",
+          "AndreGoepel.AppFoundation.Hosting": "[2.3.1, )",
           "AndreGoepel.Core": "[1.0.4, )",
           "AndreGoepel.Design.Blazor": "[1.7.1, )",
           "AndreGoepel.FinanceApp.Categorization": "[1.0.0, )",
@@ -899,12 +899,12 @@
       },
       "AndreGoepel.AppFoundation": {
         "type": "CentralTransitive",
-        "requested": "[2.3.0, )",
-        "resolved": "2.3.0",
-        "contentHash": "QppdwS0GrAUsE9mcDjmMC10lINrFy2aEDxCkc2mVoKwwwlAhoyYPYYbPXgU47n9poRiAY4L0lvCFqlW7YAeM0Q==",
+        "requested": "[2.3.1, )",
+        "resolved": "2.3.1",
+        "contentHash": "jSHjjrQMkZxSxn9+LDoCZ0Ayfg3OFIbGEw1ZaEz2KAwTZP93dKJ4iAcX2wJ+s/AUaqpE4xNXoOn81bAxeedlqQ==",
         "dependencies": {
-          "AndreGoepel.AppFoundation.Core": "2.3.0",
-          "AndreGoepel.AppFoundation.MailService": "2.3.0",
+          "AndreGoepel.AppFoundation.Core": "2.3.1",
+          "AndreGoepel.AppFoundation.MailService": "2.3.1",
           "AndreGoepel.Design.Blazor": "1.7.1",
           "AndreGoepel.Marten.Identity.Blazor": "2.2.0",
           "Marten": "9.45.0",
@@ -915,14 +915,14 @@
       },
       "AndreGoepel.AppFoundation.Hosting": {
         "type": "CentralTransitive",
-        "requested": "[2.3.0, )",
-        "resolved": "2.3.0",
-        "contentHash": "+iYBdR7Xqbl6y8i3PvIh5od9xQhFRagT7oA1kfVLQ3CugEOGKxtf37+nNaH4Keugzo4o8Z10s5L2dWSfUBexfg==",
+        "requested": "[2.3.1, )",
+        "resolved": "2.3.1",
+        "contentHash": "YfJmN7uJC0uJI3K3AUnzmiIoWDigJ66Wj3Vf2AAD3/2R+Y0CYhZHdmRzmcowWIZ1bK9eoYBoS3y9DE3bJ0IEEg==",
         "dependencies": {
-          "AndreGoepel.AppFoundation": "2.3.0",
-          "AndreGoepel.AppFoundation.Core": "2.3.0",
-          "AndreGoepel.AppFoundation.MailService": "2.3.0",
-          "AndreGoepel.AppFoundation.ServiceDefaults": "2.3.0",
+          "AndreGoepel.AppFoundation": "2.3.1",
+          "AndreGoepel.AppFoundation.Core": "2.3.1",
+          "AndreGoepel.AppFoundation.MailService": "2.3.1",
+          "AndreGoepel.AppFoundation.ServiceDefaults": "2.3.1",
           "AndreGoepel.Marten.Configuration": "1.2.6",
           "AndreGoepel.Marten.Identity.Blazor": "2.2.0",
           "Marten": "9.45.0",
