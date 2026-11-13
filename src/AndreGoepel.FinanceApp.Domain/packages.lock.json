@@ -35,9 +35,9 @@
       },
       "Microsoft.AspNetCore.DataProtection.Abstractions": {
         "type": "Direct",
-        "requested": "[10.0.12, )",
-        "resolved": "10.0.12",
-        "contentHash": "r9Rcg9xjKrTmYYHLqb7Ur64xkP8LzR+0EkxkKHqNIjGHFMgr/AuXxNuGXxZd2ScjPjwXM+VxfGfG7DPnYibkfw=="
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "FfqcYp1Y76iSwDxNik8ihG5qFEz6upOjmwE5XS86isTBSDSLQWSqTTfjwhFvDbGCw5BFItOGicBub1I86kl8zQ=="
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Direct",
